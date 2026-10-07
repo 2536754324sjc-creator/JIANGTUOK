@@ -1198,21 +1198,23 @@ window.JYStore = (function() {
 })();
 
 /* ============================================================
-   ★★★ 网络时间同步 JYTime（双源并行，谁先成功用谁） ★★★
-   
-   - 源 1：从 GitHub API 的 Date 响应头拿时间（需要 localhost / https 环境）
-   - 源 2：淘宝 JSONP 时间戳（file:// 环境可用，但需要 DNS 能解析 api.m.taobao.com）
-   - 兜底：如果都失败，用本机时间
-   
-   同步结果会打印到浏览器控制台（F12 → Console 可见）
+   ★★★ 网络时间同步 JYTime（v2：多源并行，谁先成功用谁） ★★★
+
+   三个时间源同时请求，2.5 秒超时：
+   - 源 1：GitHub API 的 Date 响应头
+   - 源 2：Cloudflare trace（返回 ts=Unix 时间戳）
+   - 源 3：苏宁时间（JSONP 兜底）
+
+   控制台会打印每个源的结果（F12 → Console 可见）
    ============================================================ */
 window.JYTime = (function() {
-    var offset = 0;         // 本机时间 + offset = 网络时间
+    var offset = 0;             // 本机时间 + offset = 网络时间
     var synced = false;
     var syncPromise = null;
+    var syncedSource = '';
 
-    /* 源 1：GitHub API 的 Date 响应头 */
-    function tryFetchDate() {
+    /* 通用的 fetch + 超时 + 解析封装 */
+    function fetchWithTimeout(url, opts, timeoutMs, parseFn) {
         return new Promise(function(resolve) {
             if (!window.fetch) return resolve(0);
 
@@ -1224,22 +1226,21 @@ window.JYTime = (function() {
                 finished = true;
                 if (controller) { try { controller.abort(); } catch (e) {} }
                 resolve(0);
-            }, 2500);
+            }, timeoutMs);
 
-            var opts = { method: 'HEAD', cache: 'no-store' };
-            if (controller) opts.signal = controller.signal;
+            var fetchOpts = Object.assign({ cache: 'no-store' }, opts || {});
+            if (controller) fetchOpts.signal = controller.signal;
 
-            fetch('https://api.github.com/', opts)
+            fetch(url, fetchOpts)
                 .then(function(res) {
+                    if (finished) return 0;
+                    return parseFn(res);
+                })
+                .then(function(ts) {
                     if (finished) return;
                     finished = true;
                     clearTimeout(timer);
-                    var dateStr = res.headers.get('date');
-                    if (dateStr) {
-                        var ts = new Date(dateStr).getTime();
-                        if (ts > 0) { resolve(ts); return; }
-                    }
-                    resolve(0);
+                    resolve(ts > 0 ? ts : 0);
                 })
                 .catch(function() {
                     if (finished) return;
@@ -1250,10 +1251,46 @@ window.JYTime = (function() {
         });
     }
 
-    /* 源 2：淘宝 JSONP 时间戳 */
-    function tryJsonpTaobao() {
+    /* ---------- 源 1：GitHub API 的 Date 响应头 ---------- */
+    function tryGithub() {
+        return fetchWithTimeout(
+            'https://api.github.com/',
+            { method: 'HEAD' },
+            2500,
+            function(res) {
+                var dateStr = res.headers.get('date');
+                if (!dateStr) return 0;
+                var ts = new Date(dateStr).getTime();
+                return ts > 0 ? ts : 0;
+            }
+        ).then(function(ts) {
+            return { ts: ts || 0, source: 'GitHub API' };
+        });
+    }
+
+    /* ---------- 源 2：Cloudflare trace ---------- */
+    function tryCloudflare() {
+        return fetchWithTimeout(
+            'https://www.cloudflare.com/cdn-cgi/trace',
+            {},
+            2500,
+            function(res) {
+                return res.text().then(function(text) {
+                    // 响应格式里有一行 ts=1699999999.123（Unix 秒）
+                    var m = text.match(/^ts=([\d.]+)/m);
+                    if (!m) return 0;
+                    return Math.round(parseFloat(m[1]) * 1000);
+                });
+            }
+        ).then(function(ts) {
+            return { ts: ts || 0, source: 'Cloudflare' };
+        });
+    }
+
+    /* ---------- 源 3：苏宁时间（JSONP 兜底） ---------- */
+    function trySuning() {
         return new Promise(function(resolve) {
-            var cbName = '__jyTb_' + Date.now() + '_' + Math.floor(Math.random() * 1e6);
+            var cbName = '__jySn_' + Date.now() + '_' + Math.floor(Math.random() * 1e6);
             var script = document.createElement('script');
             var done = false;
 
@@ -1266,7 +1303,7 @@ window.JYTime = (function() {
                 if (done) return;
                 done = true;
                 cleanup();
-                resolve(0);
+                resolve({ ts: 0, source: '苏宁' });
             }, 2500);
 
             window[cbName] = function(data) {
@@ -1275,21 +1312,29 @@ window.JYTime = (function() {
                 clearTimeout(timer);
                 var ts = 0;
                 try {
-                    if (data && data.data && data.data.t) {
-                        ts = parseInt(data.data.t, 10);
+                    // 苏宁返回格式：{"sysTime2":"2024-01-01 12:00:00","sysTime1":"20240101120000"}
+                    if (data && data.sysTime1) {
+                        var s = String(data.sysTime1);
+                        var year = parseInt(s.slice(0, 4), 10);
+                        var mon = parseInt(s.slice(4, 6), 10) - 1;
+                        var day = parseInt(s.slice(6, 8), 10);
+                        var hr = parseInt(s.slice(8, 10), 10);
+                        var min = parseInt(s.slice(10, 12), 10);
+                        var sec = parseInt(s.slice(12, 14), 10);
+                        ts = new Date(year, mon, day, hr, min, sec).getTime();
                     }
                 } catch (e) {}
                 cleanup();
-                resolve(ts > 0 ? ts : 0);
+                resolve({ ts: ts > 0 ? ts : 0, source: '苏宁' });
             };
 
-            script.src = 'https://api.m.taobao.com/rest/api3.do?api=mtop.common.getTimestamp&callback=' + cbName;
+            script.src = 'https://quan.suning.com/getSysTime.do?callback=' + cbName;
             script.onerror = function() {
                 if (done) return;
                 done = true;
                 clearTimeout(timer);
                 cleanup();
-                resolve(0);
+                resolve({ ts: 0, source: '苏宁' });
             };
             document.head.appendChild(script);
         });
@@ -1298,31 +1343,31 @@ window.JYTime = (function() {
     function sync() {
         if (syncPromise) return syncPromise;
 
-        syncPromise = Promise.all([tryFetchDate(), tryJsonpTaobao()])
+        syncPromise = Promise.all([tryGithub(), tryCloudflare(), trySuning()])
             .then(function(results) {
-                var serverTs = 0;
-                var sourceName = '';
-                var names = ['GitHub Date 头', '淘宝时间戳'];
+                console.log('[JYTime] 各源结果：', results);
 
+                var best = null;
                 for (var i = 0; i < results.length; i++) {
-                    if (results[i] > 0) {
-                        serverTs = results[i];
-                        sourceName = names[i];
-                        break;
+                    if (results[i].ts > 0) { best = results[i]; break; }
+                }
+
+                if (best) {
+                    var localTs = Date.now();
+                    var diff = best.ts - localTs;
+                    // 校验：时间差异不超过 1 年，防止脏数据
+                    if (Math.abs(diff) < 86400000 * 365) {
+                        offset = diff;
+                        synced = true;
+                        syncedSource = best.source;
+                        console.log('[JYTime] ✅ 同步成功（来源：' + best.source + '），校正 ' + diff + ' 毫秒');
+                        return true;
+                    } else {
+                        console.log('[JYTime] ⚠️ 时间差异过大，忽略。来源=' + best.source + '，差值=' + diff);
                     }
                 }
 
-                if (serverTs > 0) {
-                    var localTs = Date.now();
-                    // 校验：与本机时间差距不超过 1 年，防止脏数据
-                    if (Math.abs(serverTs - localTs) < 86400000 * 365) {
-                        offset = serverTs - localTs;
-                        synced = true;
-                        console.log('[JYTime] ✅ 网络时间同步成功（来源：' + sourceName + '），校正 ' + offset + ' 毫秒');
-                        return true;
-                    }
-                }
-                console.log('[JYTime] ⚠️ 网络时间同步失败（可能是 file:// 环境 + DNS 问题），使用本机时间（不影响功能）');
+                console.log('[JYTime] ⚠️ 所有时间源均失败，使用本机时间');
                 return false;
             });
 
@@ -1333,13 +1378,15 @@ window.JYTime = (function() {
     function date() { return new Date(now()); }
     function getOffset() { return offset; }
     function isSynced() { return synced; }
+    function getSource() { return syncedSource; }
 
     return {
         sync: sync,
         now: now,
         date: date,
         getOffset: getOffset,
-        isSynced: isSynced
+        isSynced: isSynced,
+        getSource: getSource
     };
 })();
 
