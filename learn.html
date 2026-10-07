@@ -2838,4 +2838,403 @@ var Listening = (function() {
 
         var startTime = performance.now();
         var BAR_COUNT = bars.length;
-        var CENTER = (BAR_COUNT - 1) /
+        var CENTER = (BAR_COUNT - 1) / 2;
+
+        function frame(now) {
+            var elapsed = now - startTime;
+            var progress = Math.min(elapsed / durationMs, 1);
+
+            var envelope = Math.sin(progress * Math.PI);
+            envelope = Math.pow(envelope, 0.7);
+
+            bars.forEach(function(bar, i) {
+                var dist = Math.abs(i - CENTER) / CENTER;
+                var centerWeight = 1 - dist * 0.65;
+
+                var t = elapsed / 1000;
+                var syllable = Math.abs(Math.sin(t * 8 + i * 0.7));
+                var harmonic = Math.abs(Math.sin(t * 13.5 + i * 0.35)) * 0.5;
+                var noise = Math.random() * 0.1;
+
+                var intensity = envelope * centerWeight * (syllable + harmonic + noise) / 1.6;
+                var height = 6 + Math.max(0, Math.min(1, intensity)) * 34;
+
+                bar.style.height = height + 'px';
+            });
+
+            if (progress < 1) {
+                waveRafId = requestAnimationFrame(frame);
+            } else {
+                bars.forEach(function(b) { b.style.height = '6px'; });
+                waveRafId = null;
+            }
+        }
+
+        waveRafId = requestAnimationFrame(frame);
+    }
+
+    function stopWaveAnimation() {
+        if (waveRafId) {
+            cancelAnimationFrame(waveRafId);
+            waveRafId = null;
+        }
+        var bars = document.querySelectorAll('#listenWaveform .wave-bar');
+        bars.forEach(function(bar) { bar.style.height = '6px'; });
+    }
+
+    function playAudio() {
+        if (!currentData) return;
+
+        var waveform = $('listenWaveform');
+        var playBtn = $('listenPlayBtn');
+        if (!waveform) return;
+
+        playToken++;
+        var myToken = playToken;
+
+        if ('speechSynthesis' in window) {
+            window.speechSynthesis.cancel();
+        }
+
+        waveform.classList.add('active');
+        stopWaveAnimation();
+        buildWaveform();
+
+        if (playBtn) {
+            playBtn.classList.remove('playing');
+            void playBtn.offsetWidth;
+            playBtn.classList.add('playing');
+            setTimeout(function() {
+                playBtn.classList.remove('playing');
+            }, 500);
+        }
+
+        var estimatedDuration = Math.max(1200, currentData.en.length * 65);
+        startWaveAnimation(estimatedDuration);
+
+        var stopWave = function() {
+            if (myToken !== playToken) return;
+            stopWaveAnimation();
+            waveform.classList.remove('active');
+        };
+
+        if ('speechSynthesis' in window) {
+            setTimeout(function() {
+                if (myToken !== playToken) return;
+
+                var u = new SpeechSynthesisUtterance(currentData.en);
+                u.lang = 'en-US';
+                u.rate = 0.85;
+                u.onend = stopWave;
+                u.onerror = stopWave;
+                window.speechSynthesis.speak(u);
+            }, 50);
+
+            setTimeout(stopWave, estimatedDuration + 2000);
+        } else {
+            setTimeout(stopWave, estimatedDuration);
+        }
+    }
+
+    /* ★ 阶段切换：无字幕 → 英文 → 中英 → 无字幕（循环） */
+    function cycleHint() {
+        var enEl = $('listenEn');
+        var cnEl = $('listenCn');
+        var placeholder = $('listenPlaceholder');
+        var box = $('listenSubtitleBox');
+        var btn = $('listenHintBtn');
+
+        hintStage++;
+        if (hintStage > 2) hintStage = 0;
+
+        if (hintStage === 0) {
+            placeholder.style.display = 'block';
+            enEl.style.display = 'none';
+            cnEl.style.display = 'none';
+            box.classList.remove('revealed');
+            btn.textContent = '👁 显示英文';
+        } else if (hintStage === 1) {
+            placeholder.style.display = 'none';
+            enEl.style.display = 'block';
+            enEl.textContent = currentData.en;
+            cnEl.style.display = 'none';
+            box.classList.add('revealed');
+            btn.textContent = '👁 显示中文';
+        } else {
+            placeholder.style.display = 'none';
+            enEl.style.display = 'block';
+            enEl.textContent = currentData.en;
+            cnEl.style.display = 'block';
+            cnEl.textContent = currentData.cn;
+            box.classList.add('revealed');
+            btn.textContent = '👁 隐藏字幕';
+        }
+    }
+
+    /* ★ 开始作答：切到词块拼接视图 */
+    function startQuiz() {
+        $('listenPlayView').style.display = 'none';
+        $('listenQuizView').style.display = 'block';
+
+        selectedChunks = [];
+        isAnswered = false;
+
+        var pool = $('listenChunkPool');
+        pool.innerHTML = '';
+
+        var allChunks = shuffleArray(currentData.chunks.concat(currentData.distractors || []));
+        allChunks.forEach(function(chunk, i) {
+            var el = document.createElement('div');
+            el.className = 'chunk-item';
+            el.textContent = chunk;
+            el.setAttribute('data-index', 'l_' + i);
+            el.setAttribute('data-chunk', chunk);
+            pool.appendChild(el);
+        });
+
+        $('listenChunkAnswer').innerHTML = '<span class="chunk-cursor"></span>';
+    }
+
+    function submit() {
+        if (isAnswered) return;
+        var userAnswer = selectedChunks.join(' ');
+        var isCorrect = (normalize(userAnswer) === normalize(currentData.en));
+        isAnswered = true;
+
+        JYStore.addRecord({
+            en: currentData.en,
+            cn: currentData.cn,
+            mode: 'listening',
+            correct: isCorrect
+        });
+
+        state.totalAnswered++;
+
+        if (isCorrect) {
+            state.correctCount++;
+            state.combo++;
+            if (state.combo > state.maxCombo) state.maxCombo = state.combo;
+            state.score += 10 + state.combo * 2;
+
+            showFeedback(true, 'Perfect!', '连击 ' + state.combo + ' · 得分 +' + (10 + state.combo * 2));
+            $('listenChunkAnswer').classList.add('correct');
+            updateTopbar();
+
+            setTimeout(function() {
+                state.currentIndex++;
+                if (state.currentIndex >= QUESTION_BANK.length) {
+                    showComplete();
+                    return;
+                }
+                // 重新进入听力模式，自动播放新句子
+                enter();
+                setTimeout(playAudio, 300);
+            }, 1200);
+        } else {
+            state.combo = 0;
+            showFeedback(false, '再试一次', '正确答案：' + currentData.en);
+            $('listenChunkAnswer').classList.add('wrong');
+            updateTopbar();
+
+            setTimeout(function() {
+                isAnswered = false;
+                $('listenChunkAnswer').classList.remove('wrong');
+            }, 1500);
+        }
+    }
+
+    function reset() {
+        if (isAnswered) return;
+        selectedChunks = [];
+        $('listenChunkAnswer').innerHTML = '<span class="chunk-cursor"></span>';
+        var items = $('listenChunkPool').querySelectorAll('.chunk-item');
+        items.forEach(function(item) { item.classList.remove('used'); });
+    }
+
+    /* ★ 进入听力模式：重置 UI，自动播放一遍 */
+    function enter() {
+        currentData = QUESTION_BANK[state.currentIndex];
+        if (!currentData) return;
+
+        hintStage = 0;
+        selectedChunks = [];
+        isAnswered = false;
+
+        $('listenPlayView').style.display = 'block';
+        $('listenQuizView').style.display = 'none';
+        $('listenEn').style.display = 'none';
+        $('listenCn').style.display = 'none';
+        $('listenPlaceholder').style.display = 'block';
+        $('listenSubtitleBox').classList.remove('revealed');
+        $('listenHintBtn').textContent = '👁 显示英文';
+
+        buildWaveform();
+        setTimeout(playAudio, 300);
+    }
+
+    /* ★ 事件绑定（只做一次） */
+    function init() {
+        $('listenPlayBtn').addEventListener('click', playAudio);
+        $('listenHintBtn').addEventListener('click', cycleHint);
+        $('listenStartBtn').addEventListener('click', startQuiz);
+        $('listenReplay').addEventListener('click', playAudio);
+        $('listenSubmit').addEventListener('click', submit);
+        $('listenReset').addEventListener('click', reset);
+
+        // 词块点击
+        $('listenChunkPool').addEventListener('click', function(e) {
+            var target = e.target;
+            if (!target.classList.contains('chunk-item')) return;
+            if (target.classList.contains('used')) return;
+            if (isAnswered) return;
+
+            var chunkText = target.getAttribute('data-chunk');
+            selectedChunks.push(chunkText);
+
+            var answerEl = $('listenChunkAnswer');
+            var selected = document.createElement('div');
+            selected.className = 'chunk-selected';
+            selected.textContent = chunkText;
+            selected.setAttribute('data-from', target.getAttribute('data-index'));
+
+            var cursor = answerEl.querySelector('.chunk-cursor');
+            if (cursor) cursor.remove();
+            answerEl.appendChild(selected);
+            var newCursor = document.createElement('span');
+            newCursor.className = 'chunk-cursor';
+            answerEl.appendChild(newCursor);
+
+            target.classList.add('used');
+        });
+
+        $('listenChunkAnswer').addEventListener('click', function(e) {
+            var target = e.target;
+            if (!target.classList.contains('chunk-selected')) return;
+            if (isAnswered) return;
+
+            var answerEl = $('listenChunkAnswer');
+            var fromIndex = target.getAttribute('data-from');
+            var originItem = $('listenChunkPool').querySelector('.chunk-item[data-index="' + fromIndex + '"]');
+            if (originItem) originItem.classList.remove('used');
+
+            var chunkText = target.textContent;
+            var idx = selectedChunks.indexOf(chunkText);
+            if (idx > -1) selectedChunks.splice(idx, 1);
+
+            target.remove();
+
+            if (!answerEl.querySelector('.chunk-selected')) {
+                var cursor = answerEl.querySelector('.chunk-cursor');
+                if (!cursor) {
+                    var newCursor = document.createElement('span');
+                    newCursor.className = 'chunk-cursor';
+                    answerEl.appendChild(newCursor);
+                }
+            }
+        });
+    }
+
+    return {
+        init: init,
+        enter: enter,
+        stop: function() {
+            playToken++;
+            if (waveRafId) cancelAnimationFrame(waveRafId);
+            if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+            stopWaveAnimation();
+        }
+    };
+})();
+
+Listening.init();
+
+/* ============================================================
+   模式切换
+   ============================================================ */
+(function() {
+    var modeBtns = document.querySelectorAll('.mode-btn[data-mode]');
+    var panels = {
+        read: document.getElementById('panel-read'),
+        translate: document.getElementById('panel-translate'),
+        dictation: document.getElementById('panel-dictation'),
+        listening: document.getElementById('panel-listening'),
+        speaking: document.getElementById('panel-speaking'),
+        video: document.getElementById('panel-video')
+    };
+
+    modeBtns.forEach(function(btn) {
+        btn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            modeBtns.forEach(function(b) { b.classList.remove('on'); });
+            this.classList.add('on');
+
+            var mode = this.getAttribute('data-mode');
+
+            // ★ 切模式时停止所有音频（听力 + 听写）
+            Listening.stop();
+            if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+
+            ['read', 'translate', 'listening', 'speaking', 'video'].forEach(function(k) {
+                if (panels[k]) panels[k].style.display = 'none';
+            });
+
+            if (mode === 'dictation') {
+                Dictation.enter();
+            } else if (mode === 'listening') {
+                panels.listening.style.display = 'block';
+                Listening.enter();
+            } else {
+                Object.keys(panels).forEach(function(key) {
+                    if (panels[key] && key !== 'dictation' && key !== 'listening') {
+                        panels[key].style.display = (key === mode) ? 'block' : 'none';
+                    }
+                });
+
+                var q = QUESTION_BANK[state.currentIndex];
+                if (q) {
+                    if (mode === 'read') {
+                        renderReadMode(q.en);
+                    }
+                    document.getElementById('speakSentence').textContent = q.en;
+                }
+            }
+        });
+    });
+})();
+
+(function() {
+    var currentPage = window.location.pathname.split('/').pop() || 'learn.html';
+    document.querySelectorAll('[data-href]').forEach(function(el) {
+        el.addEventListener('click', function(e) {
+            e.stopPropagation();
+            var href = this.getAttribute('data-href');
+            if (!href || href === currentPage) return;
+            window.location.href = href;
+        });
+    });
+
+    document.querySelectorAll('[data-tip]').forEach(function(el) {
+        el.addEventListener('click', function(e) {
+            e.stopPropagation();
+            alert(this.getAttribute('data-tip'));
+        });
+    });
+})();
+
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        var panel = document.getElementById('panel-dictation');
+        if (panel && panel.classList.contains('fullscreen')) {
+            Dictation.exit();
+        } else {
+            closeWordPopup();
+        }
+    }
+});
+
+JYTime.sync();
+loadQuestion();
+</script>
+
+</body>
+</html>
