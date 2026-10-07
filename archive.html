@@ -516,6 +516,24 @@
             background: linear-gradient(135deg, #22a06b, #35b87d);
         }
 
+        /* ★ 新增：复习状态标签样式 */
+        .item-tag.state-new {
+            color: #666;
+            background: #eef1f8;
+        }
+        .item-tag.state-learning {
+            color: #fff;
+            background: linear-gradient(135deg, #4f6ef7, #6b8aff);
+        }
+        .item-tag.state-review {
+            color: #fff;
+            background: linear-gradient(135deg, #22a06b, #35b87d);
+        }
+        .item-tag.state-relearning {
+            color: #fff;
+            background: linear-gradient(135deg, #ff5b5b, #ff7b7b);
+        }
+
         .item .item-actions {
             display: flex;
             align-items: center;
@@ -550,7 +568,6 @@
         .item-btn.play:hover { background: #eef2ff; color: var(--brand); }
         .item-btn.danger:hover { background: #ffeaea; border-color: #ffc9c9; color: var(--danger); }
 
-        /* 空状态 */
         .empty-state {
             padding: 60px 20px;
             text-align: center;
@@ -611,9 +628,6 @@
 
 <div class="app-layout">
 
-    <!-- ============================================================
-         左侧导航栏
-         ============================================================ -->
     <aside class="sidebar">
 
         <div class="logo">
@@ -636,7 +650,6 @@
                     <span class="nav-icon">📚</span>
                     <span class="nav-text">课程包商城</span>
                 </div>
-                <!-- 当前页：学习档案 -->
                 <div class="nav-item on" data-href="archive.html">
                     <span class="nav-icon">🗂️</span>
                     <span class="nav-text">学习档案</span>
@@ -689,9 +702,6 @@
 
     </aside>
 
-    <!-- ============================================================
-         右侧主区域
-         ============================================================ -->
     <div class="main-area">
 
         <header class="topbar">
@@ -719,12 +729,10 @@
                 </div>
                 <div class="page-actions">
                     <button class="btn-ghost" data-tip="导出学习档案（后续步骤实现）">导出</button>
-                    <!-- 开始练习：跳到学习页 -->
                     <button class="btn-primary" data-href="learn.html">开始练习</button>
                 </div>
             </div>
 
-            <!-- 统计卡片：数字由 JS 动态更新 -->
             <div class="stat-cards">
                 <div class="stat-card">
                     <div class="sc-label">📕 复习本</div>
@@ -770,7 +778,7 @@
                     <span class="fsrs-icon">🧠</span>
                     <div class="fsrs-text">
                         <div class="fsrs-title">FSRS 智能复习系统已开启</div>
-                        <div class="fsrs-desc">根据你的记忆曲线动态调整复习时间，即将遗忘的内容会自动出现在这里</div>
+                        <div class="fsrs-desc">答对 1 次延后 1 天，答对 2 次延后 3 天，连续答对 3 次自动进入掌握列表</div>
                     </div>
                     <button class="btn-primary" data-href="learn.html">开始复习</button>
                 </div>
@@ -787,7 +795,6 @@
                         </div>
                     </div>
 
-                    <!-- 复习本列表：由 JS 动态渲染 -->
                     <div class="item-list" id="reviewList"></div>
                 </div>
             </div>
@@ -807,7 +814,6 @@
                         </div>
                     </div>
 
-                    <!-- 生词本列表：由 JS 动态渲染 -->
                     <div class="item-list" id="wordList"></div>
                 </div>
             </div>
@@ -826,7 +832,6 @@
                         </div>
                     </div>
 
-                    <!-- 掌握列表：由 JS 动态渲染 -->
                     <div class="item-list" id="masteredList"></div>
                 </div>
             </div>
@@ -839,7 +844,7 @@
 
 <script>
 /* ============================================================
-   ★★★ 登录状态检查（脚本最前面，未登录立即跳回登录页） ★★★
+   登录状态检查
    ============================================================ */
 (function() {
     var userStr = localStorage.getItem('juyou_user');
@@ -864,7 +869,175 @@
 })();
 
 /* ============================================================
-   ★★★ 本地学习数据访问 JYStore（轻量版，只含本页需要的功能） ★★★
+   ★★★ 网络时间同步 JYTime ★★★
+   ============================================================ */
+window.JYTime = (function() {
+    var offset = 0;
+    var synced = false;
+    var syncPromise = null;
+    var syncedSource = '';
+
+    function fetchWithTimeout(url, opts, timeoutMs, parseFn) {
+        return new Promise(function(resolve) {
+            if (!window.fetch) return resolve(0);
+            var controller = ('AbortController' in window) ? new AbortController() : null;
+            var finished = false;
+            var timer = setTimeout(function() {
+                if (finished) return;
+                finished = true;
+                if (controller) { try { controller.abort(); } catch (e) {} }
+                resolve(0);
+            }, timeoutMs);
+            var fetchOpts = Object.assign({ cache: 'no-store' }, opts || {});
+            if (controller) fetchOpts.signal = controller.signal;
+            fetch(url, fetchOpts)
+                .then(function(res) {
+                    if (finished) return 0;
+                    return parseFn(res);
+                })
+                .then(function(ts) {
+                    if (finished) return;
+                    finished = true;
+                    clearTimeout(timer);
+                    resolve(ts > 0 ? ts : 0);
+                })
+                .catch(function() {
+                    if (finished) return;
+                    finished = true;
+                    clearTimeout(timer);
+                    resolve(0);
+                });
+        });
+    }
+
+    function tryGithub() {
+        return fetchWithTimeout(
+            'https://api.github.com/',
+            { method: 'HEAD' },
+            2500,
+            function(res) {
+                var dateStr = res.headers.get('date');
+                if (!dateStr) return 0;
+                var ts = new Date(dateStr).getTime();
+                return ts > 0 ? ts : 0;
+            }
+        ).then(function(ts) {
+            return { ts: ts || 0, source: 'GitHub API' };
+        });
+    }
+
+    function tryCloudflare() {
+        return fetchWithTimeout(
+            'https://www.cloudflare.com/cdn-cgi/trace',
+            {},
+            2500,
+            function(res) {
+                return res.text().then(function(text) {
+                    var m = text.match(/^ts=([\d.]+)/m);
+                    if (!m) return 0;
+                    return Math.round(parseFloat(m[1]) * 1000);
+                });
+            }
+        ).then(function(ts) {
+            return { ts: ts || 0, source: 'Cloudflare' };
+        });
+    }
+
+    function trySuning() {
+        return new Promise(function(resolve) {
+            var cbName = '__jySn_' + Date.now() + '_' + Math.floor(Math.random() * 1e6);
+            var script = document.createElement('script');
+            var done = false;
+
+            function cleanup() {
+                if (script.parentNode) script.parentNode.removeChild(script);
+                try { delete window[cbName]; } catch (e) { window[cbName] = undefined; }
+            }
+
+            var timer = setTimeout(function() {
+                if (done) return;
+                done = true;
+                cleanup();
+                resolve({ ts: 0, source: '苏宁' });
+            }, 2500);
+
+            window[cbName] = function(data) {
+                if (done) return;
+                done = true;
+                clearTimeout(timer);
+                var ts = 0;
+                try {
+                    if (data && data.sysTime1) {
+                        var s = String(data.sysTime1);
+                        var year = parseInt(s.slice(0, 4), 10);
+                        var mon = parseInt(s.slice(4, 6), 10) - 1;
+                        var day = parseInt(s.slice(6, 8), 10);
+                        var hr = parseInt(s.slice(8, 10), 10);
+                        var min = parseInt(s.slice(10, 12), 10);
+                        var sec = parseInt(s.slice(12, 14), 10);
+                        ts = new Date(year, mon, day, hr, min, sec).getTime();
+                    }
+                } catch (e) {}
+                cleanup();
+                resolve({ ts: ts > 0 ? ts : 0, source: '苏宁' });
+            };
+
+            script.src = 'https://quan.suning.com/getSysTime.do?callback=' + cbName;
+            script.onerror = function() {
+                if (done) return;
+                done = true;
+                clearTimeout(timer);
+                cleanup();
+                resolve({ ts: 0, source: '苏宁' });
+            };
+            document.head.appendChild(script);
+        });
+    }
+
+    function sync() {
+        if (syncPromise) return syncPromise;
+        syncPromise = Promise.all([tryGithub(), tryCloudflare(), trySuning()])
+            .then(function(results) {
+                console.log('[JYTime] 各源结果：', results);
+                var best = null;
+                for (var i = 0; i < results.length; i++) {
+                    if (results[i].ts > 0) { best = results[i]; break; }
+                }
+                if (best) {
+                    var localTs = Date.now();
+                    var diff = best.ts - localTs;
+                    if (Math.abs(diff) < 86400000 * 365) {
+                        offset = diff;
+                        synced = true;
+                        syncedSource = best.source;
+                        console.log('[JYTime] ✅ 同步成功（来源：' + best.source + '），校正 ' + diff + ' 毫秒');
+                        return true;
+                    }
+                }
+                console.log('[JYTime] ⚠️ 所有时间源均失败，使用本机时间');
+                return false;
+            });
+        return syncPromise;
+    }
+
+    function now() { return Date.now() + offset; }
+    function date() { return new Date(now()); }
+    function getOffset() { return offset; }
+    function isSynced() { return synced; }
+    function getSource() { return syncedSource; }
+
+    return {
+        sync: sync,
+        now: now,
+        date: date,
+        getOffset: getOffset,
+        isSynced: isSynced,
+        getSource: getSource
+    };
+})();
+
+/* ============================================================
+   本地学习数据访问 JYStore（只读）
    ============================================================ */
 window.JYStore = (function() {
     var KEY = 'juyou_study';
@@ -903,7 +1076,6 @@ window.JYStore = (function() {
         try { localStorage.setItem(KEY, JSON.stringify(data)); } catch (e) {}
     }
 
-    /* 从复习本移除 */
     function removeFromReviewBook(en) {
         var data = load();
         data.reviewBook = data.reviewBook.filter(function(item) {
@@ -912,7 +1084,6 @@ window.JYStore = (function() {
         save(data);
     }
 
-    /* 从掌握列表移除 */
     function removeFromMastered(en) {
         var data = load();
         data.mastered = data.mastered.filter(function(item) {
@@ -921,7 +1092,6 @@ window.JYStore = (function() {
         save(data);
     }
 
-    /* 从生词本移除 */
     function removeFromWordBook(word) {
         var data = load();
         data.wordBook = data.wordBook.filter(function(item) {
@@ -955,7 +1125,7 @@ function escapeHtml(str) {
 function formatTime(ts) {
     if (!ts) return '';
     var d = new Date(ts);
-    var now = new Date();
+    var now = new Date(JYTime.now());
     var diff = now - d;
     var minutes = Math.floor(diff / 60000);
     if (minutes < 1) return '刚刚';
@@ -969,7 +1139,6 @@ function formatTime(ts) {
     return (m < 10 ? '0' + m : m) + '-' + (day < 10 ? '0' + day : day);
 }
 
-/* 用浏览器 TTS 朗读 */
 function speak(text) {
     if (!('speechSynthesis' in window)) {
         alert('当前浏览器不支持语音朗读');
@@ -987,7 +1156,7 @@ function speak(text) {
    ============================================================ */
 function renderStats() {
     var data = JYStore.load();
-    var now = Date.now();
+    var now = JYTime.now();
 
     var reviewCount = data.reviewBook.length;
     var wordCount = data.wordBook.length;
@@ -1005,7 +1174,6 @@ function renderStats() {
     document.getElementById('tabCountWords').textContent = wordCount;
     document.getElementById('tabCountMastered').textContent = masteredCount;
 
-    // 趋势文案
     var trendReview = document.getElementById('statReviewTrend');
     if (reviewCount === 0) {
         trendReview.textContent = '暂无数据';
@@ -1047,12 +1215,12 @@ function renderStats() {
 }
 
 /* ============================================================
-   渲染复习本列表
+   渲染复习本列表（★ 显示 FSRS 状态）
    ============================================================ */
 function renderReviewList() {
     var data = JYStore.load();
     var listEl = document.getElementById('reviewList');
-    var now = Date.now();
+    var now = JYTime.now();
 
     if (data.reviewBook.length === 0) {
         listEl.innerHTML =
@@ -1074,13 +1242,14 @@ function renderReviewList() {
 
         var dueTag = due
             ? '<span class="item-tag due-now">🔔 已到期</span>'
-            : '<span class="item-tag">⏰ ' + hoursLeft + ' 小时后到期</span>';
+            : '<span class="item-tag">⏰ ' + (hoursLeft < 1 ? '即将到期' : hoursLeft + ' 小时后到期') + '</span>';
 
+        // ★ 显示 FSRS 状态
         var stateText = '新内容';
-        var stateCls = 'new';
-        if (item.state === 'review') { stateText = '复习中'; stateCls = 'review'; }
-        else if (item.state === 'learning') { stateText = '学习中'; stateCls = 'learning'; }
-        else if (item.state === 'relearning') { stateText = '重新学习'; stateCls = 'relearning'; }
+        var stateCls = 'state-new';
+        if (item.state === 'learning') { stateText = '📘 学习中'; stateCls = 'state-learning'; }
+        else if (item.state === 'review') { stateText = '🔁 复习中'; stateCls = 'state-review'; }
+        else if (item.state === 'relearning') { stateText = '⚠️ 重新学习'; stateCls = 'state-relearning'; }
 
         html +=
             '<div class="item">' +
@@ -1089,6 +1258,7 @@ function renderReviewList() {
                     '<div class="item-en">' + escapeHtml(item.en) + '</div>' +
                     '<div class="item-cn">' + escapeHtml(item.cn) + '</div>' +
                     '<div class="item-tags">' +
+                        '<span class="item-tag ' + stateCls + '">' + stateText + '</span>' +
                         dueTag +
                         '<span class="item-tag">' + escapeHtml(formatTime(item.addTime)) + ' 加入</span>' +
                     '</div>' +
@@ -1156,7 +1326,7 @@ function renderMasteredList() {
             '<div class="empty-state">' +
                 '<div class="es-icon">✅</div>' +
                 '<div class="es-title">还没有已掌握的句子</div>' +
-                '<div class="es-desc">同一句话答对 3 次以上<br>会自动进入掌握列表</div>' +
+                '<div class="es-desc">答错进入复习本后，连续答对 3 次<br>会自动进入掌握列表</div>' +
                 '<a class="es-btn" href="learn.html">去练习</a>' +
             '</div>';
         return;
@@ -1186,9 +1356,6 @@ function renderMasteredList() {
     listEl.innerHTML = html;
 }
 
-/* ============================================================
-   渲染全部
-   ============================================================ */
 function renderAll() {
     renderStats();
     renderReviewList();
@@ -1197,7 +1364,7 @@ function renderAll() {
 }
 
 /* ============================================================
-   列表里的按钮：用事件委托统一处理
+   列表按钮事件
    ============================================================ */
 document.addEventListener('click', function(e) {
     var target = e.target.closest('[data-action]');
@@ -1230,7 +1397,7 @@ document.addEventListener('click', function(e) {
 });
 
 /* ============================================================
-   页面跳转逻辑
+   页面跳转
    ============================================================ */
 (function() {
     var currentPage = window.location.pathname.split('/').pop() || 'archive.html';
@@ -1247,7 +1414,7 @@ document.addEventListener('click', function(e) {
 })();
 
 /* ============================================================
-   一级 Tab 切换
+   Tab 切换
    ============================================================ */
 (function() {
     var tabs = document.querySelectorAll('.main-tab');
@@ -1274,7 +1441,7 @@ document.addEventListener('click', function(e) {
 })();
 
 /* ============================================================
-   所有带 data-tip 属性的元素，点击后弹出提示
+   data-tip 提示
    ============================================================ */
 (function() {
     var tipElements = document.querySelectorAll('[data-tip]');
@@ -1291,6 +1458,10 @@ document.addEventListener('click', function(e) {
    初始化
    ============================================================ */
 renderAll();
+
+JYTime.sync().then(function() {
+    renderAll();
+});
 </script>
 
 </body>
