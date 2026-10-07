@@ -499,10 +499,7 @@
             gap: 6px;
         }
 
-        /* ============================================================
-           听力模式（三阶段：盲听 → 慢听 → 字幕）
-           ============================================================ */
-
+        /* 听力模式（三阶段） */
         .listen-steps {
             display: flex;
             align-items: center;
@@ -774,10 +771,7 @@
             padding-top: 8px;
         }
 
-        /* ============================================================
-           ★★★ 口语测评模式 ★★★
-           ============================================================ */
-
+        /* 口语测评模式 */
         .speak-sentence-box {
             background: #f8faff;
             border-radius: 16px;
@@ -810,7 +804,6 @@
             line-height: 1.6;
         }
 
-        /* 示范播放按钮 */
         .speak-demo-row {
             display: flex;
             justify-content: center;
@@ -844,7 +837,6 @@
             background: #eef2ff;
         }
 
-        /* 录音区 */
         .speak-record-area {
             display: flex;
             flex-direction: column;
@@ -912,7 +904,6 @@
             font-weight: 600;
         }
 
-        /* 真实音量波形 */
         .speak-volume-meter {
             display: flex;
             align-items: center;
@@ -937,7 +928,6 @@
             box-shadow: 0 0 4px rgba(255, 91, 91, 0.5);
         }
 
-        /* 录音回放 */
         .speak-playback-row {
             display: flex;
             align-items: center;
@@ -972,7 +962,6 @@
             color: var(--brand);
         }
 
-        /* 提交评分按钮 */
         .speak-submit-area {
             display: flex;
             justify-content: center;
@@ -981,7 +970,6 @@
             margin-top: auto;
         }
 
-        /* 评分结果面板 */
         .speak-result {
             display: none;
             animation: resultIn 0.5s ease-out both;
@@ -1055,7 +1043,6 @@
         .speak-rating-label.rating-ss { background: linear-gradient(135deg, #8b5cf6, #a78bfa); color: #fff; }
         .speak-rating-label.rating-sss { background: linear-gradient(135deg, #ff9f43, #ffd93d); color: #7a4a00; }
 
-        /* 三维度 */
         .speak-dimensions {
             display: flex;
             flex-direction: column;
@@ -1132,7 +1119,6 @@
             gap: 6px;
         }
 
-        /* 权限提示 */
         .speak-permission-warn {
             background: #ffeaea;
             color: #cc0000;
@@ -1143,6 +1129,388 @@
             margin-bottom: 20px;
             border: 1px solid #ffc9c9;
             text-align: center;
+        }
+
+        /* ============================================================
+           ★★★ 视频观看模式 ★★★
+           ============================================================ */
+
+        .video-title-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 14px;
+            flex-wrap: wrap;
+        }
+
+        .video-title-bar .vt-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .video-title-bar .vt-progress {
+            font-size: 13px;
+            color: var(--text-mute);
+            background: #f4f6fc;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-weight: 600;
+        }
+
+        .video-title-bar .vt-progress.all-done {
+            background: #e6f7ef;
+            color: var(--success);
+        }
+
+        .video-player {
+            background: #000;
+            border-radius: 16px;
+            overflow: hidden;
+            margin-bottom: 18px;
+            position: relative;
+            box-shadow: 0 12px 30px rgba(20, 40, 90, 0.15);
+        }
+
+        .video-player video {
+            width: 100%;
+            display: block;
+            aspect-ratio: 16/9;
+            background: #000;
+            object-fit: contain;
+        }
+
+        /* 视频上叠加的当前句字幕 */
+        .video-overlay-subtitle {
+            position: absolute;
+            bottom: 60px;
+            left: 50%;
+            transform: translateX(-50%);
+            max-width: 88%;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(6px);
+            -webkit-backdrop-filter: blur(6px);
+            color: #fff;
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-size: 17px;
+            font-weight: 600;
+            text-align: center;
+            line-height: 1.4;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.25s;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .video-overlay-subtitle.on { opacity: 1; }
+
+        /* 视频控制条 */
+        .video-controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 16px;
+            background: #1a1a2e;
+            color: #fff;
+            flex-wrap: wrap;
+        }
+
+        .video-ctrl-btn {
+            background: rgba(255, 255, 255, 0.12);
+            border: none;
+            color: #fff;
+            border-radius: 8px;
+            padding: 8px 14px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .video-ctrl-btn:hover { background: rgba(255, 255, 255, 0.22); }
+        .video-ctrl-btn:active { transform: scale(0.97); }
+
+        .video-ctrl-btn.primary {
+            background: linear-gradient(135deg, #4f6ef7, #7b8fff);
+            box-shadow: 0 4px 12px rgba(79, 110, 247, 0.35);
+        }
+
+        .video-ctrl-btn.primary:hover { opacity: 0.9; background: linear-gradient(135deg, #4f6ef7, #7b8fff); }
+
+        .video-time-display {
+            margin-left: auto;
+            font-size: 12px;
+            color: #8b93a8;
+            font-family: monospace;
+            letter-spacing: 0.5px;
+            white-space: nowrap;
+        }
+
+        /* 视频进度条 */
+        .video-progress-bar {
+            height: 4px;
+            background: rgba(255, 255, 255, 0.08);
+            position: relative;
+            cursor: pointer;
+            overflow: hidden;
+        }
+
+        .video-progress-fill {
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 100%;
+            background: linear-gradient(90deg, #4f6ef7, #7b8fff);
+            transition: width 0.1s linear;
+            width: 0%;
+        }
+
+        /* 视频进度条上每个句子的分隔标记 */
+        .video-segment-marker {
+            position: absolute;
+            top: 0;
+            height: 100%;
+            width: 2px;
+            background: rgba(255, 255, 255, 0.35);
+            z-index: 1;
+        }
+
+        /* 当前句卡片 */
+        .video-current-card {
+            background: linear-gradient(135deg, #eef2ff, #f8faff);
+            border-radius: 16px;
+            padding: 22px 24px;
+            margin-bottom: 18px;
+            border: 2px solid #d8dfee;
+            text-align: center;
+            transition: border-color 0.25s, background 0.25s;
+        }
+
+        .video-current-card.done {
+            border-color: #c0e8d4;
+            background: linear-gradient(135deg, #e6f7ef, #f2fbf7);
+        }
+
+        .video-current-label {
+            font-size: 11px;
+            color: var(--text-mute);
+            letter-spacing: 1.5px;
+            margin-bottom: 8px;
+            font-weight: 700;
+        }
+
+        .video-current-en {
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--text-main);
+            line-height: 1.5;
+            margin-bottom: 6px;
+            letter-spacing: 0.3px;
+        }
+
+        .video-current-phonetic {
+            font-size: 13px;
+            color: #4f6ef7;
+            font-family: 'SF Mono', 'Monaco', 'Menlo', 'Consolas', monospace;
+            margin-bottom: 6px;
+            letter-spacing: 0.3px;
+        }
+
+        .video-current-cn {
+            font-size: 14px;
+            color: var(--text-sub);
+            line-height: 1.6;
+        }
+
+        .video-current-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 14px;
+            flex-wrap: wrap;
+        }
+
+        .video-action-btn {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: #fff;
+            border: 1.5px solid #d8dfee;
+            border-radius: 10px;
+            padding: 9px 18px;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-main);
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+
+        .video-action-btn:hover {
+            border-color: var(--brand);
+            color: var(--brand);
+            background: #f8faff;
+        }
+
+        .video-action-btn.primary {
+            background: linear-gradient(135deg, #4f6ef7, #6b8aff);
+            color: #fff;
+            border-color: transparent;
+            box-shadow: 0 4px 12px rgba(79, 110, 247, 0.25);
+        }
+
+        .video-action-btn.primary:hover {
+            opacity: 0.9;
+            color: #fff;
+        }
+
+        .video-action-btn.done {
+            background: #e6f7ef;
+            color: var(--success);
+            border-color: #c0e8d4;
+        }
+
+        .video-action-btn.done:hover {
+            background: #d0ebdc;
+            color: var(--success);
+        }
+
+        /* 句子列表 */
+        .video-sent-list-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .video-sent-list-head .vslh-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+
+        .video-sent-list-head .vslh-tip {
+            font-size: 12px;
+            color: var(--text-mute);
+        }
+
+        .video-sent-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            max-height: 280px;
+            overflow-y: auto;
+            padding-right: 4px;
+        }
+
+        .video-sent-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 14px;
+            border-radius: 12px;
+            background: #f8faff;
+            cursor: pointer;
+            transition: background 0.2s, border-color 0.2s, transform 0.1s;
+            border: 2px solid transparent;
+        }
+
+        .video-sent-item:hover {
+            background: #eef2ff;
+            transform: translateX(2px);
+        }
+
+        .video-sent-item.on {
+            background: #eef2ff;
+            border-color: #4f6ef7;
+        }
+
+        .video-sent-item.done {
+            background: #e6f7ef;
+        }
+
+        .video-sent-item.done.on {
+            border-color: #22a06b;
+        }
+
+        .video-sent-num {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: #e2e8f5;
+            color: var(--text-sub);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 800;
+            flex-shrink: 0;
+            transition: background 0.2s, color 0.2s;
+        }
+
+        .video-sent-item.on .video-sent-num {
+            background: #4f6ef7;
+            color: #fff;
+        }
+
+        .video-sent-item.done .video-sent-num {
+            background: #22a06b;
+            color: #fff;
+        }
+
+        .video-sent-body { flex: 1; min-width: 0; }
+
+        .video-sent-en {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-main);
+            margin-bottom: 2px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .video-sent-cn {
+            font-size: 12px;
+            color: var(--text-mute);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .video-sent-play {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            background: #fff;
+            border: 1px solid #d8dfee;
+            color: #4f6ef7;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            flex-shrink: 0;
+            transition: all 0.2s;
+        }
+
+        .video-sent-play:hover {
+            background: #4f6ef7;
+            color: #fff;
+            border-color: #4f6ef7;
         }
 
         /* 单词弹层 */
@@ -1808,6 +2176,10 @@
             .speak-mic-btn { width: 90px; height: 90px; font-size: 36px; }
             .speak-score-ring { width: 120px; height: 120px; }
             .speak-score-ring .score-value { font-size: 34px; }
+            .video-current-en { font-size: 17px; }
+            .video-ctrl-btn { padding: 6px 10px; font-size: 12px; }
+            .video-time-display { display: none; }
+            .video-overlay-subtitle { font-size: 14px; bottom: 80px; }
         }
     </style>
 </head>
@@ -1957,7 +2329,6 @@
 
                 <div id="panel-dictation" class="mode-panel" style="display: none;"></div>
 
-                <!-- 听力模式（三阶段） -->
                 <div id="panel-listening" class="mode-panel" style="display: none;">
 
                     <div class="listen-steps" id="listenSteps">
@@ -2056,9 +2427,6 @@
 
                 </div>
 
-                <!-- ============================================================
-                     ★★★ 口语测评模式 ★★★
-                     ============================================================ -->
                 <div id="panel-speaking" class="mode-panel" style="display: none;">
 
                     <div class="prompt-label">口语测评 · 跟读下面的句子</div>
@@ -2069,19 +2437,16 @@
                         <div class="speak-cn" id="speakCn">我喜欢吃苹果。</div>
                     </div>
 
-                    <!-- 权限失败提示 -->
                     <div class="speak-permission-warn" id="speakPermissionWarn" style="display: none;">
                         ⚠️ 无法访问麦克风，请检查浏览器权限设置（地址栏左侧的锁图标 → 麦克风 → 允许），然后刷新页面。
                     </div>
 
-                    <!-- 示范发音 -->
                     <div class="speak-demo-row">
                         <button class="speak-demo-btn" id="speakDemoBtn">
                             🔊 听示范发音
                         </button>
                     </div>
 
-                    <!-- 录音区（录音前显示） -->
                     <div id="speakRecordView">
                         <div class="speak-record-area">
                             <button class="speak-mic-btn" id="speakMicBtn">🎤</button>
@@ -2095,12 +2460,10 @@
                         </div>
                     </div>
 
-                    <!-- 提交评分按钮 -->
                     <div class="speak-submit-area" id="speakSubmitArea" style="display: none;">
                         <button class="btn-submit" id="speakSubmitBtn">✨ 提交评分</button>
                     </div>
 
-                    <!-- 评分结果（评分后显示） -->
                     <div class="speak-result" id="speakResult">
                         <div class="speak-total-score">
                             <div class="speak-score-ring" id="speakScoreRing" style="--p: 0deg;">
@@ -2147,11 +2510,60 @@
 
                 </div>
 
+                <!-- ============================================================
+                     ★★★ 视频观看模式 ★★★
+                     ============================================================ -->
                 <div id="panel-video" class="mode-panel" style="display: none;">
-                    <div class="prompt-label">视频观看</div>
-                    <div style="width: 100%; aspect-ratio: 16/9; background: linear-gradient(135deg, #1f2544, #3a4270); border-radius: 16px; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 48px;">
-                        🎬
+
+                    <div class="video-title-bar">
+                        <div class="vt-title">
+                            <span>🎬</span>
+                            <span id="videoTitle">逐句精听</span>
+                        </div>
+                        <div class="vt-progress" id="videoProgressText">完成 0 / 3</div>
                     </div>
+
+                    <!-- 视频播放器 -->
+                    <div class="video-player">
+                        <video
+                            id="videoEl"
+                            preload="metadata"
+                            playsinline
+                            crossorigin="anonymous"
+                            poster=""
+                        ></video>
+                        <div class="video-overlay-subtitle" id="videoOverlaySubtitle"></div>
+                        <div class="video-progress-bar" id="videoProgressBar">
+                            <div class="video-progress-fill" id="videoProgressFill"></div>
+                        </div>
+                        <div class="video-controls">
+                            <button class="video-ctrl-btn" id="videoPrevBtn">⏮ 上一句</button>
+                            <button class="video-ctrl-btn primary" id="videoPlayBtn">▶ 播放本句</button>
+                            <button class="video-ctrl-btn" id="videoNextBtn">下一句 ⏭</button>
+                            <button class="video-ctrl-btn" id="videoSpeakBtn">🔊 再听一遍</button>
+                            <div class="video-time-display" id="videoTimeDisplay">00:00 / 00:15</div>
+                        </div>
+                    </div>
+
+                    <!-- 当前句卡片 -->
+                    <div class="video-current-card" id="videoCurrentCard">
+                        <div class="video-current-label" id="videoCurrentLabel">第 1 句</div>
+                        <div class="video-current-en" id="videoCurrentEn">I like to eat apples.</div>
+                        <div class="video-current-phonetic" id="videoCurrentPhonetic">/aɪ laɪk tuː iːt ˈæpəlz/</div>
+                        <div class="video-current-cn" id="videoCurrentCn">我喜欢吃苹果。</div>
+                        <div class="video-current-actions">
+                            <button class="video-action-btn" id="videoAddWordBtn">📒 生词本（本句）</button>
+                            <button class="video-action-btn primary" id="videoDoneBtn">✓ 标记完成</button>
+                        </div>
+                    </div>
+
+                    <!-- 句子列表 -->
+                    <div class="video-sent-list-head">
+                        <div class="vslh-title">📝 全部句子</div>
+                        <div class="vslh-tip">点击任意一句，视频跳到该片段并朗读</div>
+                    </div>
+                    <div class="video-sent-list" id="videoSentList"></div>
+
                 </div>
 
             </div>
@@ -2752,6 +3164,39 @@ var WORD_DICT = {
     'wangwu':     { phonetic: '/ˈwɑːŋˈwuː/', cn: '王屋（山名）' }
 };
 
+/* ============================================================
+   ★★★ 视频数据 ★★★
+   可修改：视频地址、句子分段（start/end 单位：秒）
+   注：这里用 Google 公开示例视频（15 秒），把它分成 3 段
+   ============================================================ */
+var VIDEO_DATA = {
+    title: 'For Bigger Blazes · 逐句精听',
+    videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
+    sentences: [
+        {
+            start: 0,
+            end: 5,
+            en: 'I like to eat apples.',
+            cn: '我喜欢吃苹果。',
+            phonetic: '/aɪ laɪk tuː iːt ˈæpəlz/'
+        },
+        {
+            start: 5,
+            end: 10,
+            en: 'They are sweet and healthy.',
+            cn: '它们又甜又健康。',
+            phonetic: '/ðeɪ ɑːr swiːt ænd ˈhelθi/'
+        },
+        {
+            start: 10,
+            end: 15,
+            en: 'She goes to school by bus.',
+            cn: '她坐公交车去上学。',
+            phonetic: '/ʃiː ɡoʊz tuː skuːl baɪ bʌs/'
+        }
+    ]
+};
+
 var state = {
     currentIndex: 0, combo: 0, maxCombo: 0,
     correctCount: 0, totalAnswered: 0, score: 0,
@@ -2776,7 +3221,6 @@ function getRating(correctRate, total) {
     return { label: 'C', cls: 'rating-c' };
 }
 
-/* 分数转评级（用于口语测评） */
 function scoreToRating(score) {
     if (score >= 95) return { label: 'SSS', cls: 'rating-sss' };
     if (score >= 85) return { label: 'SS', cls: 'rating-ss' };
@@ -2823,6 +3267,13 @@ function normalize(str) {
         .replace(/\s+/g, ' ')
         .trim()
         .toLowerCase();
+}
+
+function formatSeconds(s) {
+    s = Math.max(0, Math.floor(s));
+    var m = Math.floor(s / 60);
+    var sec = s % 60;
+    return (m < 10 ? '0' + m : m) + ':' + (sec < 10 ? '0' + sec : sec);
 }
 
 /* ============================================================
@@ -3930,12 +4381,11 @@ var Listening = (function() {
 Listening.init();
 
 /* ============================================================
-   ★★★ 口语测评（录音 + 本地打分） ★★★
+   口语测评（录音 + 本地打分）
    ============================================================ */
 var Speaking = (function() {
     var currentData = null;
 
-    // 状态
     var mediaStream = null;
     var mediaRecorder = null;
     var audioChunks = [];
@@ -3944,50 +4394,34 @@ var Speaking = (function() {
     var recordStartTime = 0;
     var recordDuration = 0;
 
-    // 音量分析
     var audioCtx = null;
     var analyser = null;
     var sourceNode = null;
     var volumeRafId = null;
-    var volumeSamples = [];      // 每一帧的音量（0~1）
-    var lastFrameTs = 0;
+    var volumeSamples = [];
 
-    // 播放
     var playbackAudio = null;
-    var demoUtterance = null;
 
-    // 状态标识
     var isRecording = false;
     var hasRecorded = false;
     var isPlayingBack = false;
 
     function $(id) { return document.getElementById(id); }
 
-    /* ---------- 判断是否支持录音 ---------- */
     function isSupported() {
         return !!(navigator.mediaDevices &&
                   navigator.mediaDevices.getUserMedia &&
                   window.MediaRecorder);
     }
 
-    /* ---------- 计算标准朗读时长（估算） ----------
-       基于句子长度估算正常朗读的秒数
-       例：'I like to eat apples.' 约 19 字符 → 约 2 秒
-    */
     function estimateStandardDuration(en) {
         var len = en.length;
         return Math.max(1.0, len * 0.1);
     }
 
-    /* ============================================================
-       ★ 本地模拟评分
-       ★ 后续接真实语音识别 API 时，替换整个函数即可
-       ============================================================ */
     function calculateScore(duration, estimatedDuration, volumeSamples) {
-        // 1. 时长比率
         var ratio = duration / estimatedDuration;
 
-        // 2. 音量分析
         var avgVol = 0;
         var maxVol = 0;
         var voicedFrames = 0;
@@ -4001,33 +4435,25 @@ var Speaking = (function() {
         avgVol = totalFrames > 0 ? avgVol / totalFrames : 0;
         var voicedRatio = totalFrames > 0 ? voicedFrames / totalFrames : 0;
 
-        // 3. 准确度
-        // 基础 100：时长越偏离标准，扣分越多
         var accuracy = 100;
         if (ratio < 0.5) {
-            accuracy -= (0.5 - ratio) * 100;   // 太短，说明没读完
+            accuracy -= (0.5 - ratio) * 100;
         } else if (ratio < 0.8) {
             accuracy -= (0.8 - ratio) * 50;
         } else if (ratio > 1.5) {
-            accuracy -= (ratio - 1.5) * 40;    // 太长，说明有停顿或重复
+            accuracy -= (ratio - 1.5) * 40;
         }
         if (avgVol < 0.08) {
-            accuracy -= 15;                     // 音量太低
+            accuracy -= 15;
         }
-        // 加一点随机扰动，让它看起来更自然
         accuracy = accuracy + (Math.random() * 8 - 4);
         accuracy = Math.max(35, Math.min(98, accuracy));
 
-        // 4. 流利度
-        // 基于有声比例：语音连贯，voicedRatio 高
         var fluency = voicedRatio * 100;
-        // 加一点扰动
         fluency = fluency + (Math.random() * 10 - 5);
-        // 如果时长太短，流利度也低
         if (ratio < 0.6) fluency -= 15;
         fluency = Math.max(40, Math.min(98, fluency));
 
-        // 5. 完整度
         var completeness = 100;
         if (ratio < 0.6) {
             completeness -= (0.6 - ratio) * 100;
@@ -4038,7 +4464,6 @@ var Speaking = (function() {
         completeness = completeness + (Math.random() * 6 - 3);
         completeness = Math.max(40, Math.min(99, completeness));
 
-        // 6. 总分（加权平均：准确度 40% + 流利度 30% + 完整度 30%）
         var total = Math.round(accuracy * 0.4 + fluency * 0.3 + completeness * 0.3);
 
         return {
@@ -4049,7 +4474,6 @@ var Speaking = (function() {
         };
     }
 
-    /* ---------- 生成小提示（基于分数） ---------- */
     function generateTips(score) {
         var tips = [];
         if (score.accuracy < 75) {
@@ -4067,7 +4491,6 @@ var Speaking = (function() {
         return tips.join('；') + '。';
     }
 
-    /* ---------- 播放示范发音 ---------- */
     function playDemo() {
         if (!currentData) return;
         if (!('speechSynthesis' in window)) {
@@ -4086,11 +4509,9 @@ var Speaking = (function() {
         u.onend = function() { btn.classList.remove('playing'); };
         u.onerror = function() { btn.classList.remove('playing'); };
 
-        demoUtterance = u;
         window.speechSynthesis.speak(u);
     }
 
-    /* ---------- 创建真实音量波形 bar ---------- */
     function buildVolumeMeter() {
         var meter = $('speakVolumeMeter');
         if (!meter) return;
@@ -4101,7 +4522,6 @@ var Speaking = (function() {
         meter.innerHTML = html;
     }
 
-    /* ---------- 音量动画循环 ---------- */
     function startVolumeLoop() {
         var bars = document.querySelectorAll('#speakVolumeMeter .vol-bar');
         if (!bars.length) return;
@@ -4109,7 +4529,6 @@ var Speaking = (function() {
         var meter = $('speakVolumeMeter');
         meter.classList.add('active');
 
-        lastFrameTs = performance.now();
         volumeSamples = [];
 
         function loop() {
@@ -4119,7 +4538,6 @@ var Speaking = (function() {
             var dataArray = new Uint8Array(bufferLength);
             analyser.getByteTimeDomainData(dataArray);
 
-            // 计算 RMS 音量（0~1）
             var sum = 0;
             for (var i = 0; i < bufferLength; i++) {
                 var v = (dataArray[i] - 128) / 128;
@@ -4127,15 +4545,12 @@ var Speaking = (function() {
             }
             var rms = Math.sqrt(sum / bufferLength);
 
-            // 记录采样
             volumeSamples.push(rms);
 
-            // 渲染 waveform（40 根 bar，用 rms 驱动）
             var center = (bars.length - 1) / 2;
             bars.forEach(function(bar, i) {
                 var dist = Math.abs(i - center) / center;
                 var centerWeight = 1 - dist * 0.6;
-                // 加一点随机让它看起来像真实波形
                 var noise = Math.random() * 0.15;
                 var intensity = (rms * 6 + noise) * centerWeight;
                 intensity = Math.max(0, Math.min(1, intensity));
@@ -4160,7 +4575,6 @@ var Speaking = (function() {
         bars.forEach(function(bar) { bar.style.height = '6px'; });
     }
 
-    /* ---------- 开始录音 ---------- */
     function startRecording() {
         if (isRecording) return;
 
@@ -4176,7 +4590,6 @@ var Speaking = (function() {
                 audioChunks = [];
                 volumeSamples = [];
 
-                // 设置 MediaRecorder
                 var mimeType = '';
                 if (MediaRecorder.isTypeSupported('audio/webm;codecs=opus')) {
                     mimeType = 'audio/webm;codecs=opus';
@@ -4209,7 +4622,6 @@ var Speaking = (function() {
 
                     recordDuration = (performance.now() - recordStartTime) / 1000;
 
-                    // 显示回放按钮和提交按钮
                     $('speakPlaybackRow').style.display = 'flex';
                     $('speakSubmitArea').style.display = 'flex';
                     $('speakMicStatus').textContent = '✓ 录音完成（' + recordDuration.toFixed(1) + ' 秒）';
@@ -4218,7 +4630,6 @@ var Speaking = (function() {
                     hasRecorded = true;
                 };
 
-                // 设置 AudioContext 做音量分析
                 try {
                     audioCtx = new (window.AudioContext || window.webkitAudioContext)();
                     analyser = audioCtx.createAnalyser();
@@ -4229,7 +4640,6 @@ var Speaking = (function() {
                     console.warn('AudioContext 初始化失败', e);
                 }
 
-                // 开始录音
                 mediaRecorder.start();
                 isRecording = true;
                 recordStartTime = performance.now();
@@ -4246,7 +4656,6 @@ var Speaking = (function() {
                 $('speakSubmitArea').style.display = 'none';
                 $('speakResult').classList.remove('on');
 
-                // 启动音量波形
                 buildVolumeMeter();
                 startVolumeLoop();
             })
@@ -4257,7 +4666,6 @@ var Speaking = (function() {
             });
     }
 
-    /* ---------- 停止录音 ---------- */
     function stopRecording() {
         if (!isRecording) return;
 
@@ -4287,7 +4695,6 @@ var Speaking = (function() {
         micBtn.textContent = '🎤';
     }
 
-    /* ---------- 播放录音 ---------- */
     function playRecording() {
         if (!recordedUrl) return;
 
@@ -4316,21 +4723,17 @@ var Speaking = (function() {
         $('speakPlaybackBtn').textContent = '⏸ 播放中...';
     }
 
-    /* ---------- 显示评分结果 ---------- */
     function showScore(score) {
-        // 总分圆环
         var ring = $('speakScoreRing');
         var deg = (score.total / 100) * 360;
         ring.style.setProperty('--p', deg + 'deg');
         $('speakTotalScore').textContent = score.total;
 
-        // 评级
         var rating = scoreToRating(score.total);
         var label = $('speakRatingLabel');
         label.textContent = rating.label;
         label.className = 'speak-rating-label ' + rating.cls;
 
-        // 三维度
         setTimeout(function() {
             $('dimAccuracy').style.width = score.accuracy + '%';
             $('dimFluency').style.width = score.fluency + '%';
@@ -4341,21 +4744,17 @@ var Speaking = (function() {
         $('dimFluencyScore').textContent = score.fluency;
         $('dimCompletenessScore').textContent = score.completeness;
 
-        // 小提示
         $('speakTipsText').textContent = generateTips(score);
 
-        // 显示结果面板
         $('speakResult').classList.add('on');
     }
 
-    /* ---------- 提交评分 ---------- */
     function submitScore() {
         if (!hasRecorded || !currentData) return;
 
         var estimatedDuration = estimateStandardDuration(currentData.en);
         var score = calculateScore(recordDuration, estimatedDuration, volumeSamples);
 
-        // 写入数据（correct 定义为总分 >= 70）
         var isCorrect = score.total >= 70;
         JYStore.addRecord({
             en: currentData.en,
@@ -4374,11 +4773,9 @@ var Speaking = (function() {
         }
         updateTopbar();
 
-        // 显示评分
         showScore(score);
     }
 
-    /* ---------- 重录（回到录音前） ---------- */
     function retake() {
         if (recordedUrl) {
             URL.revokeObjectURL(recordedUrl);
@@ -4394,13 +4791,11 @@ var Speaking = (function() {
         $('speakMicStatus').textContent = '点击麦克风开始录音';
         $('speakMicStatus').classList.remove('recording');
 
-        // 重置三维度条宽度
         $('dimAccuracy').style.width = '0%';
         $('dimFluency').style.width = '0%';
         $('dimCompleteness').style.width = '0%';
     }
 
-    /* ---------- 下一句 ---------- */
     function nextSentence() {
         state.currentIndex++;
         if (state.currentIndex >= QUESTION_BANK.length) {
@@ -4410,7 +4805,6 @@ var Speaking = (function() {
         enter();
     }
 
-    /* ---------- 进入口语模式 ---------- */
     function enter() {
         currentData = QUESTION_BANK[state.currentIndex];
         if (!currentData) return;
@@ -4419,10 +4813,8 @@ var Speaking = (function() {
         $('speakPhonetic').textContent = currentData.phonetic || '';
         $('speakCn').textContent = currentData.cn;
 
-        // 重置状态
         retake();
 
-        // 停止正在播放的音频
         if ('speechSynthesis' in window) window.speechSynthesis.cancel();
         if (playbackAudio) {
             playbackAudio.pause();
@@ -4430,13 +4822,10 @@ var Speaking = (function() {
         }
     }
 
-    /* ---------- 退出（切换模式时调用） ---------- */
     function stop() {
-        // 停止录音
         if (isRecording) {
             stopRecording();
         }
-        // 停止播放
         if ('speechSynthesis' in window) window.speechSynthesis.cancel();
         if (playbackAudio) {
             playbackAudio.pause();
@@ -4449,12 +4838,9 @@ var Speaking = (function() {
         }
     }
 
-    /* ---------- 事件绑定 ---------- */
     function init() {
-        // 示范发音
         $('speakDemoBtn').addEventListener('click', playDemo);
 
-        // 麦克风按钮：点击切换录音状态
         $('speakMicBtn').addEventListener('click', function() {
             if (isRecording) {
                 stopRecording();
@@ -4463,16 +4849,9 @@ var Speaking = (function() {
             }
         });
 
-        // 播放录音
         $('speakPlaybackBtn').addEventListener('click', playRecording);
-
-        // 重录
         $('speakRetakeBtn').addEventListener('click', retake);
-
-        // 提交评分
         $('speakSubmitBtn').addEventListener('click', submitScore);
-
-        // 结果面板：再练一次 / 下一句
         $('speakRetryBtn').addEventListener('click', retake);
         $('speakNextBtn').addEventListener('click', nextSentence);
     }
@@ -4485,6 +4864,457 @@ var Speaking = (function() {
 })();
 
 Speaking.init();
+
+/* ============================================================
+   ★★★ 视频观看（逐句精听） ★★★
+   ============================================================ */
+var VideoMode = (function() {
+    var currentData = null;
+    var videoEl = null;
+    var currentIndex = 0;
+    var completedSet = {};        // { 0: true, 1: true } 已完成句子
+    var isPlayingSegment = false;
+    var segmentRafId = null;
+    var playToken = 0;
+    var isEntered = false;
+
+    var PROGRESS_KEY = 'juyou_video_progress';
+
+    function $(id) { return document.getElementById(id); }
+
+    /* ---------- 进度保存 ---------- */
+    function loadProgress() {
+        try {
+            var raw = localStorage.getItem(PROGRESS_KEY);
+            if (raw) {
+                completedSet = JSON.parse(raw) || {};
+            } else {
+                completedSet = {};
+            }
+        } catch (e) {
+            completedSet = {};
+        }
+    }
+
+    function saveProgress() {
+        try {
+            localStorage.setItem(PROGRESS_KEY, JSON.stringify(completedSet));
+        } catch (e) {}
+    }
+
+    /* ---------- 更新 UI ---------- */
+    function updateProgressText() {
+        var total = currentData.sentences.length;
+        var done = 0;
+        for (var k in completedSet) {
+            if (completedSet[k]) done++;
+        }
+        var el = $('videoProgressText');
+        el.textContent = '完成 ' + done + ' / ' + total;
+        if (done >= total) {
+            el.classList.add('all-done');
+            el.textContent = '✓ 全部完成';
+        } else {
+            el.classList.remove('all-done');
+        }
+    }
+
+    function updateCurrentCard() {
+        var s = currentData.sentences[currentIndex];
+        if (!s) return;
+
+        $('videoCurrentLabel').textContent = '第 ' + (currentIndex + 1) + ' 句';
+        $('videoCurrentEn').textContent = s.en;
+        $('videoCurrentPhonetic').textContent = s.phonetic || '';
+        $('videoCurrentCn').textContent = s.cn;
+
+        var card = $('videoCurrentCard');
+        var doneBtn = $('videoDoneBtn');
+        if (completedSet[currentIndex]) {
+            card.classList.add('done');
+            doneBtn.classList.add('done');
+            doneBtn.textContent = '✓ 已完成';
+        } else {
+            card.classList.remove('done');
+            doneBtn.classList.remove('done');
+            doneBtn.textContent = '✓ 标记完成';
+        }
+
+        // 视频叠加字幕
+        var overlay = $('videoOverlaySubtitle');
+        overlay.textContent = s.en;
+        overlay.classList.add('on');
+    }
+
+    function updateSentList() {
+        var list = $('videoSentList');
+        var html = '';
+        currentData.sentences.forEach(function(s, i) {
+            var cls = 'video-sent-item';
+            if (i === currentIndex) cls += ' on';
+            if (completedSet[i]) cls += ' done';
+
+            html +=
+                '<div class="' + cls + '" data-index="' + i + '">' +
+                    '<div class="video-sent-num">' + (i + 1) + '</div>' +
+                    '<div class="video-sent-body">' +
+                        '<div class="video-sent-en">' + s.en + '</div>' +
+                        '<div class="video-sent-cn">' + s.cn + '</div>' +
+                    '</div>' +
+                    '<button class="video-sent-play" data-play="' + i + '">▶</button>' +
+                '</div>';
+        });
+        list.innerHTML = html;
+    }
+
+    function updateTimeDisplay() {
+        if (!videoEl) return;
+        var cur = videoEl.currentTime || 0;
+        var dur = videoEl.duration || 15;
+        $('videoTimeDisplay').textContent = formatSeconds(cur) + ' / ' + formatSeconds(dur);
+    }
+
+    function updateProgressBar() {
+        if (!videoEl) return;
+        var dur = videoEl.duration || 15;
+        var cur = videoEl.currentTime || 0;
+        var pct = Math.min(100, (cur / dur) * 100);
+        $('videoProgressFill').style.width = pct + '%';
+    }
+
+    /* ---------- 播放指定句子的片段 ---------- */
+    function goToSentence(index, autoPlay) {
+        if (!currentData) return;
+        if (index < 0 || index >= currentData.sentences.length) return;
+
+        currentIndex = index;
+        var s = currentData.sentences[index];
+
+        // 停止正在播放的
+        stopSegment();
+
+        if (videoEl) {
+            try { videoEl.currentTime = s.start; } catch (e) {}
+        }
+
+        updateCurrentCard();
+        updateSentList();
+
+        if (autoPlay) {
+            playSegment();
+        }
+    }
+
+    function playSegment() {
+        if (!videoEl || !currentData) return;
+        var s = currentData.sentences[currentIndex];
+        if (!s) return;
+
+        stopSegment();
+        playToken++;
+        var myToken = playToken;
+
+        // 视频从头
+        try { videoEl.currentTime = s.start; } catch (e) {}
+
+        // 朗读句子（Web Speech API）
+        if ('speechSynthesis' in window) {
+            window.speechSynthesis.cancel();
+            setTimeout(function() {
+                if (myToken !== playToken) return;
+                var u = new SpeechSynthesisUtterance(s.en);
+                u.lang = 'en-US';
+                u.rate = 0.9;
+                window.speechSynthesis.speak(u);
+            }, 100);
+        }
+
+        // 视频播放
+        var playPromise = videoEl.play();
+        if (playPromise && playPromise.catch) {
+            playPromise.catch(function() {
+                // 自动播放被拒绝，忽略
+            });
+        }
+        isPlayingSegment = true;
+
+        // 循环检查是否到 end
+        function check() {
+            if (myToken !== playToken) return;
+            if (!videoEl) return;
+            if (videoEl.currentTime >= s.end || videoEl.ended) {
+                videoEl.pause();
+                isPlayingSegment = false;
+                return;
+            }
+            if (!videoEl.paused) {
+                segmentRafId = requestAnimationFrame(check);
+            }
+        }
+        segmentRafId = requestAnimationFrame(check);
+    }
+
+    function stopSegment() {
+        playToken++;
+        if (segmentRafId) {
+            cancelAnimationFrame(segmentRafId);
+            segmentRafId = null;
+        }
+        if ('speechSynthesis' in window) {
+            window.speechSynthesis.cancel();
+        }
+        if (videoEl) {
+            videoEl.pause();
+        }
+        isPlayingSegment = false;
+    }
+
+    /* ---------- 标记完成 ---------- */
+    function markCompleted(index) {
+        if (completedSet[index]) return;
+        completedSet[index] = true;
+        saveProgress();
+
+        // 写入 JYStore 记录
+        var s = currentData.sentences[index];
+        if (s) {
+            JYStore.addRecord({
+                en: s.en,
+                cn: s.cn,
+                mode: 'video',
+                correct: true
+            });
+        }
+
+        // 更新 UI
+        updateProgressText();
+        updateCurrentCard();
+        updateSentList();
+
+        // 显示反馈
+        showFeedback(true, '完成一句！', '继续下一句吧');
+
+        // 全部完成提示
+        var total = currentData.sentences.length;
+        var done = 0;
+        for (var k in completedSet) {
+            if (completedSet[k]) done++;
+        }
+        if (done >= total) {
+            setTimeout(function() {
+                showFeedback(true, '🎉 全部完成！', '本视频共 ' + total + ' 句，已全部掌握');
+            }, 1600);
+        }
+    }
+
+    /* ---------- 上一句 / 下一句 ---------- */
+    function prevSentence() {
+        if (currentIndex > 0) {
+            goToSentence(currentIndex - 1, true);
+        }
+    }
+
+    function nextSentence() {
+        if (currentIndex < currentData.sentences.length - 1) {
+            goToSentence(currentIndex + 1, true);
+        }
+    }
+
+    /* ---------- 添加本句所有生词到生词本 ---------- */
+    function addCurrentWordsToBook() {
+        var s = currentData.sentences[currentIndex];
+        if (!s) return;
+
+        // 拆词
+        var words = s.en.match(/[A-Za-z][A-Za-z.''-]*/g) || [];
+        var added = 0;
+        words.forEach(function(w) {
+            var lower = w.toLowerCase();
+            var dict = WORD_DICT[lower];
+            if (dict) {
+                if (!JYStore.isInWordBook(w)) {
+                    JYStore.addToWordBook(w, dict.cn);
+                    added++;
+                }
+            }
+        });
+
+        if (added > 0) {
+            showFeedback(true, '已加入生词本', '本句新增 ' + added + ' 个生词');
+        } else {
+            showFeedback(true, '本句生词已在生词本', '没有新增');
+        }
+    }
+
+    /* ---------- 视频事件绑定 ---------- */
+    function bindVideoEvents() {
+        if (!videoEl) return;
+
+        // 时间更新
+        videoEl.addEventListener('timeupdate', function() {
+            updateTimeDisplay();
+            updateProgressBar();
+
+            // 如果不在"播放片段"模式，但用户在手动拖动进度，就检测当前句
+            if (!isPlayingSegment) {
+                var t = videoEl.currentTime;
+                var sents = currentData.sentences;
+                for (var i = 0; i < sents.length; i++) {
+                    if (t >= sents[i].start && t < sents[i].end) {
+                        if (currentIndex !== i) {
+                            currentIndex = i;
+                            updateCurrentCard();
+                            updateSentList();
+                        }
+                        break;
+                    }
+                }
+            }
+        });
+
+        // 加载元数据后更新时长
+        videoEl.addEventListener('loadedmetadata', function() {
+            updateTimeDisplay();
+            updateProgressBar();
+        });
+
+        // 播放结束
+        videoEl.addEventListener('ended', function() {
+            isPlayingSegment = false;
+        });
+    }
+
+    /* ---------- 进度条点击跳转 ---------- */
+    function initProgressBar() {
+        var bar = $('videoProgressBar');
+        if (!bar) return;
+        bar.addEventListener('click', function(e) {
+            var rect = this.getBoundingClientRect();
+            var pct = (e.clientX - rect.left) / rect.width;
+            var dur = videoEl.duration || 15;
+            var target = pct * dur;
+            try { videoEl.currentTime = target; } catch (err) {}
+        });
+    }
+
+    /* ---------- 事件绑定 ---------- */
+    function init() {
+        videoEl = $('videoEl');
+
+        // 设置视频源
+        if (videoEl) {
+            videoEl.src = VIDEO_DATA.videoUrl;
+        }
+
+        // 按钮
+        $('videoPlayBtn').addEventListener('click', function() {
+            if (isPlayingSegment) {
+                stopSegment();
+            } else {
+                playSegment();
+            }
+        });
+
+        $('videoPrevBtn').addEventListener('click', prevSentence);
+        $('videoNextBtn').addEventListener('click', nextSentence);
+        $('videoSpeakBtn').addEventListener('click', function() {
+            // 只朗读不播视频
+            var s = currentData.sentences[currentIndex];
+            if (!s) return;
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+                var u = new SpeechSynthesisUtterance(s.en);
+                u.lang = 'en-US';
+                u.rate = 0.9;
+                window.speechSynthesis.speak(u);
+            }
+        });
+
+        $('videoDoneBtn').addEventListener('click', function() {
+            if (completedSet[currentIndex]) {
+                // 取消完成
+                delete completedSet[currentIndex];
+                saveProgress();
+                updateProgressText();
+                updateCurrentCard();
+                updateSentList();
+            } else {
+                markCompleted(currentIndex);
+            }
+        });
+
+        $('videoAddWordBtn').addEventListener('click', addCurrentWordsToBook);
+
+        // 句子列表点击
+        $('videoSentList').addEventListener('click', function(e) {
+            // 优先处理播放按钮
+            var playBtn = e.target.closest('.video-sent-play');
+            if (playBtn) {
+                e.stopPropagation();
+                var pIdx = parseInt(playBtn.getAttribute('data-play'));
+                if (!isNaN(pIdx)) {
+                    goToSentence(pIdx, true);
+                }
+                return;
+            }
+
+            // 点击整行
+            var item = e.target.closest('.video-sent-item');
+            if (!item) return;
+            var idx = parseInt(item.getAttribute('data-index'));
+            if (!isNaN(idx)) {
+                goToSentence(idx, true);
+            }
+        });
+
+        // 视频事件
+        bindVideoEvents();
+        initProgressBar();
+    }
+
+    /* ---------- 进入视频模式 ---------- */
+    function enter() {
+        if (!currentData || currentData !== VIDEO_DATA) {
+            currentData = VIDEO_DATA;
+        }
+        loadProgress();
+        isEntered = true;
+
+        // 设置标题
+        $('videoTitle').textContent = VIDEO_DATA.title;
+
+        // 视频源（首次设置）
+        if (videoEl && !videoEl.src) {
+            videoEl.src = VIDEO_DATA.videoUrl;
+        }
+
+        // 重置到第一句
+        currentIndex = 0;
+        updateCurrentCard();
+        updateSentList();
+        updateProgressText();
+        updateTimeDisplay();
+        updateProgressBar();
+
+        if (videoEl) {
+            try { videoEl.currentTime = currentData.sentences[0].start; } catch (e) {}
+        }
+    }
+
+    /* ---------- 退出 ---------- */
+    function stop() {
+        stopSegment();
+        isEntered = false;
+    }
+
+    return {
+        init: init,
+        enter: enter,
+        stop: stop
+    };
+})();
+
+VideoMode.init();
 
 /* ============================================================
    模式切换
@@ -4510,6 +5340,7 @@ Speaking.init();
 
             Listening.stop();
             Speaking.stop();
+            VideoMode.stop();
             if ('speechSynthesis' in window) window.speechSynthesis.cancel();
 
             ['read', 'translate', 'listening', 'speaking', 'video'].forEach(function(k) {
@@ -4524,9 +5355,12 @@ Speaking.init();
             } else if (mode === 'speaking') {
                 panels.speaking.style.display = 'block';
                 Speaking.enter();
+            } else if (mode === 'video') {
+                panels.video.style.display = 'block';
+                VideoMode.enter();
             } else {
                 Object.keys(panels).forEach(function(key) {
-                    if (panels[key] && key !== 'dictation' && key !== 'listening' && key !== 'speaking') {
+                    if (panels[key] && key !== 'dictation' && key !== 'listening' && key !== 'speaking' && key !== 'video') {
                         panels[key].style.display = (key === mode) ? 'block' : 'none';
                     }
                 });
