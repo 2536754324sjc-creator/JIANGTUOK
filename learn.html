@@ -442,9 +442,7 @@
             color: var(--text-sub);
         }
 
-        /* ============================================================
-           ★★★ 阅读模式：可点击的单词 + 弹层 ★★★
-           ============================================================ */
+        /* 阅读模式 */
         .read-sentence {
             font-size: 26px;
             line-height: 2.2;
@@ -470,7 +468,6 @@
 
         .read-word:active { transform: scale(0.96); }
 
-        /* 已加入生词本的词：黄色高亮 */
         .read-word.starred {
             background: #fff8ec;
             color: #cc7000;
@@ -608,18 +605,17 @@
             color: #fff;
         }
 
+        /* ★ 已加入生词本状态：可再次点击移除（不再是禁用） */
         .word-popup .wp-btn.added {
             background: #e6f7ef;
             color: var(--success);
-            cursor: default;
         }
 
         .word-popup .wp-btn.added:hover {
-            background: #e6f7ef;
+            background: #d0ebdc;
             color: var(--success);
         }
 
-        /* 弹层遮罩 */
         .popup-mask {
             position: fixed;
             inset: 0;
@@ -1296,7 +1292,6 @@
                     </div>
                 </div>
 
-                <!-- ★ 阅读模式：单词可点击 -->
                 <div id="panel-read" class="mode-panel" style="display: none;">
                     <div class="prompt-label">阅读模式</div>
                     <div class="read-hint">
@@ -1344,10 +1339,8 @@
     <div class="fb-sub" id="fbSub">连击 8 · 得分 +120</div>
 </div>
 
-<!-- ★ 单词弹层遮罩 -->
 <div class="popup-mask" id="popupMask"></div>
 
-<!-- ★ 单词弹层 -->
 <div class="word-popup" id="wordPopup">
     <button class="wp-close" id="wpClose">✕</button>
     <div class="wp-word" id="wpWord">apple</div>
@@ -1556,7 +1549,7 @@ window.JYTime = (function() {
 })();
 
 /* ============================================================
-   本地学习数据存储 JYStore（含 FSRS + 生词本）
+   本地学习数据存储 JYStore（含 FSRS + 生词本开关）
    ============================================================ */
 window.JYStore = (function() {
     var KEY = 'juyou_study';
@@ -1730,7 +1723,7 @@ window.JYStore = (function() {
         return record;
     }
 
-    /* ★ 新增：加入生词本 */
+    /* 加入生词本 */
     function addToWordBook(word, cn) {
         var data = load();
         var lower = word.toLowerCase();
@@ -1752,6 +1745,27 @@ window.JYStore = (function() {
             });
         }
         save(data);
+    }
+
+    /* ★ 新增：从生词本移除 */
+    function removeFromWordBook(word) {
+        var data = load();
+        var lower = word.toLowerCase();
+        data.wordBook = data.wordBook.filter(function(item) {
+            return item.word.toLowerCase() !== lower;
+        });
+        save(data);
+    }
+
+    /* ★ 新增：切换生词本状态，返回 true 表示当前已在生词本 */
+    function toggleWordBook(word, cn) {
+        if (isInWordBook(word)) {
+            removeFromWordBook(word);
+            return false;
+        } else {
+            addToWordBook(word, cn);
+            return true;
+        }
     }
 
     function isInWordBook(word) {
@@ -1801,6 +1815,8 @@ window.JYStore = (function() {
         save: save,
         addRecord: addRecord,
         addToWordBook: addToWordBook,
+        removeFromWordBook: removeFromWordBook,
+        toggleWordBook: toggleWordBook,
         isInWordBook: isInWordBook,
         toggleStar: toggleStar,
         isStarred: isStarred,
@@ -1853,8 +1869,8 @@ var DICTATION_DATA = [
 ];
 
 /* ============================================================
-   ★★★ 阅读模式内置小词典 ★★★
-   可修改：往这里加词，格式 { '小写单词': { phonetic, cn } }
+   阅读模式内置小词典
+   可修改：往这里加词
    ============================================================ */
 var WORD_DICT = {
     'i':          { phonetic: '/aɪ/',        cn: '我' },
@@ -1894,7 +1910,6 @@ var dictationState = {
     recorded: {}
 };
 
-/* ★ 当前打开的单词（供弹层按钮使用） */
 var currentWord = null;
 
 function getRating(correctRate, total) {
@@ -1948,13 +1963,12 @@ function normalize(str) {
 }
 
 /* ============================================================
-   ★ 阅读模式：把句子渲染为可点击的单词
+   阅读模式：渲染可点击单词
    ============================================================ */
 function renderReadMode(en) {
     var el = document.getElementById('readContent');
     if (!el) return;
 
-    // 把连续字母数字（包括 . 和 '）作为一个"单词"
     var html = en.replace(/([A-Za-z][A-Za-z.''-]*)/g, function(match) {
         var starred = JYStore.isInWordBook(match);
         var cls = 'read-word' + (starred ? ' starred' : '');
@@ -1964,7 +1978,6 @@ function renderReadMode(en) {
     el.innerHTML = html;
 }
 
-/* ★ 打开单词弹层 */
 function openWordPopup(word) {
     var lower = word.toLowerCase();
     var dict = WORD_DICT[lower] || { phonetic: '', cn: '（词典中暂无此词）' };
@@ -1975,31 +1988,28 @@ function openWordPopup(word) {
 
     currentWord = { word: word, cn: dict.cn || '' };
 
+    // ★ 按钮状态：根据是否已在生词本决定样式和文字
     var addBtn = document.getElementById('wpAdd');
     if (JYStore.isInWordBook(word)) {
         addBtn.classList.add('added');
         addBtn.classList.remove('primary');
-        addBtn.textContent = '✓ 已在生词本';
-        addBtn.disabled = true;
+        addBtn.textContent = '✓ 已在生词本（点击移除）';
     } else {
         addBtn.classList.remove('added');
         addBtn.classList.add('primary');
         addBtn.textContent = '⭐ 加入生词本';
-        addBtn.disabled = false;
     }
 
     document.getElementById('popupMask').classList.add('on');
     document.getElementById('wordPopup').classList.add('on');
 }
 
-/* ★ 关闭单词弹层 */
 function closeWordPopup() {
     document.getElementById('popupMask').classList.remove('on');
     document.getElementById('wordPopup').classList.remove('on');
     currentWord = null;
 }
 
-/* ★ 阅读模式点击事件委托 */
 document.getElementById('readContent').addEventListener('click', function(e) {
     var target = e.target.closest('.read-word');
     if (!target) return;
@@ -2008,11 +2018,9 @@ document.getElementById('readContent').addEventListener('click', function(e) {
     if (word) openWordPopup(word);
 });
 
-/* ★ 弹层关闭按钮 */
 document.getElementById('wpClose').addEventListener('click', closeWordPopup);
 document.getElementById('popupMask').addEventListener('click', closeWordPopup);
 
-/* ★ 弹层发音按钮 */
 document.getElementById('wpSpeak').addEventListener('click', function() {
     if (!currentWord) return;
     if (!('speechSynthesis' in window)) {
@@ -2026,21 +2034,32 @@ document.getElementById('wpSpeak').addEventListener('click', function() {
     window.speechSynthesis.speak(u);
 });
 
-/* ★ 弹层加入生词本按钮 */
+/* ★★★ 弹层按钮：一键切换加入/移除 ★★★ */
 document.getElementById('wpAdd').addEventListener('click', function() {
     if (!currentWord) return;
-    JYStore.addToWordBook(currentWord.word, currentWord.cn);
 
-    this.classList.remove('primary');
-    this.classList.add('added');
-    this.textContent = '✓ 已在生词本';
-    this.disabled = true;
+    var isNowIn = JYStore.toggleWordBook(currentWord.word, currentWord.cn);
 
-    // 阅读句子里的这个词也高亮
+    // 更新按钮外观
+    if (isNowIn) {
+        this.classList.remove('primary');
+        this.classList.add('added');
+        this.textContent = '✓ 已在生词本（点击移除）';
+    } else {
+        this.classList.remove('added');
+        this.classList.add('primary');
+        this.textContent = '⭐ 加入生词本';
+    }
+
+    // 同步句子里的高亮
     var spans = document.querySelectorAll('.read-word');
     spans.forEach(function(span) {
         if (span.getAttribute('data-word') === currentWord.word) {
-            span.classList.add('starred');
+            if (isNowIn) {
+                span.classList.add('starred');
+            } else {
+                span.classList.remove('starred');
+            }
         }
     });
 });
@@ -2075,8 +2094,6 @@ function loadQuestion() {
     });
 
     updateTopbar();
-
-    // ★ 用新的渲染函数
     renderReadMode(q.en);
 
     document.getElementById('listenSubtitle').textContent = q.en;
@@ -2683,7 +2700,6 @@ var Dictation = (function() {
 
                 var q = QUESTION_BANK[state.currentIndex];
                 if (q) {
-                    // ★ 阅读模式用新渲染
                     if (mode === 'read') {
                         renderReadMode(q.en);
                     }
