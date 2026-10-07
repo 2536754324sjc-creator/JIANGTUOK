@@ -1,0 +1,1841 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>句游英语 - 个人中心</title>
+
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+            background: #f5f7fb;
+            color: #333;
+            min-height: 100vh;
+        }
+
+        :root {
+            --brand: #4f6ef7;
+            --brand-light: #7b8fff;
+            --text-main: #1a1a2e;
+            --text-sub: #666;
+            --text-mute: #999;
+            --border: #eef1f8;
+            --card-bg: #ffffff;
+            --success: #22a06b;
+            --danger: #ff5b5b;
+            --warn: #ff9f43;
+        }
+
+        a { text-decoration: none; color: inherit; }
+
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-thumb { background: #d8dfee; border-radius: 99px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+
+        .app-layout { display: flex; min-height: 100vh; }
+
+        /* ============================================================
+           左侧导航栏
+           ============================================================ */
+        .sidebar {
+            width: 220px;
+            flex-shrink: 0;
+            background: #ffffff;
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            padding: 24px 16px;
+            position: sticky;
+            top: 0;
+            height: 100vh;
+            overflow-y: auto;
+        }
+
+        .sidebar .logo {
+            font-size: 20px;
+            font-weight: 800;
+            color: var(--brand);
+            padding: 0 12px;
+            margin-bottom: 28px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .nav-group { margin-bottom: 8px; }
+
+        .nav-group-title {
+            font-size: 11px;
+            color: #bbb;
+            padding: 8px 12px;
+            letter-spacing: 1px;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 11px 12px;
+            border-radius: 10px;
+            font-size: 14px;
+            color: var(--text-sub);
+            cursor: pointer;
+            transition: background 0.2s, color 0.2s;
+            margin-bottom: 2px;
+        }
+
+        .nav-item:hover { background: #f4f6fc; color: var(--brand); }
+        .nav-item.on { background: #eef2ff; color: var(--brand); font-weight: 600; }
+
+        .nav-item .nav-icon {
+            font-size: 17px;
+            width: 20px;
+            text-align: center;
+            flex-shrink: 0;
+        }
+
+        .sidebar-bottom { margin-top: auto; padding-top: 16px; }
+
+        .vip-card {
+            background: linear-gradient(135deg, #4f6ef7, #7b8fff);
+            border-radius: 14px;
+            padding: 16px;
+            color: #fff;
+            margin-bottom: 10px;
+            cursor: pointer;
+        }
+
+        .vip-card .vip-title { font-size: 14px; font-weight: 700; margin-bottom: 4px; }
+        .vip-card .vip-desc { font-size: 11px; opacity: 0.85; line-height: 1.5; }
+
+        .main-area {
+            flex: 1;
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .topbar {
+            background: #ffffff;
+            border-bottom: 1px solid var(--border);
+            padding: 14px 28px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+
+        .search-box {
+            flex: 1;
+            max-width: 420px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: #f4f6fc;
+            border-radius: 10px;
+            padding: 0 14px;
+            height: 40px;
+            transition: box-shadow 0.2s;
+        }
+
+        .search-box:focus-within { box-shadow: 0 0 0 3px rgba(79, 110, 247, 0.12); }
+
+        .search-box input {
+            flex: 1;
+            border: none;
+            outline: none;
+            background: transparent;
+            font-size: 14px;
+            color: var(--text-main);
+        }
+
+        .search-box input::placeholder { color: #b3bdd1; }
+
+        .topbar-right {
+            margin-left: auto;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .topbar-icon-btn {
+            width: 38px;
+            height: 38px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 17px;
+            cursor: pointer;
+            color: var(--text-sub);
+            transition: background 0.2s;
+            position: relative;
+        }
+
+        .topbar-icon-btn:hover { background: #f4f6fc; }
+
+        .badge-dot {
+            position: absolute;
+            top: 7px;
+            right: 7px;
+            width: 7px;
+            height: 7px;
+            background: #ff5b5b;
+            border-radius: 50%;
+            border: 1.5px solid #fff;
+        }
+
+        .user-avatar {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #4f6ef7, #7b8fff);
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+
+        .content-scroll { padding: 24px 28px 40px; }
+
+        /* ============================================================
+           个人资料卡片
+           ============================================================ */
+        .profile-hero {
+            background: linear-gradient(135deg, #4f6ef7 0%, #7b8fff 50%, #a8b8ff 100%);
+            border-radius: 20px;
+            padding: 28px 32px;
+            color: #fff;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 24px;
+            flex-wrap: wrap;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .profile-hero::before {
+            content: '';
+            position: absolute;
+            top: -80px;
+            right: -60px;
+            width: 220px;
+            height: 220px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .profile-hero::after {
+            content: '';
+            position: absolute;
+            bottom: -100px;
+            right: 100px;
+            width: 160px;
+            height: 160px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.06);
+        }
+
+        .profile-avatar-big {
+            width: 88px;
+            height: 88px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.25);
+            border: 3px solid rgba(255, 255, 255, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 36px;
+            font-weight: 700;
+            flex-shrink: 0;
+            position: relative;
+            z-index: 1;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .profile-avatar-big:hover { transform: scale(1.05); }
+
+        .avatar-edit-icon {
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            background: #fff;
+            color: var(--brand);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+        }
+
+        .profile-hero-info {
+            flex: 1;
+            min-width: 220px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .profile-nickname {
+            font-size: 24px;
+            font-weight: 800;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .vip-badge {
+            font-size: 11px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #ffd93d, #ffb800);
+            color: #7a4a00;
+            border-radius: 20px;
+            padding: 3px 10px;
+            letter-spacing: 0.5px;
+        }
+
+        .profile-id {
+            font-size: 13px;
+            opacity: 0.8;
+            margin-bottom: 10px;
+        }
+
+        .profile-follow-stats {
+            display: flex;
+            gap: 24px;
+            flex-wrap: wrap;
+        }
+
+        .profile-follow-stats .stat-item {
+            font-size: 13px;
+            opacity: 0.9;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+
+        .profile-follow-stats .stat-item:hover { opacity: 1; }
+
+        .profile-follow-stats .stat-item b {
+            font-size: 16px;
+            font-weight: 800;
+            margin-right: 3px;
+        }
+
+        .profile-hero-actions {
+            display: flex;
+            gap: 10px;
+            position: relative;
+            z-index: 1;
+            flex-wrap: wrap;
+        }
+
+        .btn-hero {
+            padding: 11px 22px;
+            border-radius: 12px;
+            border: none;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.15s, background 0.2s;
+            white-space: nowrap;
+        }
+
+        .btn-hero.white {
+            background: #fff;
+            color: var(--brand);
+        }
+
+        .btn-hero.outline {
+            background: rgba(255, 255, 255, 0.16);
+            color: #fff;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .btn-hero:hover { transform: translateY(-2px); }
+        .btn-hero:active { transform: scale(0.98); }
+
+        .main-tabs {
+            display: flex;
+            gap: 6px;
+            background: #fff;
+            border-radius: 14px;
+            padding: 6px;
+            margin-bottom: 20px;
+            width: fit-content;
+            box-shadow: 0 2px 12px rgba(20, 40, 90, 0.04);
+            max-width: 100%;
+            overflow-x: auto;
+        }
+
+        .main-tab {
+            padding: 10px 22px;
+            border-radius: 10px;
+            font-size: 14px;
+            color: var(--text-sub);
+            cursor: pointer;
+            transition: background 0.2s, color 0.2s;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .main-tab:hover { background: #f4f6fc; }
+
+        .main-tab.on {
+            background: linear-gradient(135deg, #4f6ef7, #6b8aff);
+            color: #fff;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 22px;
+            box-shadow: 0 2px 12px rgba(20, 40, 90, 0.04);
+            margin-bottom: 20px;
+        }
+
+        .card-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 18px;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .card-head .card-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .card-head .card-more {
+            font-size: 13px;
+            color: var(--text-mute);
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .card-head .card-more:hover { color: var(--brand); }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #4f6ef7, #6b8aff);
+            color: #fff;
+            border: none;
+            border-radius: 10px;
+            padding: 10px 20px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: opacity 0.2s, transform 0.1s;
+            white-space: nowrap;
+            box-shadow: 0 4px 12px rgba(79, 110, 247, 0.25);
+        }
+
+        .btn-primary:hover { opacity: 0.9; }
+        .btn-primary:active { transform: scale(0.98); }
+
+        .btn-ghost {
+            background: #fff;
+            color: var(--text-sub);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 10px 20px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s, color 0.2s, border-color 0.2s;
+            white-space: nowrap;
+        }
+
+        .btn-ghost:hover {
+            background: #f4f6fc;
+            color: var(--brand);
+            border-color: #c9d4f5;
+        }
+
+        .btn-danger {
+            background: #fff;
+            color: var(--danger);
+            border: 1px solid #ffc9c9;
+            border-radius: 10px;
+            padding: 10px 20px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+            white-space: nowrap;
+        }
+
+        .btn-danger:hover { background: #ffeaea; }
+
+        /* 数据概览 */
+        .overview-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 14px;
+            margin-bottom: 20px;
+        }
+
+        .overview-card {
+            background: #f8faff;
+            border-radius: 14px;
+            padding: 16px;
+            text-align: center;
+            transition: transform 0.2s, background 0.2s;
+            cursor: pointer;
+        }
+
+        .overview-card:hover {
+            transform: translateY(-3px);
+            background: #eef2ff;
+        }
+
+        .overview-card .oc-icon { font-size: 22px; margin-bottom: 6px; }
+
+        .overview-card .oc-value {
+            font-size: 24px;
+            font-weight: 800;
+            color: var(--text-main);
+            line-height: 1.1;
+            margin-bottom: 4px;
+        }
+
+        .overview-card .oc-value .unit {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-mute);
+            margin-left: 2px;
+        }
+
+        .overview-card .oc-label { font-size: 12px; color: var(--text-mute); }
+
+        .two-col {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            align-items: flex-start;
+        }
+
+        .mini-feed-item {
+            display: flex;
+            gap: 12px;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .mini-feed-item:last-child { border-bottom: none; padding-bottom: 0; }
+
+        .mini-feed-avatar {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #dfe7ff, #c9d4f5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--brand);
+            flex-shrink: 0;
+        }
+
+        .mini-feed-body { flex: 1; min-width: 0; }
+
+        .mini-feed-text {
+            font-size: 13px;
+            color: var(--text-main);
+            line-height: 1.6;
+            margin-bottom: 4px;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .mini-feed-time { font-size: 11px; color: var(--text-mute); }
+
+        .history-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 11px 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .history-item:last-child { border-bottom: none; padding-bottom: 0; }
+
+        .history-icon {
+            width: 34px;
+            height: 34px;
+            border-radius: 9px;
+            background: #f8faff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 15px;
+            flex-shrink: 0;
+        }
+
+        .history-info { flex: 1; min-width: 0; }
+
+        .history-name {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-main);
+            margin-bottom: 2px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .history-meta { font-size: 11px; color: var(--text-mute); }
+
+        .history-score {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--brand);
+            flex-shrink: 0;
+        }
+
+        /* 我的动态 */
+        .filter-row {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+        }
+
+        .filter-chip {
+            padding: 6px 14px;
+            border-radius: 8px;
+            font-size: 13px;
+            color: var(--text-sub);
+            cursor: pointer;
+            transition: background 0.2s, color 0.2s;
+            background: #f4f6fc;
+            white-space: nowrap;
+        }
+
+        .filter-chip:hover { background: #e9edfa; color: var(--brand); }
+        .filter-chip.on { background: var(--brand); color: #fff; }
+
+        .my-feed-item {
+            display: flex;
+            gap: 12px;
+            padding: 16px;
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            margin-bottom: 12px;
+            transition: border-color 0.2s, background 0.2s;
+        }
+
+        .my-feed-item:hover {
+            border-color: #c9d4f5;
+            background: #fafbff;
+        }
+
+        .my-feed-avatar {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #4f6ef7, #7b8fff);
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 15px;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+
+        .my-feed-body { flex: 1; min-width: 0; }
+
+        .my-feed-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 6px;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .my-feed-time { font-size: 12px; color: var(--text-mute); }
+
+        .visibility-tag {
+            font-size: 11px;
+            padding: 2px 8px;
+            border-radius: 5px;
+            font-weight: 600;
+        }
+
+        .visibility-tag.public { color: var(--success); background: #e6f7ef; }
+        .visibility-tag.followers { color: var(--brand); background: #eef2ff; }
+        .visibility-tag.mutual { color: var(--warn); background: #fff4e6; }
+        .visibility-tag.private { color: var(--text-mute); background: #f0f2f8; }
+
+        .my-feed-text {
+            font-size: 14px;
+            color: var(--text-main);
+            line-height: 1.7;
+            margin-bottom: 10px;
+            word-break: break-word;
+        }
+
+        .my-feed-foot {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+            padding-top: 10px;
+            border-top: 1px solid var(--border);
+        }
+
+        .my-feed-action {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 13px;
+            color: var(--text-mute);
+        }
+
+        .my-feed-actions {
+            margin-left: auto;
+            display: flex;
+            gap: 8px;
+        }
+
+        .mini-btn {
+            font-size: 12px;
+            color: var(--text-sub);
+            background: #f4f6fc;
+            border: none;
+            border-radius: 7px;
+            padding: 5px 12px;
+            cursor: pointer;
+            transition: background 0.2s, color 0.2s;
+            white-space: nowrap;
+        }
+
+        .mini-btn:hover { background: #e9edfa; color: var(--brand); }
+        .mini-btn.danger:hover { background: #ffeaea; color: var(--danger); }
+
+        /* 账户设置 */
+        .setting-group { margin-bottom: 24px; }
+        .setting-group:last-child { margin-bottom: 0; }
+
+        .setting-group-title {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--text-mute);
+            letter-spacing: 1px;
+            margin-bottom: 12px;
+            padding-left: 4px;
+        }
+
+        .setting-item {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 14px 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .setting-item:last-child { border-bottom: none; }
+
+        .setting-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 11px;
+            background: #f8faff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            flex-shrink: 0;
+        }
+
+        .setting-info { flex: 1; min-width: 0; }
+
+        .setting-name {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-main);
+            margin-bottom: 3px;
+        }
+
+        .setting-desc { font-size: 12px; color: var(--text-mute); }
+
+        .setting-value {
+            font-size: 13px;
+            color: var(--text-sub);
+            margin-right: 8px;
+            flex-shrink: 0;
+        }
+
+        /* 会员管理 */
+        .current-vip-card {
+            background: linear-gradient(135deg, #1f2544 0%, #3a4270 100%);
+            border-radius: 18px;
+            padding: 24px 28px;
+            color: #fff;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            flex-wrap: wrap;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .current-vip-card::after {
+            content: '👑';
+            position: absolute;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 100px;
+            opacity: 0.08;
+        }
+
+        .current-vip-icon { font-size: 40px; flex-shrink: 0; }
+
+        .current-vip-info {
+            flex: 1;
+            min-width: 200px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .current-vip-title {
+            font-size: 18px;
+            font-weight: 800;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .current-vip-desc {
+            font-size: 13px;
+            opacity: 0.7;
+            line-height: 1.6;
+        }
+
+        .current-vip-actions { position: relative; z-index: 1; }
+
+        .plan-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 16px;
+        }
+
+        .plan-card {
+            border: 2px solid var(--border);
+            border-radius: 16px;
+            padding: 22px 18px;
+            text-align: center;
+            cursor: pointer;
+            transition: border-color 0.2s, transform 0.2s, box-shadow 0.2s;
+            position: relative;
+            background: #fff;
+        }
+
+        .plan-card:hover {
+            border-color: #c9d4f5;
+            transform: translateY(-3px);
+            box-shadow: 0 12px 28px rgba(79, 110, 247, 0.1);
+        }
+
+        .plan-card.recommend {
+            border-color: var(--brand);
+            box-shadow: 0 8px 24px rgba(79, 110, 247, 0.15);
+        }
+
+        .recommend-tag {
+            position: absolute;
+            top: -12px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(135deg, #ff9f43, #ff7b00);
+            color: #fff;
+            font-size: 11px;
+            font-weight: 700;
+            padding: 3px 14px;
+            border-radius: 20px;
+            white-space: nowrap;
+        }
+
+        .plan-name {
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--text-main);
+            margin-bottom: 12px;
+        }
+
+        .plan-price {
+            font-size: 30px;
+            font-weight: 800;
+            color: var(--brand);
+            line-height: 1;
+            margin-bottom: 4px;
+        }
+
+        .plan-price .currency { font-size: 16px; font-weight: 600; }
+        .plan-price .period { font-size: 13px; font-weight: 500; color: var(--text-mute); }
+
+        .plan-equiv {
+            font-size: 12px;
+            color: var(--text-mute);
+            margin-bottom: 16px;
+            background: #f8faff;
+            border-radius: 8px;
+            padding: 5px 10px;
+            display: inline-block;
+        }
+
+        .plan-benefits {
+            text-align: left;
+            margin-bottom: 18px;
+            min-height: 100px;
+        }
+
+        .plan-benefits .benefit {
+            font-size: 12px;
+            color: var(--text-sub);
+            padding: 5px 0;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            line-height: 1.5;
+        }
+
+        .plan-benefits .benefit .benefit-check {
+            color: var(--success);
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+
+        .plan-btn {
+            width: 100%;
+            padding: 10px;
+            border-radius: 10px;
+            border: none;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: opacity 0.2s, transform 0.1s;
+        }
+
+        .plan-btn.primary {
+            background: linear-gradient(135deg, #4f6ef7, #6b8aff);
+            color: #fff;
+            box-shadow: 0 4px 12px rgba(79, 110, 247, 0.3);
+        }
+
+        .plan-btn.secondary {
+            background: #f4f6fc;
+            color: var(--brand);
+        }
+
+        .plan-btn:hover { opacity: 0.9; }
+        .plan-btn:active { transform: scale(0.98); }
+
+        .benefit-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+
+        .benefit-table th,
+        .benefit-table td {
+            padding: 12px 14px;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .benefit-table th {
+            font-weight: 700;
+            color: var(--text-main);
+            background: #f8faff;
+            font-size: 12px;
+            letter-spacing: 0.5px;
+        }
+
+        .benefit-table td { color: var(--text-sub); }
+        .benefit-table tr:last-child td { border-bottom: none; }
+
+        .benefit-table .col-vip {
+            text-align: center;
+            color: var(--brand);
+            font-weight: 600;
+        }
+
+        .benefit-table .col-free {
+            text-align: center;
+            color: var(--text-mute);
+        }
+
+        @media (max-width: 1100px) {
+            .two-col { grid-template-columns: 1fr; }
+        }
+
+        @media (max-width: 768px) {
+            .sidebar { width: 64px; padding: 16px 8px; }
+            .sidebar .logo { font-size: 0; justify-content: center; padding: 0; }
+            .sidebar .logo .logo-icon { font-size: 22px; }
+            .nav-item { justify-content: center; padding: 12px 0; }
+            .nav-item .nav-text { display: none; }
+            .nav-group-title { display: none; }
+            .vip-card { display: none; }
+            .content-scroll { padding: 16px 14px 32px; }
+            .topbar { padding: 12px 14px; }
+            .profile-hero { padding: 22px 18px; }
+            .profile-avatar-big { width: 68px; height: 68px; font-size: 28px; }
+            .profile-nickname { font-size: 20px; }
+            .main-tabs { width: 100%; }
+            .plan-grid { grid-template-columns: 1fr 1fr; }
+            .benefit-table { font-size: 12px; }
+            .benefit-table th, .benefit-table td { padding: 10px 8px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="app-layout">
+
+    <!-- 左侧导航栏 -->
+    <aside class="sidebar">
+
+        <div class="logo">
+            <span class="logo-icon">🎯</span>
+            <span class="logo-text">句游英语</span>
+        </div>
+
+        <nav>
+            <div class="nav-group">
+                <div class="nav-group-title">学习</div>
+                <div class="nav-item" data-href="home.html">
+                    <span class="nav-icon">🏠</span>
+                    <span class="nav-text">首页</span>
+                </div>
+                <div class="nav-item" data-href="learn.html">
+                    <span class="nav-icon">▶️</span>
+                    <span class="nav-text">开始学习</span>
+                </div>
+                <div class="nav-item" data-href="mall.html">
+                    <span class="nav-icon">📚</span>
+                    <span class="nav-text">课程包商城</span>
+                </div>
+                <div class="nav-item" data-href="archive.html">
+                    <span class="nav-icon">🗂️</span>
+                    <span class="nav-text">学习档案</span>
+                </div>
+                <div class="nav-item" data-href="growth.html">
+                    <span class="nav-icon">📈</span>
+                    <span class="nav-text">成长分析</span>
+                </div>
+            </div>
+
+            <div class="nav-group">
+                <div class="nav-group-title">社交</div>
+                <div class="nav-item" data-href="community.html">
+                    <span class="nav-icon">👥</span>
+                    <span class="nav-text">社区</span>
+                </div>
+                <div class="nav-item" data-href="community.html">
+                    <span class="nav-icon">⚔️</span>
+                    <span class="nav-text">PK 对战</span>
+                </div>
+                <div class="nav-item" data-href="community.html">
+                    <span class="nav-icon">🏆</span>
+                    <span class="nav-text">排行榜</span>
+                </div>
+            </div>
+
+            <div class="nav-group">
+                <div class="nav-group-title">我的</div>
+                <!-- 当前页：个人中心 -->
+                <div class="nav-item on" data-href="profile.html">
+                    <span class="nav-icon">👤</span>
+                    <span class="nav-text">个人中心</span>
+                </div>
+                <div class="nav-item" data-href="promote.html">
+                    <span class="nav-icon">💰</span>
+                    <span class="nav-text">推广返佣</span>
+                </div>
+                <div class="nav-item" data-href="plugin.html">
+                    <span class="nav-icon">🧩</span>
+                    <span class="nav-text">浏览器插件</span>
+                </div>
+            </div>
+        </nav>
+
+        <div class="sidebar-bottom">
+            <div class="vip-card" data-href="profile.html">
+                <div class="vip-title">👑 升级会员</div>
+                <div class="vip-desc">解锁全部课程<br>AI 助手无限次提问</div>
+            </div>
+        </div>
+
+    </aside>
+
+    <!-- 右侧主区域 -->
+    <div class="main-area">
+
+        <header class="topbar">
+            <div class="search-box">
+                <span>🔍</span>
+                <input type="text" placeholder="搜索...">
+            </div>
+
+            <div class="topbar-right">
+                <div class="topbar-icon-btn" data-tip="通知中心（后续步骤实现）">
+                    🔔
+                    <span class="badge-dot"></span>
+                </div>
+                <div class="topbar-icon-btn" data-tip="帮助中心（后续步骤实现）">❓</div>
+                <div class="user-avatar" data-href="profile.html">学</div>
+            </div>
+        </header>
+
+        <div class="content-scroll">
+
+            <!-- 个人资料卡片 -->
+            <div class="profile-hero">
+
+                <div class="profile-avatar-big" data-tip="更换头像（后续步骤实现）">
+                    学
+                    <span class="avatar-edit-icon">📷</span>
+                </div>
+
+                <div class="profile-hero-info">
+                    <div class="profile-nickname">
+                        学习者
+                        <span class="vip-badge">👑 VIP</span>
+                    </div>
+                    <div class="profile-id">ID: JY20261006 · 加入于 2026-03-15</div>
+
+                    <div class="profile-follow-stats">
+                        <div class="stat-item" data-tip="查看关注（后续步骤实现）"><b>32</b>关注</div>
+                        <div class="stat-item" data-tip="查看粉丝（后续步骤实现）"><b>128</b>粉丝</div>
+                        <div class="stat-item" data-tip="查看动态（后续步骤实现）"><b>46</b>动态</div>
+                    </div>
+                </div>
+
+                <div class="profile-hero-actions">
+                    <button class="btn-hero outline" data-tip="编辑资料（后续步骤实现）">编辑资料</button>
+                    <button class="btn-hero white" data-tip="分享个人主页（后续步骤实现）">分享主页</button>
+                </div>
+
+            </div>
+
+            <!-- 一级 Tab -->
+            <div class="main-tabs" id="mainTabs">
+                <div class="main-tab on" data-tab="home">🏠 我的主页</div>
+                <div class="main-tab" data-tab="feed">📝 我的动态</div>
+                <div class="main-tab" data-tab="settings">⚙️ 账户设置</div>
+                <div class="main-tab" data-tab="vip">👑 会员管理</div>
+            </div>
+
+            <!-- Tab 1：我的主页 -->
+            <div id="panel-home" class="tab-panel">
+
+                <div class="overview-grid">
+                    <div class="overview-card" data-href="archive.html">
+                        <div class="oc-icon">📖</div>
+                        <div class="oc-value">1,286<span class="unit">句</span></div>
+                        <div class="oc-label">累计练习</div>
+                    </div>
+                    <div class="overview-card" data-href="growth.html">
+                        <div class="oc-icon">⏱️</div>
+                        <div class="oc-value">48.5<span class="unit">h</span></div>
+                        <div class="oc-label">累计时长</div>
+                    </div>
+                    <div class="overview-card" data-href="growth.html">
+                        <div class="oc-icon">🔥</div>
+                        <div class="oc-value">12<span class="unit">天</span></div>
+                        <div class="oc-label">连续打卡</div>
+                    </div>
+                    <div class="overview-card" data-href="learn.html">
+                        <div class="oc-icon">🏆</div>
+                        <div class="oc-value">SSS</div>
+                        <div class="oc-label">最高评级</div>
+                    </div>
+                    <div class="overview-card" data-href="community.html">
+                        <div class="oc-icon">📊</div>
+                        <div class="oc-value">28<span class="unit">名</span></div>
+                        <div class="oc-label">月榜排名</div>
+                    </div>
+                    <div class="overview-card" data-href="community.html">
+                        <div class="oc-icon">👥</div>
+                        <div class="oc-value">5<span class="unit">个</span></div>
+                        <div class="oc-label">加入小组</div>
+                    </div>
+                </div>
+
+                <div class="two-col">
+
+                    <div class="card">
+                        <div class="card-head">
+                            <div class="card-title">📝 最近动态</div>
+                            <div class="card-more" data-tip="切换到我的动态">查看全部 →</div>
+                        </div>
+
+                        <div class="mini-feed-item">
+                            <div class="mini-feed-avatar">学</div>
+                            <div class="mini-feed-body">
+                                <div class="mini-feed-text">今天终于把《星荣零基础》第 10 课刷到了 SSS！</div>
+                                <div class="mini-feed-time">10 分钟前 · 128 赞 · 32 评论</div>
+                            </div>
+                        </div>
+
+                        <div class="mini-feed-item">
+                            <div class="mini-feed-avatar">学</div>
+                            <div class="mini-feed-body">
+                                <div class="mini-feed-text">有没有一起练雅思词汇的小伙伴？求组队打卡</div>
+                                <div class="mini-feed-time">昨天 14:30 · 56 赞 · 18 评论</div>
+                            </div>
+                        </div>
+
+                        <div class="mini-feed-item">
+                            <div class="mini-feed-avatar">学</div>
+                            <div class="mini-feed-body">
+                                <div class="mini-feed-text">FSRS 复习本真的好用，复习效率提升好多</div>
+                                <div class="mini-feed-time">3 天前 · 89 赞 · 24 评论</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-head">
+                            <div class="card-title">📚 最近学习</div>
+                            <div class="card-more" data-href="archive.html">全部记录 →</div>
+                        </div>
+
+                        <div class="history-item">
+                            <div class="history-icon">📘</div>
+                            <div class="history-info">
+                                <div class="history-name">星荣零基础学英语</div>
+                                <div class="history-meta">今天 14:30 · 第 12 课</div>
+                            </div>
+                            <div class="history-score">SSS</div>
+                        </div>
+
+                        <div class="history-item">
+                            <div class="history-icon">🎧</div>
+                            <div class="history-info">
+                                <div class="history-name">雅思词汇 8000</div>
+                                <div class="history-meta">今天 10:15 · 第 8 单元</div>
+                            </div>
+                            <div class="history-score">SS</div>
+                        </div>
+
+                        <div class="history-item">
+                            <div class="history-icon">🍿</div>
+                            <div class="history-info">
+                                <div class="history-name">老友记经典台词精练</div>
+                                <div class="history-meta">昨天 20:00 · 第 5 课</div>
+                            </div>
+                            <div class="history-score">S</div>
+                        </div>
+
+                        <div class="history-item">
+                            <div class="history-icon">💼</div>
+                            <div class="history-info">
+                                <div class="history-name">商务英语邮件写作</div>
+                                <div class="history-meta">3 天前 · 第 3 课</div>
+                            </div>
+                            <div class="history-score">SSS</div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Tab 2：我的动态 -->
+            <div id="panel-feed" class="tab-panel" style="display: none;">
+
+                <div class="card">
+                    <div class="card-head">
+                        <div class="card-title">📝 我的动态（共 46 条）</div>
+                        <button class="btn-primary" data-tip="发布动态（后续步骤实现）">+ 发布动态</button>
+                    </div>
+
+                    <div class="filter-row">
+                        <div class="filter-chip on">全部</div>
+                        <div class="filter-chip">公开</div>
+                        <div class="filter-chip">关注可见</div>
+                        <div class="filter-chip">互关可见</div>
+                        <div class="filter-chip">仅自己</div>
+                    </div>
+
+                    <div class="my-feed-item">
+                        <div class="my-feed-avatar">学</div>
+                        <div class="my-feed-body">
+                            <div class="my-feed-head">
+                                <div class="my-feed-time">今天 15:30</div>
+                                <span class="visibility-tag public">🌐 公开</span>
+                            </div>
+                            <div class="my-feed-text">
+                                今天终于把《星荣零基础》第 10 课刷到了 SSS！连击 20 直接翻倍，太爽了。坚持就是胜利，加油各位 💪
+                            </div>
+                            <div class="my-feed-foot">
+                                <div class="my-feed-action">❤️ 128</div>
+                                <div class="my-feed-action">💬 32</div>
+                                <div class="my-feed-action">🔗 18</div>
+                                <div class="my-feed-actions">
+                                    <button class="mini-btn" data-tip="编辑动态（后续步骤实现）">编辑</button>
+                                    <button class="mini-btn danger" data-tip="删除动态（后续步骤实现）">删除</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="my-feed-item">
+                        <div class="my-feed-avatar">学</div>
+                        <div class="my-feed-body">
+                            <div class="my-feed-head">
+                                <div class="my-feed-time">昨天 14:30</div>
+                                <span class="visibility-tag followers">👥 关注可见</span>
+                            </div>
+                            <div class="my-feed-text">
+                                有没有一起练雅思词汇的小伙伴？求组队打卡，每天互相监督 📖
+                            </div>
+                            <div class="my-feed-foot">
+                                <div class="my-feed-action">❤️ 56</div>
+                                <div class="my-feed-action">💬 18</div>
+                                <div class="my-feed-action">🔗 5</div>
+                                <div class="my-feed-actions">
+                                    <button class="mini-btn" data-tip="编辑动态（后续步骤实现）">编辑</button>
+                                    <button class="mini-btn danger" data-tip="删除动态（后续步骤实现）">删除</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="my-feed-item">
+                        <div class="my-feed-avatar">学</div>
+                        <div class="my-feed-body">
+                            <div class="my-feed-head">
+                                <div class="my-feed-time">3 天前</div>
+                                <span class="visibility-tag public">🌐 公开</span>
+                            </div>
+                            <div class="my-feed-text">
+                                FSRS 复习本真的好用，昨天推荐的 20 个句子今天全记住了。之前总觉得复习没用，现在才知道是方法不对。
+                            </div>
+                            <div class="my-feed-foot">
+                                <div class="my-feed-action">❤️ 89</div>
+                                <div class="my-feed-action">💬 24</div>
+                                <div class="my-feed-action">🔗 12</div>
+                                <div class="my-feed-actions">
+                                    <button class="mini-btn" data-tip="编辑动态（后续步骤实现）">编辑</button>
+                                    <button class="mini-btn danger" data-tip="删除动态（后续步骤实现）">删除</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="my-feed-item">
+                        <div class="my-feed-avatar">学</div>
+                        <div class="my-feed-body">
+                            <div class="my-feed-head">
+                                <div class="my-feed-time">5 天前</div>
+                                <span class="visibility-tag private">🔒 仅自己</span>
+                            </div>
+                            <div class="my-feed-text">
+                                记录：今天学习 2 小时，完成了 68 个句子练习，比昨天多 12 个。
+                            </div>
+                            <div class="my-feed-foot">
+                                <div class="my-feed-action">❤️ 0</div>
+                                <div class="my-feed-action">💬 0</div>
+                                <div class="my-feed-action">🔗 0</div>
+                                <div class="my-feed-actions">
+                                    <button class="mini-btn" data-tip="编辑动态（后续步骤实现）">编辑</button>
+                                    <button class="mini-btn danger" data-tip="删除动态（后续步骤实现）">删除</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Tab 3：账户设置 -->
+            <div id="panel-settings" class="tab-panel" style="display: none;">
+
+                <div class="card">
+
+                    <div class="setting-group">
+                        <div class="setting-group-title">🔐 账号与安全</div>
+
+                        <div class="setting-item">
+                            <div class="setting-icon">📱</div>
+                            <div class="setting-info">
+                                <div class="setting-name">手机号</div>
+                                <div class="setting-desc">用于登录和找回密码</div>
+                            </div>
+                            <div class="setting-value">138****8888</div>
+                            <button class="btn-ghost" data-tip="更换手机号（后续步骤实现）">更换</button>
+                        </div>
+
+                        <div class="setting-item">
+                            <div class="setting-icon">📧</div>
+                            <div class="setting-info">
+                                <div class="setting-name">邮箱</div>
+                                <div class="setting-desc">用于接收通知和找回密码</div>
+                            </div>
+                            <div class="setting-value" style="color: var(--text-mute);">未绑定</div>
+                            <button class="btn-primary" data-tip="绑定邮箱（后续步骤实现）">绑定</button>
+                        </div>
+
+                        <div class="setting-item">
+                            <div class="setting-icon">💬</div>
+                            <div class="setting-info">
+                                <div class="setting-name">微信账号</div>
+                                <div class="setting-desc">绑定后可使用微信快速登录</div>
+                            </div>
+                            <div class="setting-value" style="color: var(--success);">✓ 已绑定</div>
+                            <button class="btn-ghost" data-tip="解绑微信（后续步骤实现）">解绑</button>
+                        </div>
+
+                        <div class="setting-item">
+                            <div class="setting-icon">🔑</div>
+                            <div class="setting-info">
+                                <div class="setting-name">修改密码</div>
+                                <div class="setting-desc">定期修改密码保障账号安全</div>
+                            </div>
+                            <button class="btn-ghost" data-tip="修改密码（后续步骤实现）">修改</button>
+                        </div>
+                    </div>
+
+                    <div class="setting-group">
+                        <div class="setting-group-title">⚙️ 学习偏好</div>
+
+                        <div class="setting-item">
+                            <div class="setting-icon">🎯</div>
+                            <div class="setting-info">
+                                <div class="setting-name">每日打卡目标</div>
+                                <div class="setting-desc">设置每日练习点目标（5-200）</div>
+                            </div>
+                            <div class="setting-value">10 个练习点</div>
+                            <button class="btn-ghost" data-tip="修改目标（后续步骤实现）">修改</button>
+                        </div>
+
+                        <div class="setting-item">
+                            <div class="setting-icon">🔔</div>
+                            <div class="setting-info">
+                                <div class="setting-name">学习提醒</div>
+                                <div class="setting-desc">每日固定时间提醒学习</div>
+                            </div>
+                            <div class="setting-value">每天 20:00</div>
+                            <button class="btn-ghost" data-tip="修改提醒（后续步骤实现）">修改</button>
+                        </div>
+
+                        <div class="setting-item">
+                            <div class="setting-icon">🔊</div>
+                            <div class="setting-info">
+                                <div class="setting-name">音效</div>
+                                <div class="setting-desc">连击、提交等操作的音效</div>
+                            </div>
+                            <div class="setting-value" style="color: var(--success);">已开启</div>
+                            <button class="btn-ghost" data-tip="关闭音效（后续步骤实现）">关闭</button>
+                        </div>
+
+                        <div class="setting-item">
+                            <div class="setting-icon">🌐</div>
+                            <div class="setting-info">
+                                <div class="setting-name">界面语言</div>
+                                <div class="setting-desc">选择界面显示语言</div>
+                            </div>
+                            <div class="setting-value">简体中文</div>
+                            <button class="btn-ghost" data-tip="切换语言（后续步骤实现）">切换</button>
+                        </div>
+                    </div>
+
+                    <div class="setting-group">
+                        <div class="setting-group-title">📢 通知设置</div>
+
+                        <div class="setting-item">
+                            <div class="setting-icon">💬</div>
+                            <div class="setting-info">
+                                <div class="setting-name">社区互动通知</div>
+                                <div class="setting-desc">有人点赞、评论、关注时通知</div>
+                            </div>
+                            <div class="setting-value" style="color: var(--success);">已开启</div>
+                            <button class="btn-ghost" data-tip="关闭通知（后续步骤实现）">关闭</button>
+                        </div>
+
+                        <div class="setting-item">
+                            <div class="setting-icon">📊</div>
+                            <div class="setting-info">
+                                <div class="setting-name">每周学习报告</div>
+                                <div class="setting-desc">每周收到学习数据总结</div>
+                            </div>
+                            <div class="setting-value" style="color: var(--success);">已开启</div>
+                            <button class="btn-ghost" data-tip="关闭通知（后续步骤实现）">关闭</button>
+                        </div>
+                    </div>
+
+                    <div class="setting-group">
+                        <div class="setting-group-title" style="color: var(--danger);">⚠️ 危险操作</div>
+
+                        <div class="setting-item">
+                            <div class="setting-icon">🚪</div>
+                            <div class="setting-info">
+                                <div class="setting-name">退出登录</div>
+                                <div class="setting-desc">退出当前账号，下次需重新登录</div>
+                            </div>
+                            <!-- 退出登录：跳到 index.html -->
+                            <button class="btn-ghost" id="btnLogout">退出</button>
+                        </div>
+
+                        <div class="setting-item">
+                            <div class="setting-icon">🗑️</div>
+                            <div class="setting-info">
+                                <div class="setting-name">注销账号</div>
+                                <div class="setting-desc" style="color: var(--danger);">注销后所有数据将被永久删除，不可恢复</div>
+                            </div>
+                            <button class="btn-danger" data-tip="注销账号（后续步骤实现）">注销账号</button>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Tab 4：会员管理 -->
+            <div id="panel-vip" class="tab-panel" style="display: none;">
+
+                <div class="current-vip-card">
+                    <div class="current-vip-icon">👑</div>
+                    <div class="current-vip-info">
+                        <div class="current-vip-title">VIP 会员</div>
+                        <div class="current-vip-desc">
+                            有效期至 2027-10-06 · 剩余 365 天<br>
+                            享受全部会员权益
+                        </div>
+                    </div>
+                    <div class="current-vip-actions">
+                        <button class="btn-hero white" data-tip="续费会员（后续步骤实现）">立即续费</button>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-head">
+                        <div class="card-title">💎 选择套餐</div>
+                        <div class="card-more" data-tip="查看权益详情">权益详情 →</div>
+                    </div>
+
+                    <div class="plan-grid">
+
+                        <div class="plan-card" data-tip="购买月度会员（后续步骤实现）">
+                            <div class="plan-name">月度会员</div>
+                            <div class="plan-price"><span class="currency">¥</span>39<span class="period">/月</span></div>
+                            <div class="plan-equiv">每月 39 元</div>
+                            <div class="plan-benefits">
+                                <div class="benefit"><span class="benefit-check">✓</span>全部会员课程</div>
+                                <div class="benefit"><span class="benefit-check">✓</span>小组创建 10 个</div>
+                                <div class="benefit"><span class="benefit-check">✓</span>只练错题</div>
+                                <div class="benefit"><span class="benefit-check">✓</span>AI 助手更多额度</div>
+                            </div>
+                            <button class="plan-btn secondary">选择</button>
+                        </div>
+
+                        <div class="plan-card" data-tip="购买季度会员（后续步骤实现）">
+                            <div class="plan-name">季度会员</div>
+                            <div class="plan-price"><span class="currency">¥</span>109<span class="period">/季</span></div>
+                            <div class="plan-equiv">约 36.3 元/月 · 省 8.3 元</div>
+                            <div class="plan-benefits">
+                                <div class="benefit"><span class="benefit-check">✓</span>全部会员课程</div>
+                                <div class="benefit"><span class="benefit-check">✓</span>小组创建 10 个</div>
+                                <div class="benefit"><span class="benefit-check">✓</span>只练错题</div>
+                                <div class="benefit"><span class="benefit-check">✓</span>AI 助手更多额度</div>
+                            </div>
+                            <button class="plan-btn secondary">选择</button>
+                        </div>
+
+                        <div class="plan-card recommend" data-tip="购买年度会员（后续步骤实现）">
+                            <div class="recommend-tag">🔥 最划算</div>
+                            <div class="plan-name">年度会员</div>
+                            <div class="plan-price"><span class="currency">¥</span>365<span class="period">/年</span></div>
+                            <div class="plan-equiv">约 30.4 元/月 · 省 103 元</div>
+                            <div class="plan-benefits">
+                                <div class="benefit"><span class="benefit-check">✓</span>全部会员课程</div>
+                                <div class="benefit"><span class="benefit-check">✓</span>小组创建 10 个</div>
+                                <div class="benefit"><span class="benefit-check">✓</span>只练错题</div>
+                                <div class="benefit"><span class="benefit-check">✓</span>AI 助手更多额度</div>
+                            </div>
+                            <button class="plan-btn primary">选择</button>
+                        </div>
+
+                        <div class="plan-card" data-tip="购买永久会员（后续步骤实现）">
+                            <div class="plan-name">永久会员</div>
+                            <div class="plan-price"><span class="currency">¥</span>1999<span class="period"></span></div>
+                            <div class="plan-equiv">一次付费 · 永久有效</div>
+                            <div class="plan-benefits">
+                                <div class="benefit"><span class="benefit-check">✓</span>全部会员课程</div>
+                                <div class="benefit"><span class="benefit-check">✓</span>小组创建 10 个</div>
+                                <div class="benefit"><span class="benefit-check">✓</span>只练错题</div>
+                                <div class="benefit"><span class="benefit-check">✓</span>AI 助手更多额度</div>
+                                <div class="benefit"><span class="benefit-check">✓</span>优先体验新功能</div>
+                            </div>
+                            <button class="plan-btn secondary">选择</button>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-head">
+                        <div class="card-title">📋 会员权益对比</div>
+                    </div>
+
+                    <table class="benefit-table">
+                        <thead>
+                            <tr>
+                                <th>功能</th>
+                                <th class="col-free">免费用户</th>
+                                <th class="col-vip">VIP 会员</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>课程试学</td>
+                                <td class="col-free">前几节</td>
+                                <td class="col-vip">全部解锁</td>
+                            </tr>
+                            <tr>
+                                <td>小组创建</td>
+                                <td class="col-free">1 个</td>
+                                <td class="col-vip">10 个</td>
+                            </tr>
+                            <tr>
+                                <td>只练错题</td>
+                                <td class="col-free">✗</td>
+                                <td class="col-vip">✓</td>
+                            </tr>
+                            <tr>
+                                <td>AI 助手额度</td>
+                                <td class="col-free">每天 2 次</td>
+                                <td class="col-vip">更多额度</td>
+                            </tr>
+                            <tr>
+                                <td>学习数据导出</td>
+                                <td class="col-free">✗</td>
+                                <td class="col-vip">✓</td>
+                            </tr>
+                            <tr>
+                                <td>优先客服</td>
+                                <td class="col-free">✗</td>
+                                <td class="col-vip">✓</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+    /* ============================================================
+       登录状态检查（放在最前面，未登录立即跳回登录页）
+       ============================================================ */
+    (function() {
+        var userStr = localStorage.getItem('juyou_user');
+
+        if (!userStr) {
+            window.location.href = 'index.html';
+            return;
+        }
+
+        var user = null;
+        try {
+            user = JSON.parse(userStr);
+        } catch (e) {
+            localStorage.removeItem('juyou_user');
+            window.location.href = 'index.html';
+            return;
+        }
+
+        if (!user || !user.phone) {
+            localStorage.removeItem('juyou_user');
+            window.location.href = 'index.html';
+            return;
+        }
+
+        window.currentUser = user;
+    })();
+
+    /* ============================================================
+       页面跳转逻辑
+       ============================================================ */
+    (function() {
+        var currentPage = window.location.pathname.split('/').pop() || 'profile.html';
+        var clickables = document.querySelectorAll('[data-href]');
+        clickables.forEach(function(el) {
+            el.addEventListener('click', function(e) {
+                e.stopPropagation();
+                var href = this.getAttribute('data-href');
+                if (!href) return;
+                if (href === currentPage) return;
+                window.location.href = href;
+            });
+        });
+    })();
+
+    /* ============================================================
+       显示用户信息（昵称、头像、手机号、ID）
+       ============================================================ */
+    (function() {
+        if (!window.currentUser) return;
+
+        var nickname = window.currentUser.nickname || '学习者';
+        var phone = window.currentUser.phone || '';
+
+        // 1. 昵称
+        var nicknameEl = document.querySelector('.profile-nickname');
+        if (nicknameEl) {
+            // 保留 VIP 徽章，只替换文字部分
+            var vipBadge = nicknameEl.querySelector('.vip-badge');
+            nicknameEl.textContent = '';
+            nicknameEl.appendChild(document.createTextNode(nickname));
+            if (vipBadge) nicknameEl.appendChild(vipBadge);
+        }
+
+        // 2. 大号头像文字
+        var bigAvatar = document.querySelector('.profile-avatar-big');
+        if (bigAvatar) {
+            // 保留相机图标
+            var editIcon = bigAvatar.querySelector('.avatar-edit-icon');
+            bigAvatar.textContent = '';
+            bigAvatar.appendChild(document.createTextNode(nickname.slice(-1)));
+            if (editIcon) bigAvatar.appendChild(editIcon);
+        }
+
+        // 3. 右上角小头像
+        var smallAvatar = document.querySelector('.user-avatar');
+        if (smallAvatar) {
+            smallAvatar.textContent = nickname.slice(-1);
+        }
+
+        // 4. 手机号（在账户设置里）
+        var settingValues = document.querySelectorAll('.setting-value');
+        settingValues.forEach(function(el) {
+            if (el.textContent.indexOf('138') === 0 && phone.length === 11) {
+                // 脱敏显示：138****8888
+                el.textContent = phone.slice(0, 3) + '****' + phone.slice(-4);
+            }
+        });
+
+        // 5. 用户 ID（取手机号后 6 位）
+        var idEl = document.querySelector('.profile-id');
+        if (idEl && phone.length === 11) {
+            idEl.textContent = 'ID: JY' + phone.slice(-6) + ' · 加入于 2026-03-15';
+        }
+    })();
+
+    /* ============================================================
+       退出登录
+       ============================================================ */
+    (function() {
+        var btnLogout = document.getElementById('btnLogout');
+        if (!btnLogout) return;
+
+        btnLogout.addEventListener('click', function(e) {
+            e.stopPropagation();
+            if (!confirm('确定要退出登录吗？')) return;
+
+            // 清除登录信息
+            localStorage.removeItem('juyou_user');
+
+            // 跳回登录页
+            window.location.href = 'index.html';
+        });
+    })();
+
+    /* ============================================================
+       一级 Tab 切换
+       ============================================================ */
+    (function() {
+        var tabs = document.querySelectorAll('.main-tab');
+        var panels = {
+            home: document.getElementById('panel-home'),
+            feed: document.getElementById('panel-feed'),
+            settings: document.getElementById('panel-settings'),
+            vip: document.getElementById('panel-vip')
+        };
+
+        tabs.forEach(function(tab) {
+            tab.addEventListener('click', function(e) {
+                e.stopPropagation();
+                tabs.forEach(function(t) { t.classList.remove('on'); });
+                this.classList.add('on');
+
+                var name = this.getAttribute('data-tab');
+                Object.keys(panels).forEach(function(key) {
+                    if (panels[key]) {
+                        panels[key].style.display = (key === name) ? 'block' : 'none';
+                    }
+                });
+            });
+        });
+    })();
+
+    /* ============================================================
+       filter-chip 分组单选
+       ============================================================ */
+    (function() {
+        var containers = new Set();
+        document.querySelectorAll('.filter-chip').forEach(function(chip) {
+            containers.add(chip.parentElement);
+        });
+
+        containers.forEach(function(container) {
+            var chips = container.querySelectorAll('.filter-chip');
+            chips.forEach(function(chip) {
+                chip.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    chips.forEach(function(c) { c.classList.remove('on'); });
+                    this.classList.add('on');
+                });
+            });
+        });
+    })();
+
+    /* ============================================================
+       所有带 data-tip 属性的元素，点击后弹出提示
+       ============================================================ */
+    (function() {
+        var tipElements = document.querySelectorAll('[data-tip]');
+        tipElements.forEach(function(el) {
+            el.addEventListener('click', function(e) {
+                e.stopPropagation();
+                var tip = this.getAttribute('data-tip');
+                alert(tip);
+            });
+        });
+    })();
+</script>
+
+</body>
+</html>

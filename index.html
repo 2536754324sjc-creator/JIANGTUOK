@@ -1,0 +1,832 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <!-- 可修改：移动端适配的视口设置，不要动 -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- 可修改：网页标题，显示在浏览器标签页上 -->
+    <title>句游英语 - 登录 / 注册</title>
+
+    <style>
+        /* ============================================
+           全局重置 & 基础样式
+           ============================================ */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            /* 可修改：整个页面的字体 */
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+            /* 可修改：页面背景色（登录页背景） */
+            background: #f5f7fb;
+            color: #333;
+            min-height: 100vh;
+        }
+
+        /* ============================================
+           整体布局：左右分栏
+           ============================================ */
+        .page-wrapper {
+            display: flex;
+            min-height: 100vh;
+            max-width: 1400px;
+            margin: 0 auto;
+            /* 可修改：左右分栏的整体内边距 */
+            padding: 40px 60px;
+            gap: 60px;
+            align-items: center;
+        }
+
+        /* ============================================
+           左侧：产品展示轮播区
+           ============================================ */
+        .left-showcase {
+            flex: 1;
+            /* 可修改：左侧区域最小宽度 */
+            min-width: 0;
+            position: relative;
+        }
+
+        /* 轮播容器 */
+        .carousel {
+            position: relative;
+            /* 可修改：轮播卡片的最小高度 */
+            min-height: 480px;
+        }
+
+        /* 每一个轮播卡片 */
+        .carousel-card {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.5s ease, visibility 0.5s ease;
+            /* 可修改：轮播卡片的背景色 */
+            background: #ffffff;
+            /* 可修改：轮播卡片的圆角 */
+            border-radius: 24px;
+            /* 可修改：轮播卡片的阴影 */
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.08);
+            /* 可修改：轮播卡片的内边距 */
+            padding: 48px 44px;
+        }
+
+        .carousel-card.on {
+            opacity: 1;
+            visibility: visible;
+            position: relative;
+        }
+
+        /* 卡片主标题（第一行） */
+        .carousel-card .card-title-1 {
+            display: block;
+            /* 可修改：主标题第一行字号 */
+            font-size: 32px;
+            /* 可修改：主标题第一行字重 */
+            font-weight: 600;
+            /* 可修改：主标题第一行颜色 */
+            color: #1a1a2e;
+            /* 可修改：行高 */
+            line-height: 1.4;
+        }
+
+        /* 卡片主标题（第二行，高亮色） */
+        .carousel-card .card-title-2 {
+            display: block;
+            /* 可修改：主标题第二行字号 */
+            font-size: 32px;
+            /* 可修改：主标题第二行字重 */
+            font-weight: 700;
+            /* 可修改：主标题第二行颜色（品牌色） */
+            color: #4f6ef7;
+            line-height: 1.4;
+            /* 可修改：与第一行的间距 */
+            margin-bottom: 16px;
+        }
+
+        /* 卡片描述文字 */
+        .carousel-card .card-desc {
+            display: block;
+            /* 可修改：描述文字字号 */
+            font-size: 15px;
+            /* 可修改：描述文字颜色 */
+            color: #888;
+            /* 可修改：描述文字行高 */
+            line-height: 1.6;
+            /* 可修改：与下方数据卡片的间距 */
+            margin-bottom: 36px;
+        }
+
+        /* 数据可视化卡片 */
+        .data-card {
+            /* 可修改：数据卡片背景色 */
+            background: #f8faff;
+            /* 可修改：数据卡片圆角 */
+            border-radius: 16px;
+            /* 可修改：数据卡片内边距 */
+            padding: 24px 28px;
+            /* 可修改：数据卡片与上方文字的间距 */
+            margin-bottom: 28px;
+        }
+
+        /* 功能名称行 */
+        .data-card .feature-name {
+            /* 可修改：功能名称字号 */
+            font-size: 14px;
+            /* 可修改：功能名称颜色 */
+            color: #666;
+            /* 可修改：与下方进度条的间距 */
+            margin-bottom: 10px;
+        }
+
+        /* 评价等级行 */
+        .data-card .rating {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            /* 可修改：与进度条的间距 */
+            margin-bottom: 10px;
+        }
+
+        .data-card .rating .rating-label {
+            /* 可修改：评价等级文字字号 */
+            font-size: 13px;
+            /* 可修改：评价等级文字颜色 */
+            color: #4f6ef7;
+            font-weight: 600;
+        }
+
+        .data-card .rating .rating-value {
+            /* 可修改：评价等级数值字号 */
+            font-size: 13px;
+            color: #999;
+        }
+
+        /* 进度条轨道 */
+        .progress-track {
+            width: 100%;
+            /* 可修改：进度条高度 */
+            height: 8px;
+            /* 可修改：进度条轨道背景色 */
+            background: #e2e8f5;
+            /* 可修改：进度条圆角 */
+            border-radius: 99px;
+            overflow: hidden;
+            /* 可修改：与上方评价等级的间距 */
+            margin-bottom: 10px;
+        }
+
+        /* 进度条填充 */
+        .progress-fill {
+            height: 100%;
+            /* 可修改：进度条填充色（品牌色） */
+            background: linear-gradient(90deg, #4f6ef7, #7b8fff);
+            /* 可修改：进度条圆角 */
+            border-radius: 99px;
+            /* 注意：width 在 HTML 中通过内联样式设置，表示百分比 */
+        }
+
+        /* 学员数量行 */
+        .data-card .student-count {
+            /* 可修改：学员数量文字字号 */
+            font-size: 13px;
+            /* 可修改：学员数量文字颜色 */
+            color: #999;
+        }
+
+        /* 轮播底部控制区 */
+        .carousel-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            /* 可修改：与上方卡片的间距 */
+            margin-top: 28px;
+        }
+
+        /* 返回首页链接 */
+        .back-home {
+            /* 可修改：返回首页链接字号 */
+            font-size: 14px;
+            /* 可修改：返回首页链接颜色 */
+            color: #888;
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .back-home:hover {
+            /* 可修改：返回首页链接悬停颜色 */
+            color: #4f6ef7;
+        }
+
+        /* 指示点容器 */
+        .carousel-dots {
+            display: flex;
+            gap: 10px;
+        }
+
+        /* 单个指示点 */
+        .carousel-dots .dot {
+            /* 可修改：指示点大小 */
+            width: 10px;
+            height: 10px;
+            /* 可修改：指示点圆角（圆形） */
+            border-radius: 50%;
+            /* 可修改：指示点未选中颜色 */
+            background: #d0d8e8;
+            cursor: pointer;
+            transition: background 0.3s, transform 0.3s;
+        }
+
+        .carousel-dots .dot.on {
+            /* 可修改：指示点选中颜色（品牌色） */
+            background: #4f6ef7;
+            /* 可修改：指示点选中放大比例 */
+            transform: scale(1.3);
+        }
+
+        /* ============================================
+           右侧：登录 / 注册区
+           ============================================ */
+        .right-auth {
+            /* 可修改：右侧区域宽度 */
+            width: 400px;
+            flex-shrink: 0;
+        }
+
+        /* 登录卡片 */
+        .auth-card {
+            /* 可修改：登录卡片背景色 */
+            background: #ffffff;
+            /* 可修改：登录卡片圆角 */
+            border-radius: 24px;
+            /* 可修改：登录卡片阴影 */
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.08);
+            /* 可修改：登录卡片内边距 */
+            padding: 44px 36px;
+        }
+
+        /* 品牌 Logo */
+        .auth-logo {
+            /* 可修改：Logo 字号 */
+            font-size: 24px;
+            /* 可修改：Logo 字重 */
+            font-weight: 800;
+            /* 可修改：Logo 颜色（品牌色） */
+            color: #4f6ef7;
+            /* 可修改：Logo 与下方登录方式的间距 */
+            margin-bottom: 32px;
+            text-align: center;
+        }
+
+        /* 登录方式 Tab */
+        .auth-tabs {
+            display: flex;
+            /* 可修改：Tab 之间的间距 */
+            gap: 0;
+            /* 可修改：Tab 底部边框线 */
+            border-bottom: 2px solid #eef1f8;
+            /* 可修改：与下方表单的间距 */
+            margin-bottom: 28px;
+        }
+
+        /* 单个 Tab */
+        .auth-tabs .tab {
+            flex: 1;
+            text-align: center;
+            /* 可修改：Tab 内边距 */
+            padding: 12px 0;
+            /* 可修改：Tab 字号 */
+            font-size: 15px;
+            /* 可修改：Tab 默认颜色 */
+            color: #999;
+            cursor: pointer;
+            /* 可修改：Tab 底部指示线粗细 */
+            border-bottom: 2px solid transparent;
+            /* 可修改：Tab 底部指示线与边框底边的偏移 */
+            margin-bottom: -2px;
+            transition: color 0.2s, border-color 0.2s;
+        }
+
+        .auth-tabs .tab.on {
+            /* 可修改：Tab 选中颜色（品牌色） */
+            color: #4f6ef7;
+            font-weight: 600;
+            /* 可修改：Tab 选中底部指示线颜色 */
+            border-bottom-color: #4f6ef7;
+        }
+
+        /* 表单分组 */
+        .form-group {
+            /* 可修改：表单项之间的间距 */
+            margin-bottom: 20px;
+        }
+
+        /* 表单标签 */
+        .form-group label {
+            display: block;
+            /* 可修改：标签字号 */
+            font-size: 13px;
+            /* 可修改：标签颜色 */
+            color: #666;
+            /* 可修改：标签与输入框的间距 */
+            margin-bottom: 6px;
+        }
+
+        /* 输入框容器（用于图标 + 输入框的组合） */
+        .input-wrap {
+            display: flex;
+            align-items: center;
+            /* 可修改：输入框边框 */
+            border: 1.5px solid #e2e8f5;
+            /* 可修改：输入框圆角 */
+            border-radius: 12px;
+            /* 可修改：输入框内边距 */
+            padding: 0 16px;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            background: #fff;
+        }
+
+        .input-wrap:focus-within {
+            /* 可修改：输入框聚焦时的边框颜色（品牌色） */
+            border-color: #4f6ef7;
+            /* 可修改：输入框聚焦时的外发光阴影 */
+            box-shadow: 0 0 0 3px rgba(79, 110, 247, 0.1);
+        }
+
+        /* 输入框前缀图标（区号等） */
+        .input-prefix {
+            /* 可修改：前缀图标/文字颜色 */
+            color: #999;
+            /* 可修改：前缀字号 */
+            font-size: 14px;
+            /* 可修改：前缀与输入框的间距 */
+            margin-right: 8px;
+            flex-shrink: 0;
+        }
+
+        /* 输入框 */
+        .input-wrap input {
+            flex: 1;
+            /* 可修改：输入框高度 */
+            height: 48px;
+            border: none;
+            outline: none;
+            /* 可修改：输入框字号 */
+            font-size: 15px;
+            /* 可修改：输入框文字颜色 */
+            color: #333;
+            background: transparent;
+        }
+
+        .input-wrap input::placeholder {
+            /* 可修改：输入框占位文字颜色 */
+            color: #bbb;
+        }
+
+        /* 获取验证码按钮（在输入框内部右侧） */
+        .btn-send-code {
+            /* 可修改：获取验证码按钮字号 */
+            font-size: 13px;
+            /* 可修改：获取验证码按钮颜色（品牌色） */
+            color: #4f6ef7;
+            background: none;
+            border: none;
+            cursor: pointer;
+            white-space: nowrap;
+            padding: 8px 0 8px 12px;
+            font-weight: 600;
+            transition: opacity 0.2s;
+        }
+
+        .btn-send-code:disabled {
+            /* 可修改：按钮禁用时的颜色 */
+            color: #bbb;
+            cursor: not-allowed;
+        }
+
+        /* 登录按钮 */
+        .btn-login {
+            width: 100%;
+            /* 可修改：登录按钮高度 */
+            height: 48px;
+            /* 可修改：登录按钮背景色（品牌色，可做渐变） */
+            background: linear-gradient(135deg, #4f6ef7, #6b8aff);
+            /* 可修改：登录按钮文字颜色 */
+            color: #fff;
+            /* 可修改：登录按钮字号 */
+            font-size: 16px;
+            /* 可修改：登录按钮字重 */
+            font-weight: 600;
+            /* 可修改：登录按钮圆角 */
+            border-radius: 12px;
+            border: none;
+            cursor: pointer;
+            /* 可修改：登录按钮与上方表单的间距 */
+            margin-top: 8px;
+            transition: opacity 0.2s, transform 0.1s;
+        }
+
+        .btn-login:hover {
+            /* 可修改：登录按钮悬停透明度 */
+            opacity: 0.9;
+        }
+
+        .btn-login:active {
+            transform: scale(0.98);
+        }
+
+        /* 用户协议区域 */
+        .agreement {
+            /* 可修改：协议文字字号 */
+            font-size: 12px;
+            /* 可修改：协议文字颜色 */
+            color: #aaa;
+            text-align: center;
+            /* 可修改：与上方按钮的间距 */
+            margin-top: 18px;
+            line-height: 1.6;
+        }
+
+        .agreement a {
+            /* 可修改：协议链接颜色 */
+            color: #4f6ef7;
+            text-decoration: none;
+        }
+
+        /* 底部版权 */
+        .footer-copyright {
+            text-align: center;
+            /* 可修改：版权文字字号 */
+            font-size: 12px;
+            /* 可修改：版权文字颜色 */
+            color: #bbb;
+            /* 可修改：与上方内容的间距 */
+            margin-top: 24px;
+        }
+
+        /* ============================================
+           移动端适配（屏幕宽度小于 768px 时生效）
+           ============================================ */
+        @media (max-width: 768px) {
+            .page-wrapper {
+                flex-direction: column;
+                padding: 20px 16px;
+                gap: 32px;
+            }
+
+            .right-auth {
+                width: 100%;
+            }
+
+            .carousel {
+                min-height: 380px;
+            }
+
+            .carousel-card {
+                padding: 32px 24px;
+            }
+
+            .carousel-card .card-title-1,
+            .carousel-card .card-title-2 {
+                font-size: 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="page-wrapper">
+
+        <!-- ============================================================
+             左侧：产品展示轮播区
+             包含 4 个轮播卡片，通过添加/移除 .on 类来切换显示
+             ============================================================ -->
+        <div class="left-showcase">
+            <div class="carousel" id="carousel">
+
+                <!-- 轮播卡片 1 -->
+                <div class="carousel-card on" data-index="0">
+                    <!-- 可修改：主标题第一行 -->
+                    <strong class="card-title-1">让每一次开口</strong>
+                    <!-- 可修改：主标题第二行（高亮） -->
+                    <b class="card-title-2">都更自信</b>
+                    <!-- 可修改：描述文字 -->
+                    <small class="card-desc">AI 实时评分，音标级纠错，练出地道口语</small>
+
+                    <div class="data-card">
+                        <!-- 可修改：功能名称 -->
+                        <div class="feature-name">口语测评</div>
+                        <div class="rating">
+                            <!-- 可修改：评价等级 -->
+                            <span class="rating-label">Excellent</span>
+                            <span class="rating-value">流利度 92%</span>
+                        </div>
+                        <div class="progress-track">
+                            <!-- 可修改：进度条百分比（改 width 的值即可，比如 92%） -->
+                            <div class="progress-fill" style="width: 92%;"></div>
+                        </div>
+                        <!-- 可修改：学员数量 -->
+                        <div class="student-count">10k+ 学员</div>
+                    </div>
+                </div>
+
+                <!-- 轮播卡片 2 -->
+                <div class="carousel-card" data-index="1">
+                    <strong class="card-title-1">像玩游戏一样</strong>
+                    <b class="card-title-2">组装句子</b>
+                    <small class="card-desc">连词成句，连击加成，越练越上瘾</small>
+
+                    <div class="data-card">
+                        <div class="feature-name">语法构建</div>
+                        <div class="rating">
+                            <span class="rating-label">Perfect</span>
+                            <span class="rating-value">完成度 90%</span>
+                        </div>
+                        <div class="progress-track">
+                            <div class="progress-fill" style="width: 90%;"></div>
+                        </div>
+                        <div class="student-count">8k+ 学员</div>
+                    </div>
+                </div>
+
+                <!-- 轮播卡片 3 -->
+                <div class="carousel-card" data-index="2">
+                    <strong class="card-title-1">指尖律动</strong>
+                    <b class="card-title-2">入耳更入心</b>
+                    <small class="card-desc">听写训练，听力拼写双提升</small>
+
+                    <div class="data-card">
+                        <div class="feature-name">键盘听写</div>
+                        <div class="rating">
+                            <span class="rating-label">Great</span>
+                            <span class="rating-value">正确率 96%</span>
+                        </div>
+                        <div class="progress-track">
+                            <div class="progress-fill" style="width: 96%;"></div>
+                        </div>
+                        <div class="student-count">12k+ 学员</div>
+                    </div>
+                </div>
+
+                <!-- 轮播卡片 4 -->
+                <div class="carousel-card" data-index="3">
+                    <strong class="card-title-1">海量优质课程</strong>
+                    <b class="card-title-2">应有尽有</b>
+                    <small class="card-desc">近千个课程包，覆盖零基础到备考</small>
+
+                    <div class="data-card">
+                        <div class="feature-name">课程体系</div>
+                        <div class="rating">
+                            <span class="rating-label">Rich</span>
+                            <span class="rating-value">覆盖率 92%</span>
+                        </div>
+                        <div class="progress-track">
+                            <div class="progress-fill" style="width: 92%;"></div>
+                        </div>
+                        <div class="student-count">20k+ 学员</div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- 轮播底部：返回首页 + 指示点 -->
+            <div class="carousel-footer">
+                <a href="#" class="back-home">← 返回首页</a>
+                <div class="carousel-dots" id="carouselDots">
+                    <!-- 可修改：指示点数量与上方卡片数量保持一致，这里是 4 个 -->
+                    <span class="dot on" data-dot="0"></span>
+                    <span class="dot" data-dot="1"></span>
+                    <span class="dot" data-dot="2"></span>
+                    <span class="dot" data-dot="3"></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================
+             右侧：登录 / 注册区
+             ============================================================ -->
+        <div class="right-auth">
+            <div class="auth-card">
+
+                <!-- 可修改：品牌 Logo 文字 -->
+                <div class="auth-logo">句游英语</div>
+
+                <!-- 登录方式 Tab -->
+                <div class="auth-tabs">
+                    <!-- 可修改：Tab 名称 -->
+                    <div class="tab on" data-tab="code">验证码登录</div>
+                    <div class="tab" data-tab="wechat">微信登录</div>
+                </div>
+
+                <!-- 验证码登录表单（当前显示） -->
+                <div id="form-code" class="form-content">
+                    <!-- 手机号 -->
+                    <div class="form-group">
+                        <label>手机号</label>
+                        <div class="input-wrap">
+                            <!-- 可修改：默认区号 -->
+                            <span class="input-prefix">+86</span>
+                            <input type="tel" placeholder="请输入手机号" id="phoneInput" maxlength="11">
+                        </div>
+                    </div>
+
+                    <!-- 验证码 -->
+                    <div class="form-group">
+                        <label>验证码</label>
+                        <div class="input-wrap">
+                            <input type="text" placeholder="请输入验证码" id="codeInput" maxlength="6">
+                            <!-- 可修改：按钮文字默认「获取验证码」，倒计时时显示「60s」 -->
+                            <button class="btn-send-code" id="btnSendCode">获取验证码</button>
+                        </div>
+                    </div>
+
+                    <!-- 登录按钮 -->
+                    <button class="btn-login" id="btnLogin">立即登录</button>
+
+                    <!-- 用户协议 -->
+                    <div class="agreement">
+                        登录即表示同意
+                        <a href="#">《用户协议》</a>
+                        和
+                        <a href="#">《隐私政策》</a>
+                    </div>
+                </div>
+
+                <!-- 微信登录表单（默认隐藏，点击 Tab 后显示） -->
+                <div id="form-wechat" class="form-content" style="display: none; text-align: center; padding: 40px 0;">
+                    <!-- 可修改：这里后续会放微信二维码，现在用占位文字 -->
+                    <p style="color: #999; font-size: 14px;">微信扫码登录区域</p>
+                    <p style="color: #ccc; font-size: 12px; margin-top: 8px;">（后续步骤实现）</p>
+                </div>
+
+                <!-- 底部版权 -->
+                <div class="footer-copyright">
+                    <!-- 可修改：版权信息 -->
+                    © 2026 JuYou English Inc. All Rights Reserved. 苏ICP备XXXXXXXX号
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+    /* ============================================================
+       轮播切换逻辑
+       ============================================================ */
+    (function() {
+        var cards = document.querySelectorAll('.carousel-card');
+        var dots = document.querySelectorAll('.carousel-dots .dot');
+        var currentIndex = 0;
+        var total = cards.length;
+        var switchInterval = 3000;
+        var timer = null;
+
+        function goTo(index) {
+            cards.forEach(function(card) { card.classList.remove('on'); });
+            dots.forEach(function(dot) { dot.classList.remove('on'); });
+            cards[index].classList.add('on');
+            dots[index].classList.add('on');
+            currentIndex = index;
+        }
+
+        function next() {
+            var nextIndex = (currentIndex + 1) % total;
+            goTo(nextIndex);
+        }
+
+        function startAuto() {
+            if (timer) clearInterval(timer);
+            timer = setInterval(next, switchInterval);
+        }
+
+        function stopAuto() {
+            if (timer) {
+                clearInterval(timer);
+                timer = null;
+            }
+        }
+
+        startAuto();
+
+        dots.forEach(function(dot) {
+            dot.addEventListener('click', function() {
+                var index = parseInt(this.getAttribute('data-dot'));
+                goTo(index);
+                stopAuto();
+                startAuto();
+            });
+        });
+
+        var carouselEl = document.getElementById('carousel');
+        carouselEl.addEventListener('mouseenter', stopAuto);
+        carouselEl.addEventListener('mouseleave', startAuto);
+    })();
+
+    /* ============================================================
+       登录方式 Tab 切换
+       ============================================================ */
+    (function() {
+        var tabs = document.querySelectorAll('.auth-tabs .tab');
+        var formCode = document.getElementById('form-code');
+        var formWechat = document.getElementById('form-wechat');
+
+        tabs.forEach(function(tab) {
+            tab.addEventListener('click', function() {
+                tabs.forEach(function(t) { t.classList.remove('on'); });
+                this.classList.add('on');
+
+                var tabName = this.getAttribute('data-tab');
+                if (tabName === 'code') {
+                    formCode.style.display = 'block';
+                    formWechat.style.display = 'none';
+                } else if (tabName === 'wechat') {
+                    formCode.style.display = 'none';
+                    formWechat.style.display = 'block';
+                }
+            });
+        });
+    })();
+
+    /* ============================================================
+       获取验证码按钮 - 60 秒倒计时
+       ============================================================ */
+    (function() {
+        var btn = document.getElementById('btnSendCode');
+        var countdownSeconds = 60;
+        var counting = false;
+
+        btn.addEventListener('click', function() {
+            if (counting) return;
+
+            var phone = document.getElementById('phoneInput').value.trim();
+            if (!phone || phone.length < 11) {
+                alert('请先输入正确的手机号');
+                return;
+            }
+
+            counting = true;
+            btn.disabled = true;
+            var remaining = countdownSeconds;
+            btn.textContent = remaining + 's';
+
+            var timer = setInterval(function() {
+                remaining--;
+                if (remaining <= 0) {
+                    clearInterval(timer);
+                    btn.disabled = false;
+                    btn.textContent = '获取验证码';
+                    counting = false;
+                } else {
+                    btn.textContent = remaining + 's';
+                }
+            }, 1000);
+        });
+    })();
+
+    /* ============================================================
+       登录按钮 - 保存登录状态并跳转
+       ============================================================ */
+    (function() {
+        var btn = document.getElementById('btnLogin');
+
+        btn.addEventListener('click', function() {
+            // 1. 获取输入
+            var phone = document.getElementById('phoneInput').value.trim();
+            var code = document.getElementById('codeInput').value.trim();
+
+            // 2. 校验
+            if (!phone || phone.length < 11) {
+                alert('请先输入正确的手机号');
+                return;
+            }
+            if (!code || code.length < 4) {
+                alert('请先输入验证码');
+                return;
+            }
+
+            // 3. 生成昵称（手机号后 4 位）
+            // 可修改：这里可以改成任意生成规则
+            var nickname = '学员' + phone.slice(-4);
+
+            // 4. 保存用户信息到 localStorage
+            var userInfo = {
+                phone: phone,
+                nickname: nickname,
+                loginTime: Date.now()
+            };
+            localStorage.setItem('juyou_user', JSON.stringify(userInfo));
+
+            // 5. 跳转到主页面
+            window.location.href = 'home.html';
+        });
+    })();
+</script>
+
+</body>
+</html>

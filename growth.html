@@ -1,0 +1,1575 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>句游英语 - 成长分析</title>
+
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+            background: #f5f7fb;
+            color: #333;
+            min-height: 100vh;
+        }
+
+        :root {
+            --brand: #4f6ef7;
+            --brand-light: #7b8fff;
+            --text-main: #1a1a2e;
+            --text-sub: #666;
+            --text-mute: #999;
+            --border: #eef1f8;
+            --card-bg: #ffffff;
+            --success: #22a06b;
+            --danger: #ff5b5b;
+            --warn: #ff9f43;
+        }
+
+        a { text-decoration: none; color: inherit; }
+
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-thumb { background: #d8dfee; border-radius: 99px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+
+        .app-layout { display: flex; min-height: 100vh; }
+
+        .sidebar {
+            width: 220px;
+            flex-shrink: 0;
+            background: #ffffff;
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            padding: 24px 16px;
+            position: sticky;
+            top: 0;
+            height: 100vh;
+            overflow-y: auto;
+        }
+
+        .sidebar .logo {
+            font-size: 20px;
+            font-weight: 800;
+            color: var(--brand);
+            padding: 0 12px;
+            margin-bottom: 28px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .nav-group { margin-bottom: 8px; }
+
+        .nav-group-title {
+            font-size: 11px;
+            color: #bbb;
+            padding: 8px 12px;
+            letter-spacing: 1px;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 11px 12px;
+            border-radius: 10px;
+            font-size: 14px;
+            color: var(--text-sub);
+            cursor: pointer;
+            transition: background 0.2s, color 0.2s;
+            margin-bottom: 2px;
+        }
+
+        .nav-item:hover { background: #f4f6fc; color: var(--brand); }
+        .nav-item.on { background: #eef2ff; color: var(--brand); font-weight: 600; }
+
+        .nav-item .nav-icon {
+            font-size: 17px;
+            width: 20px;
+            text-align: center;
+            flex-shrink: 0;
+        }
+
+        .sidebar-bottom { margin-top: auto; padding-top: 16px; }
+
+        .vip-card {
+            background: linear-gradient(135deg, #4f6ef7, #7b8fff);
+            border-radius: 14px;
+            padding: 16px;
+            color: #fff;
+            margin-bottom: 10px;
+            cursor: pointer;
+        }
+
+        .vip-card .vip-title { font-size: 14px; font-weight: 700; margin-bottom: 4px; }
+        .vip-card .vip-desc { font-size: 11px; opacity: 0.85; line-height: 1.5; }
+
+        .main-area {
+            flex: 1;
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .topbar {
+            background: #ffffff;
+            border-bottom: 1px solid var(--border);
+            padding: 14px 28px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+
+        .search-box {
+            flex: 1;
+            max-width: 420px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: #f4f6fc;
+            border-radius: 10px;
+            padding: 0 14px;
+            height: 40px;
+            transition: box-shadow 0.2s;
+        }
+
+        .search-box:focus-within {
+            box-shadow: 0 0 0 3px rgba(79, 110, 247, 0.12);
+        }
+
+        .search-box input {
+            flex: 1;
+            border: none;
+            outline: none;
+            background: transparent;
+            font-size: 14px;
+            color: var(--text-main);
+        }
+
+        .search-box input::placeholder { color: #b3bdd1; }
+
+        .topbar-right {
+            margin-left: auto;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .topbar-icon-btn {
+            width: 38px;
+            height: 38px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 17px;
+            cursor: pointer;
+            color: var(--text-sub);
+            transition: background 0.2s;
+            position: relative;
+        }
+
+        .topbar-icon-btn:hover { background: #f4f6fc; }
+
+        .badge-dot {
+            position: absolute;
+            top: 7px;
+            right: 7px;
+            width: 7px;
+            height: 7px;
+            background: #ff5b5b;
+            border-radius: 50%;
+            border: 1.5px solid #fff;
+        }
+
+        .user-avatar {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #4f6ef7, #7b8fff);
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+
+        .content-scroll { padding: 24px 28px 40px; }
+
+        .page-header {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .page-header .page-title {
+            font-size: 24px;
+            font-weight: 800;
+            color: var(--text-main);
+            margin-bottom: 6px;
+        }
+
+        .page-header .page-desc {
+            font-size: 13px;
+            color: var(--text-mute);
+        }
+
+        .range-switcher {
+            display: flex;
+            gap: 4px;
+            background: #fff;
+            border-radius: 12px;
+            padding: 4px;
+            box-shadow: 0 2px 12px rgba(20, 40, 90, 0.04);
+        }
+
+        .range-btn {
+            padding: 8px 18px;
+            border-radius: 9px;
+            font-size: 13px;
+            color: var(--text-sub);
+            cursor: pointer;
+            font-weight: 600;
+            transition: background 0.2s, color 0.2s;
+            white-space: nowrap;
+        }
+
+        .range-btn:hover { background: #f4f6fc; }
+
+        .range-btn.on {
+            background: linear-gradient(135deg, #4f6ef7, #6b8aff);
+            color: #fff;
+        }
+
+        .hero-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .hero-card {
+            background: linear-gradient(135deg, #ffffff, #f8faff);
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            padding: 22px;
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .hero-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 28px rgba(79, 110, 247, 0.1);
+        }
+
+        .hero-card::after {
+            content: '';
+            position: absolute;
+            top: -30px;
+            right: -30px;
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, rgba(79, 110, 247, 0.12), rgba(123, 143, 255, 0.05));
+        }
+
+        .hero-card .hc-icon {
+            font-size: 22px;
+            margin-bottom: 10px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .hero-card .hc-label {
+            font-size: 13px;
+            color: var(--text-mute);
+            margin-bottom: 8px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .hero-card .hc-value {
+            font-size: 34px;
+            font-weight: 800;
+            color: var(--text-main);
+            line-height: 1.1;
+            position: relative;
+            z-index: 1;
+        }
+
+        .hero-card .hc-value .unit {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-mute);
+            margin-left: 4px;
+        }
+
+        .hero-card .hc-trend {
+            font-size: 12px;
+            margin-top: 8px;
+            position: relative;
+            z-index: 1;
+            color: var(--text-mute);
+        }
+
+        .hero-card .hc-trend.up { color: var(--success); }
+        .hero-card .hc-trend.warn { color: var(--warn); }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 22px;
+            box-shadow: 0 2px 12px rgba(20, 40, 90, 0.04);
+            margin-bottom: 20px;
+        }
+
+        .card-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 18px;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .card-head .card-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .card-head .card-sub {
+            font-size: 12px;
+            color: var(--text-mute);
+            font-weight: 400;
+        }
+
+        .card-head .card-more {
+            font-size: 13px;
+            color: var(--text-mute);
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .card-head .card-more:hover { color: var(--brand); }
+
+        .chart-wrap {
+            height: 240px;
+            display: flex;
+            align-items: flex-end;
+            gap: 10px;
+            padding: 10px 0 30px;
+            position: relative;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .chart-col {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-end;
+            max-width: 60px;
+            height: 100%;
+            position: relative;
+            cursor: pointer;
+        }
+
+        .chart-bar {
+            width: 100%;
+            border-radius: 8px 8px 4px 4px;
+            background: linear-gradient(180deg, #4f6ef7, #7b8fff);
+            transition: transform 0.2s, box-shadow 0.2s, height 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            min-height: 4px;
+            height: 4px;
+        }
+
+        .chart-col:hover .chart-bar {
+            transform: scaleY(1.03);
+            box-shadow: 0 8px 20px rgba(79, 110, 247, 0.3);
+        }
+
+        .chart-col.today .chart-bar {
+            background: linear-gradient(180deg, #ff9f43, #ff7b00);
+        }
+
+        .chart-bar::before {
+            content: attr(data-value);
+            position: absolute;
+            top: -24px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--text-main);
+            opacity: 0;
+            transition: opacity 0.2s;
+            white-space: nowrap;
+        }
+
+        .chart-col:hover .chart-bar::before { opacity: 1; }
+
+        .chart-label {
+            position: absolute;
+            bottom: -26px;
+            font-size: 12px;
+            color: var(--text-mute);
+        }
+
+        .chart-col.today .chart-label {
+            color: var(--brand);
+            font-weight: 700;
+        }
+
+        .chart-average-line {
+            position: absolute;
+            left: 0;
+            right: 0;
+            border-top: 1px dashed #c9d4f5;
+            pointer-events: none;
+        }
+
+        .chart-average-line::after {
+            content: '平均';
+            position: absolute;
+            right: 0;
+            top: -18px;
+            font-size: 11px;
+            color: var(--text-mute);
+            background: #fff;
+            padding: 0 6px;
+        }
+
+        .calendar-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 14px;
+        }
+
+        .calendar-month {
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+
+        .calendar-nav {
+            display: flex;
+            gap: 6px;
+        }
+
+        .calendar-nav-btn {
+            width: 30px;
+            height: 30px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: var(--text-sub);
+            font-size: 13px;
+            transition: background 0.2s, border-color 0.2s;
+        }
+
+        .calendar-nav-btn:hover {
+            background: #f4f6fc;
+            border-color: #c9d4f5;
+            color: var(--brand);
+        }
+
+        .calendar-weekdays {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 6px;
+            margin-bottom: 8px;
+        }
+
+        .calendar-weekdays .weekday {
+            text-align: center;
+            font-size: 12px;
+            color: var(--text-mute);
+            padding: 4px 0;
+            font-weight: 600;
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 6px;
+        }
+
+        .calendar-day {
+            aspect-ratio: 1;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            color: var(--text-sub);
+            cursor: pointer;
+            transition: transform 0.15s, background 0.15s;
+            position: relative;
+        }
+
+        .calendar-day:hover {
+            transform: scale(1.08);
+            z-index: 1;
+        }
+
+        .calendar-day.empty { visibility: hidden; }
+
+        .calendar-day.checked {
+            background: #e6f7ef;
+            color: var(--success);
+            font-weight: 600;
+        }
+
+        .calendar-day.checked.full {
+            background: linear-gradient(135deg, #22a06b, #35b87d);
+            color: #fff;
+        }
+
+        .calendar-day.today {
+            border: 2px solid var(--brand);
+            color: var(--brand);
+            font-weight: 800;
+            background: #eef2ff;
+        }
+
+        .calendar-day.future {
+            color: #d8dfee;
+            cursor: not-allowed;
+        }
+
+        .calendar-day.future:hover { transform: none; }
+
+        .calendar-legend {
+            display: flex;
+            gap: 16px;
+            margin-top: 16px;
+            flex-wrap: wrap;
+        }
+
+        .calendar-legend .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+            color: var(--text-mute);
+        }
+
+        .calendar-legend .legend-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 4px;
+        }
+
+        .legend-dot.lv1 { background: #e6f7ef; }
+        .legend-dot.lv2 { background: linear-gradient(135deg, #22a06b, #35b87d); }
+        .legend-dot.lv0 { background: #f4f6fc; border: 1px solid var(--border); }
+
+        .task-summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 14px;
+        }
+
+        .task-summary-card {
+            background: #f8faff;
+            border-radius: 14px;
+            padding: 16px;
+        }
+
+        .task-summary-card .tsc-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+
+        .task-summary-card .tsc-name {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .task-summary-card .tsc-rate {
+            font-size: 12px;
+            color: var(--text-mute);
+        }
+
+        .task-summary-card .tsc-value {
+            font-size: 24px;
+            font-weight: 800;
+            color: var(--brand);
+            margin-bottom: 4px;
+        }
+
+        .task-summary-card .tsc-desc {
+            font-size: 12px;
+            color: var(--text-mute);
+        }
+
+        .mini-track {
+            width: 100%;
+            height: 6px;
+            background: #eef1f8;
+            border-radius: 99px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+
+        .mini-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4f6ef7, #7b8fff);
+            border-radius: 99px;
+        }
+
+        .skill-list {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .skill-row {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .skill-row .skill-name {
+            width: 90px;
+            font-size: 13px;
+            color: var(--text-sub);
+            flex-shrink: 0;
+        }
+
+        .skill-row .skill-bar-track {
+            flex: 1;
+            height: 10px;
+            background: #eef1f8;
+            border-radius: 99px;
+            overflow: hidden;
+        }
+
+        .skill-row .skill-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4f6ef7, #7b8fff);
+            border-radius: 99px;
+            transition: width 0.8s ease;
+        }
+
+        .skill-row .skill-score {
+            width: 45px;
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--text-main);
+            text-align: right;
+            flex-shrink: 0;
+        }
+
+        .parent-card {
+            background: linear-gradient(135deg, #eef2ff, #e6ecff);
+            border-radius: 16px;
+            padding: 22px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        .parent-card .parent-icon { font-size: 32px; flex-shrink: 0; }
+
+        .parent-card .parent-body { flex: 1; min-width: 200px; }
+
+        .parent-card .parent-title {
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--text-main);
+            margin-bottom: 4px;
+        }
+
+        .parent-card .parent-desc {
+            font-size: 12px;
+            color: var(--text-sub);
+            line-height: 1.6;
+        }
+
+        .parent-card .btn-parent {
+            background: linear-gradient(135deg, #4f6ef7, #6b8aff);
+            color: #fff;
+            border: none;
+            border-radius: 10px;
+            padding: 10px 20px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: opacity 0.2s, transform 0.1s;
+            white-space: nowrap;
+        }
+
+        .parent-card .btn-parent:hover { opacity: 0.9; }
+        .parent-card .btn-parent:active { transform: scale(0.98); }
+
+        .two-col {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 1100px) {
+            .two-col { grid-template-columns: 1fr; }
+        }
+
+        @media (max-width: 768px) {
+            .sidebar { width: 64px; padding: 16px 8px; }
+            .sidebar .logo { font-size: 0; justify-content: center; padding: 0; }
+            .sidebar .logo .logo-icon { font-size: 22px; }
+            .nav-item { justify-content: center; padding: 12px 0; }
+            .nav-item .nav-text { display: none; }
+            .nav-group-title { display: none; }
+            .vip-card { display: none; }
+            .content-scroll { padding: 16px 14px 32px; }
+            .topbar { padding: 12px 14px; }
+            .page-header .page-title { font-size: 20px; }
+            .hero-card .hc-value { font-size: 26px; }
+            .chart-wrap { height: 180px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="app-layout">
+
+    <!-- 左侧导航栏 -->
+    <aside class="sidebar">
+
+        <div class="logo">
+            <span class="logo-icon">🎯</span>
+            <span class="logo-text">句游英语</span>
+        </div>
+
+        <nav>
+            <div class="nav-group">
+                <div class="nav-group-title">学习</div>
+                <div class="nav-item" data-href="home.html">
+                    <span class="nav-icon">🏠</span>
+                    <span class="nav-text">首页</span>
+                </div>
+                <div class="nav-item" data-href="learn.html">
+                    <span class="nav-icon">▶️</span>
+                    <span class="nav-text">开始学习</span>
+                </div>
+                <div class="nav-item" data-href="mall.html">
+                    <span class="nav-icon">📚</span>
+                    <span class="nav-text">课程包商城</span>
+                </div>
+                <div class="nav-item" data-href="archive.html">
+                    <span class="nav-icon">🗂️</span>
+                    <span class="nav-text">学习档案</span>
+                </div>
+                <!-- 当前页：成长分析 -->
+                <div class="nav-item on" data-href="growth.html">
+                    <span class="nav-icon">📈</span>
+                    <span class="nav-text">成长分析</span>
+                </div>
+            </div>
+
+            <div class="nav-group">
+                <div class="nav-group-title">社交</div>
+                <div class="nav-item" data-href="community.html">
+                    <span class="nav-icon">👥</span>
+                    <span class="nav-text">社区</span>
+                </div>
+                <div class="nav-item" data-href="community.html">
+                    <span class="nav-icon">⚔️</span>
+                    <span class="nav-text">PK 对战</span>
+                </div>
+                <div class="nav-item" data-href="community.html">
+                    <span class="nav-icon">🏆</span>
+                    <span class="nav-text">排行榜</span>
+                </div>
+            </div>
+
+            <div class="nav-group">
+                <div class="nav-group-title">我的</div>
+                <div class="nav-item" data-href="profile.html">
+                    <span class="nav-icon">👤</span>
+                    <span class="nav-text">个人中心</span>
+                </div>
+                <div class="nav-item" data-href="promote.html">
+                    <span class="nav-icon">💰</span>
+                    <span class="nav-text">推广返佣</span>
+                </div>
+                <div class="nav-item" data-href="plugin.html">
+                    <span class="nav-icon">🧩</span>
+                    <span class="nav-text">浏览器插件</span>
+                </div>
+            </div>
+        </nav>
+
+        <div class="sidebar-bottom">
+            <div class="vip-card" data-href="profile.html">
+                <div class="vip-title">👑 升级会员</div>
+                <div class="vip-desc">解锁全部课程<br>AI 助手无限次提问</div>
+            </div>
+        </div>
+
+    </aside>
+
+    <!-- 右侧主区域 -->
+    <div class="main-area">
+
+        <header class="topbar">
+            <div class="search-box">
+                <span>🔍</span>
+                <input type="text" placeholder="搜索学习记录...">
+            </div>
+
+            <div class="topbar-right">
+                <div class="topbar-icon-btn" data-tip="通知中心（后续步骤实现）">
+                    🔔
+                    <span class="badge-dot"></span>
+                </div>
+                <div class="topbar-icon-btn" data-tip="帮助中心（后续步骤实现）">❓</div>
+                <div class="user-avatar" data-href="profile.html">学</div>
+            </div>
+        </header>
+
+        <div class="content-scroll">
+
+            <div class="page-header">
+                <div>
+                    <div class="page-title">成长分析</div>
+                    <div class="page-desc">坚持学习，看见每一次进步</div>
+                </div>
+
+                <div class="range-switcher" id="rangeSwitcher">
+                    <div class="range-btn" data-range="week">本周</div>
+                    <div class="range-btn on" data-range="month">本月</div>
+                    <div class="range-btn" data-range="year">全年</div>
+                </div>
+            </div>
+
+            <!-- 核心数据：数字由 JS 动态更新 -->
+            <div class="hero-stats">
+
+                <div class="hero-card">
+                    <div class="hc-icon">📅</div>
+                    <div class="hc-label">累计学习天数</div>
+                    <div class="hc-value"><span id="heroDays">0</span><span class="unit">天</span></div>
+                    <div class="hc-trend" id="heroDaysTrend">开始你的第一天吧</div>
+                </div>
+
+                <div class="hero-card">
+                    <div class="hc-icon">⏱️</div>
+                    <div class="hc-label">累计学习时长</div>
+                    <div class="hc-value"><span id="heroHours">0</span><span class="unit">小时</span></div>
+                    <div class="hc-trend" id="heroHoursTrend">按每题约 3 分钟估算</div>
+                </div>
+
+                <div class="hero-card">
+                    <div class="hc-icon">📖</div>
+                    <div class="hc-label">累计练习句子</div>
+                    <div class="hc-value"><span id="heroSentences">0</span><span class="unit">句</span></div>
+                    <div class="hc-trend" id="heroSentencesTrend">还没有练习记录</div>
+                </div>
+
+                <div class="hero-card">
+                    <div class="hc-icon">🔥</div>
+                    <div class="hc-label">当前连续打卡</div>
+                    <div class="hc-value"><span id="heroStreak">0</span><span class="unit">天</span></div>
+                    <div class="hc-trend" id="heroStreakTrend">今天还没打卡</div>
+                </div>
+
+            </div>
+
+            <!-- 学习时长趋势 -->
+            <div class="card">
+                <div class="card-head">
+                    <div class="card-title">
+                        📊 学习趋势
+                        <span class="card-sub">（近 7 天）</span>
+                    </div>
+                    <div class="card-more" data-tip="查看详细报表（后续步骤实现）">详细报表 →</div>
+                </div>
+
+                <div class="chart-wrap" id="chartWrap">
+                    <div class="chart-average-line" style="top: 55%;"></div>
+                    <!-- 7 个 chart-col 由 JS 动态生成 -->
+                </div>
+            </div>
+
+            <!-- 两列：打卡日历 + 每日任务 -->
+            <div class="two-col">
+
+                <div class="card">
+                    <div class="card-head">
+                        <div class="card-title">📅 打卡日历</div>
+                    </div>
+
+                    <div class="calendar-head">
+                        <div class="calendar-month" id="calendarMonth">— 年 — 月</div>
+                        <div class="calendar-nav">
+                            <div class="calendar-nav-btn" data-tip="上个月（后续步骤实现）">‹</div>
+                            <div class="calendar-nav-btn" data-tip="下个月（后续步骤实现）">›</div>
+                        </div>
+                    </div>
+
+                    <div class="calendar-weekdays">
+                        <div class="weekday">一</div>
+                        <div class="weekday">二</div>
+                        <div class="weekday">三</div>
+                        <div class="weekday">四</div>
+                        <div class="weekday">五</div>
+                        <div class="weekday">六</div>
+                        <div class="weekday">日</div>
+                    </div>
+
+                    <div class="calendar-grid" id="calendarGrid"></div>
+
+                    <div class="calendar-legend">
+                        <div class="legend-item">
+                            <div class="legend-dot lv0"></div>
+                            <span>未打卡</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-dot lv1"></div>
+                            <span>已打卡</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-dot lv2"></div>
+                            <span>练习点达标</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-head">
+                        <div class="card-title">🎯 每日任务完成率</div>
+                        <div class="card-more" data-tip="任务设置（后续步骤实现）">设置 →</div>
+                    </div>
+
+                    <div class="task-summary">
+
+                        <div class="task-summary-card">
+                            <div class="tsc-head">
+                                <div class="tsc-name">🎯 每日练习点</div>
+                                <div class="tsc-rate">30 天完成 26 天</div>
+                            </div>
+                            <div class="tsc-value">87%</div>
+                            <div class="tsc-desc">目标 10 个练习点 / 天</div>
+                            <div class="mini-track">
+                                <div class="mini-fill" style="width: 87%;"></div>
+                            </div>
+                        </div>
+
+                        <div class="task-summary-card">
+                            <div class="tsc-head">
+                                <div class="tsc-name">🎤 口语练习</div>
+                                <div class="tsc-rate">30 天完成 18 天</div>
+                            </div>
+                            <div class="tsc-value">60%</div>
+                            <div class="tsc-desc">目标 1 次 / 天</div>
+                            <div class="mini-track">
+                                <div class="mini-fill" style="width: 60%;"></div>
+                            </div>
+                        </div>
+
+                        <div class="task-summary-card">
+                            <div class="tsc-head">
+                                <div class="tsc-name">🔁 复习旧内容</div>
+                                <div class="tsc-rate">30 天完成 28 天</div>
+                            </div>
+                            <div class="tsc-value">93%</div>
+                            <div class="tsc-desc">目标 3 项 / 天</div>
+                            <div class="mini-track">
+                                <div class="mini-fill" style="width: 93%;"></div>
+                            </div>
+                        </div>
+
+                        <div class="task-summary-card">
+                            <div class="tsc-head">
+                                <div class="tsc-name">✍️ 发布动态</div>
+                                <div class="tsc-rate">30 天完成 9 天</div>
+                            </div>
+                            <div class="tsc-value">30%</div>
+                            <div class="tsc-desc">目标 1 条 / 天</div>
+                            <div class="mini-track">
+                                <div class="mini-fill" style="width: 30%;"></div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- 两列：能力 + 家长专区 -->
+            <div class="two-col">
+
+                <div class="card">
+                    <div class="card-head">
+                        <div class="card-title">🧠 能力分析</div>
+                        <div class="card-more" data-tip="查看详细能力报告（后续步骤实现）">详情 →</div>
+                    </div>
+
+                    <div class="skill-list">
+
+                        <div class="skill-row">
+                            <div class="skill-name">👂 听力</div>
+                            <div class="skill-bar-track">
+                                <div class="skill-bar-fill" style="width: 78%;"></div>
+                            </div>
+                            <div class="skill-score">78</div>
+                        </div>
+
+                        <div class="skill-row">
+                            <div class="skill-name">🎤 口语</div>
+                            <div class="skill-bar-track">
+                                <div class="skill-bar-fill" style="width: 65%;"></div>
+                            </div>
+                            <div class="skill-score">65</div>
+                        </div>
+
+                        <div class="skill-row">
+                            <div class="skill-name">📖 阅读</div>
+                            <div class="skill-bar-track">
+                                <div class="skill-bar-fill" style="width: 85%;"></div>
+                            </div>
+                            <div class="skill-score">85</div>
+                        </div>
+
+                        <div class="skill-row">
+                            <div class="skill-name">✍️ 写作</div>
+                            <div class="skill-bar-track">
+                                <div class="skill-bar-fill" style="width: 72%;"></div>
+                            </div>
+                            <div class="skill-score">72</div>
+                        </div>
+
+                        <div class="skill-row">
+                            <div class="skill-name">📒 词汇</div>
+                            <div class="skill-bar-track">
+                                <div class="skill-bar-fill" style="width: 90%;"></div>
+                            </div>
+                            <div class="skill-score">90</div>
+                        </div>
+
+                        <div class="skill-row">
+                            <div class="skill-name">🔤 语法</div>
+                            <div class="skill-bar-track">
+                                <div class="skill-bar-fill" style="width: 81%;"></div>
+                            </div>
+                            <div class="skill-score">81</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-head">
+                        <div class="card-title">👨‍👩‍👧 家长专区</div>
+                    </div>
+
+                    <div class="parent-card">
+                        <div class="parent-icon">📧</div>
+                        <div class="parent-body">
+                            <div class="parent-title">每周学习周报</div>
+                            <div class="parent-desc">
+                                每周末自动生成学习周报，包含学习时长、完成率、能力变化等，发送到家长邮箱
+                            </div>
+                        </div>
+                        <button class="btn-parent" data-tip="绑定家长邮箱（后续步骤实现）">绑定邮箱</button>
+                    </div>
+
+                    <div style="margin-top: 14px; padding: 16px; background: #f8faff; border-radius: 14px; display: flex; align-items: center; gap: 12px;">
+                        <span style="font-size: 22px;">📊</span>
+                        <div style="flex: 1;">
+                            <div style="font-size: 13px; font-weight: 600; color: var(--text-main); margin-bottom: 2px;">学习时长周报</div>
+                            <div style="font-size: 12px; color: var(--text-mute);">查看孩子本周学习时间分布</div>
+                        </div>
+                        <div style="font-size: 13px; color: var(--brand); cursor: pointer; font-weight: 600;" data-tip="查看周报（后续步骤实现）">查看 →</div>
+                    </div>
+
+                    <div style="margin-top: 10px; padding: 16px; background: #f8faff; border-radius: 14px; display: flex; align-items: center; gap: 12px;">
+                        <span style="font-size: 22px;">🔔</span>
+                        <div style="flex: 1;">
+                            <div style="font-size: 13px; font-weight: 600; color: var(--text-main); margin-bottom: 2px;">学习提醒</div>
+                            <div style="font-size: 12px; color: var(--text-mute);">每日固定时间提醒孩子学习</div>
+                        </div>
+                        <div style="font-size: 13px; color: var(--brand); cursor: pointer; font-weight: 600;" data-tip="设置提醒（后续步骤实现）">设置 →</div>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+/* ============================================================
+   ★★★ 登录状态检查（脚本最前面，未登录立即跳回登录页） ★★★
+   ============================================================ */
+(function() {
+    var userStr = localStorage.getItem('juyou_user');
+    if (!userStr) {
+        window.location.href = 'index.html';
+        return;
+    }
+    var user = null;
+    try {
+        user = JSON.parse(userStr);
+    } catch (e) {
+        localStorage.removeItem('juyou_user');
+        window.location.href = 'index.html';
+        return;
+    }
+    if (!user || !user.phone) {
+        localStorage.removeItem('juyou_user');
+        window.location.href = 'index.html';
+        return;
+    }
+    window.currentUser = user;
+})();
+
+/* ============================================================
+   ★★★ 本地学习数据访问 JYStore（轻量版） ★★★
+   ============================================================ */
+window.JYStore = (function() {
+    var KEY = 'juyou_study';
+
+    function getDefault() {
+        return {
+            records: [], reviewBook: [], wordBook: [], mastered: [], starred: [],
+            stats: {
+                totalDays: 0, totalTime: 0, totalSentences: 0,
+                streak: 0, lastStudyDate: null,
+                todayCount: 0, todayDate: null
+            }
+        };
+    }
+
+    function load() {
+        try {
+            var raw = localStorage.getItem(KEY);
+            if (!raw) return getDefault();
+            var data = JSON.parse(raw);
+            var def = getDefault();
+            return {
+                records: data.records || def.records,
+                reviewBook: data.reviewBook || def.reviewBook,
+                wordBook: data.wordBook || def.wordBook,
+                mastered: data.mastered || def.mastered,
+                starred: data.starred || def.starred,
+                stats: Object.assign({}, def.stats, data.stats || {})
+            };
+        } catch (e) {
+            return getDefault();
+        }
+    }
+
+    return { load: load };
+})();
+
+/* ============================================================
+   ★★★ 网络时间同步 JYTime（双源并行，谁先成功用谁） ★★★
+   
+   - 源 1：从 GitHub API 的 Date 响应头拿时间（需要 localhost / https 环境）
+   - 源 2：淘宝 JSONP 时间戳（file:// 环境可用，但需要 DNS 能解析 api.m.taobao.com）
+   - 兜底：如果都失败，用本机时间
+   
+   同步结果会打印到浏览器控制台（F12 → Console 可见）
+   ============================================================ */
+window.JYTime = (function() {
+    var offset = 0;         // 本机时间 + offset = 网络时间
+    var synced = false;
+    var syncPromise = null;
+
+    /* 源 1：GitHub API 的 Date 响应头 */
+    function tryFetchDate() {
+        return new Promise(function(resolve) {
+            if (!window.fetch) return resolve(0);
+
+            var controller = ('AbortController' in window) ? new AbortController() : null;
+            var finished = false;
+
+            var timer = setTimeout(function() {
+                if (finished) return;
+                finished = true;
+                if (controller) { try { controller.abort(); } catch (e) {} }
+                resolve(0);
+            }, 2500);
+
+            var opts = { method: 'HEAD', cache: 'no-store' };
+            if (controller) opts.signal = controller.signal;
+
+            fetch('https://api.github.com/', opts)
+                .then(function(res) {
+                    if (finished) return;
+                    finished = true;
+                    clearTimeout(timer);
+                    var dateStr = res.headers.get('date');
+                    if (dateStr) {
+                        var ts = new Date(dateStr).getTime();
+                        if (ts > 0) { resolve(ts); return; }
+                    }
+                    resolve(0);
+                })
+                .catch(function() {
+                    if (finished) return;
+                    finished = true;
+                    clearTimeout(timer);
+                    resolve(0);
+                });
+        });
+    }
+
+    /* 源 2：淘宝 JSONP 时间戳 */
+    function tryJsonpTaobao() {
+        return new Promise(function(resolve) {
+            var cbName = '__jyTb_' + Date.now() + '_' + Math.floor(Math.random() * 1e6);
+            var script = document.createElement('script');
+            var done = false;
+
+            function cleanup() {
+                if (script.parentNode) script.parentNode.removeChild(script);
+                try { delete window[cbName]; } catch (e) { window[cbName] = undefined; }
+            }
+
+            var timer = setTimeout(function() {
+                if (done) return;
+                done = true;
+                cleanup();
+                resolve(0);
+            }, 2500);
+
+            window[cbName] = function(data) {
+                if (done) return;
+                done = true;
+                clearTimeout(timer);
+                var ts = 0;
+                try {
+                    if (data && data.data && data.data.t) {
+                        ts = parseInt(data.data.t, 10);
+                    }
+                } catch (e) {}
+                cleanup();
+                resolve(ts > 0 ? ts : 0);
+            };
+
+            script.src = 'https://api.m.taobao.com/rest/api3.do?api=mtop.common.getTimestamp&callback=' + cbName;
+            script.onerror = function() {
+                if (done) return;
+                done = true;
+                clearTimeout(timer);
+                cleanup();
+                resolve(0);
+            };
+            document.head.appendChild(script);
+        });
+    }
+
+    function sync() {
+        if (syncPromise) return syncPromise;
+
+        syncPromise = Promise.all([tryFetchDate(), tryJsonpTaobao()])
+            .then(function(results) {
+                var serverTs = 0;
+                var sourceName = '';
+                var names = ['GitHub Date 头', '淘宝时间戳'];
+
+                for (var i = 0; i < results.length; i++) {
+                    if (results[i] > 0) {
+                        serverTs = results[i];
+                        sourceName = names[i];
+                        break;
+                    }
+                }
+
+                if (serverTs > 0) {
+                    var localTs = Date.now();
+                    // 校验：与本机时间差距不超过 1 年，防止脏数据
+                    if (Math.abs(serverTs - localTs) < 86400000 * 365) {
+                        offset = serverTs - localTs;
+                        synced = true;
+                        console.log('[JYTime] ✅ 网络时间同步成功（来源：' + sourceName + '），校正 ' + offset + ' 毫秒');
+                        return true;
+                    }
+                }
+                console.log('[JYTime] ⚠️ 网络时间同步失败（可能是 file:// 环境 + DNS 问题），使用本机时间（不影响功能）');
+                return false;
+            });
+
+        return syncPromise;
+    }
+
+    function now() { return Date.now() + offset; }
+    function date() { return new Date(now()); }
+    function getOffset() { return offset; }
+    function isSynced() { return synced; }
+
+    return {
+        sync: sync,
+        now: now,
+        date: date,
+        getOffset: getOffset,
+        isSynced: isSynced
+    };
+})();
+
+/* ============================================================
+   工具：把日期对象转成 "YYYY-MM-DD"（使用校准后的时间）
+   ============================================================ */
+function dateKey(d) {
+    var m = d.getMonth() + 1;
+    var day = d.getDate();
+    return d.getFullYear() + '-' + (m < 10 ? '0' + m : m) + '-' + (day < 10 ? '0' + day : day);
+}
+
+/* ============================================================
+   ★ 渲染顶部 4 个英雄卡片
+   ============================================================ */
+function renderHeroStats() {
+    var data = JYStore.load();
+    var s = data.stats;
+    var records = data.records;
+
+    document.getElementById('heroDays').textContent = s.totalDays || 0;
+    var daysTrend = document.getElementById('heroDaysTrend');
+    if (s.totalDays > 0) {
+        daysTrend.textContent = '共学习 ' + s.totalDays + ' 天';
+        daysTrend.className = 'hc-trend up';
+    } else {
+        daysTrend.textContent = '开始你的第一天吧';
+        daysTrend.className = 'hc-trend';
+    }
+
+    var minutes = (s.totalSentences || 0) * 3;
+    var hours = (minutes / 60).toFixed(1);
+    document.getElementById('heroHours').textContent = hours;
+    var hoursTrend = document.getElementById('heroHoursTrend');
+    if (minutes > 0) {
+        hoursTrend.textContent = '约 ' + minutes + ' 分钟';
+        hoursTrend.className = 'hc-trend up';
+    } else {
+        hoursTrend.textContent = '按每题约 3 分钟估算';
+        hoursTrend.className = 'hc-trend';
+    }
+
+    document.getElementById('heroSentences').textContent = s.totalSentences || 0;
+    var sentTrend = document.getElementById('heroSentencesTrend');
+    if (records.length > 0) {
+        var correctCount = records.filter(function(r) { return r.correct; }).length;
+        var rate = Math.round((correctCount / records.length) * 100);
+        sentTrend.textContent = '正确率 ' + rate + '%';
+        sentTrend.className = 'hc-trend up';
+    } else {
+        sentTrend.textContent = '还没有练习记录';
+        sentTrend.className = 'hc-trend';
+    }
+
+    document.getElementById('heroStreak').textContent = s.streak || 0;
+    var streakTrend = document.getElementById('heroStreakTrend');
+    var todayStr = dateKey(JYTime.date());  // ★ 使用网络时间
+    if (s.lastStudyDate === todayStr) {
+        streakTrend.textContent = '今天已打卡，继续加油！';
+        streakTrend.className = 'hc-trend up';
+    } else {
+        streakTrend.textContent = '今天还没打卡';
+        streakTrend.className = 'hc-trend warn';
+    }
+}
+
+/* ============================================================
+   ★ 渲染近 7 天趋势柱状图（使用网络时间）
+   ============================================================ */
+function renderChart() {
+    var data = JYStore.load();
+    var now = JYTime.date();
+
+    var days = [];
+    for (var i = 6; i >= 0; i--) {
+        var d = new Date(now.getFullYear(), now.getMonth(), now.getDate() - i);
+        days.push(d);
+    }
+
+    var counts = days.map(function(day) {
+        var start = day.getTime();
+        var end = start + 86400000;
+        return data.records.filter(function(r) {
+            return r.timestamp >= start && r.timestamp < end;
+        }).length;
+    });
+
+    var maxCount = Math.max.apply(null, counts.concat([1]));
+
+    var weekNames = ['日', '一', '二', '三', '四', '五', '六'];
+    var todayStr = dateKey(now);
+
+    var wrap = document.getElementById('chartWrap');
+    var avgLine = wrap.querySelector('.chart-average-line');
+    wrap.innerHTML = '';
+    if (avgLine) wrap.appendChild(avgLine);
+
+    days.forEach(function(day, i) {
+        var isToday = dateKey(day) === todayStr;
+        var col = document.createElement('div');
+        col.className = 'chart-col' + (isToday ? ' today' : '');
+
+        var bar = document.createElement('div');
+        bar.className = 'chart-bar';
+        var percent = maxCount > 0 ? (counts[i] / maxCount) * 100 : 0;
+        bar.style.height = Math.max(percent, 4) + '%';
+        bar.setAttribute('data-value', counts[i] + ' 句');
+
+        var lbl = document.createElement('div');
+        lbl.className = 'chart-label';
+        lbl.textContent = isToday ? '日' : weekNames[day.getDay()];
+
+        col.appendChild(bar);
+        col.appendChild(lbl);
+        wrap.appendChild(col);
+    });
+}
+
+/* ============================================================
+   ★ 渲染打卡日历（按当月，使用网络时间）
+   ============================================================ */
+function renderCalendar() {
+    var data = JYStore.load();
+    var now = JYTime.date();
+    var year = now.getFullYear();
+    var month = now.getMonth();
+
+    document.getElementById('calendarMonth').textContent = year + ' 年 ' + (month + 1) + ' 月';
+
+    var firstDay = new Date(year, month, 1);
+    var jsDay = firstDay.getDay();
+    var offset = (jsDay === 0) ? 6 : (jsDay - 1);
+
+    var daysInMonth = new Date(year, month + 1, 0).getDate();
+
+    var dayStats = {};
+    data.records.forEach(function(r) {
+        var d = new Date(r.timestamp);
+        if (d.getFullYear() !== year || d.getMonth() !== month) return;
+        var key = dateKey(d);
+        dayStats[key] = (dayStats[key] || 0) + 1;
+    });
+
+    var grid = document.getElementById('calendarGrid');
+    var html = '';
+
+    for (var i = 0; i < offset; i++) {
+        html += '<div class="calendar-day empty"></div>';
+    }
+
+    var todayDate = now.getDate();
+    for (var day = 1; day <= daysInMonth; day++) {
+        var dObj = new Date(year, month, day);
+        var key = dateKey(dObj);
+        var count = dayStats[key] || 0;
+
+        var classes = ['calendar-day'];
+        if (count > 0) {
+            classes.push('checked');
+            if (count >= 10) classes.push('full');
+        }
+        if (day === todayDate) classes.push('today');
+        if (day > todayDate) classes.push('future');
+
+        html += '<div class="' + classes.join(' ') + '" title="' + count + ' 句练习">' + day + '</div>';
+    }
+
+    grid.innerHTML = html;
+}
+
+/* ============================================================
+   时间范围切换（暂时只切换按钮视觉）
+   ============================================================ */
+(function() {
+    var rangeBtns = document.querySelectorAll('.range-btn');
+    rangeBtns.forEach(function(btn) {
+        btn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            rangeBtns.forEach(function(b) { b.classList.remove('on'); });
+            this.classList.add('on');
+        });
+    });
+})();
+
+/* ============================================================
+   页面跳转逻辑
+   ============================================================ */
+(function() {
+    var currentPage = window.location.pathname.split('/').pop() || 'growth.html';
+    var clickables = document.querySelectorAll('[data-href]');
+    clickables.forEach(function(el) {
+        el.addEventListener('click', function(e) {
+            e.stopPropagation();
+            var href = this.getAttribute('data-href');
+            if (!href) return;
+            if (href === currentPage) return;
+            window.location.href = href;
+        });
+    });
+})();
+
+/* ============================================================
+   所有带 data-tip 属性的元素，点击后弹出提示
+   ============================================================ */
+(function() {
+    var tipElements = document.querySelectorAll('[data-tip]');
+    tipElements.forEach(function(el) {
+        el.addEventListener('click', function(e) {
+            e.stopPropagation();
+            var tip = this.getAttribute('data-tip');
+            alert(tip);
+        });
+    });
+})();
+
+/* ============================================================
+   初始化：先用本机时间渲染一次，再异步同步网络时间，成功后重新渲染
+   ============================================================ */
+renderHeroStats();
+renderChart();
+renderCalendar();
+
+JYTime.sync().then(function(ok) {
+    if (ok) {
+        renderHeroStats();
+        renderChart();
+        renderCalendar();
+    }
+});
+</script>
+
+</body>
+</html>
