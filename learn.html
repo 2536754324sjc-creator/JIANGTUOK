@@ -1132,7 +1132,7 @@
         }
 
         /* ============================================================
-           ★★★ 视频观看模式 ★★★
+           视频观看模式（★ 已修复 403 + 兜底）
            ============================================================ */
 
         .video-title-bar {
@@ -1174,14 +1174,54 @@
             margin-bottom: 18px;
             position: relative;
             box-shadow: 0 12px 30px rgba(20, 40, 90, 0.15);
+            aspect-ratio: 16/9;
         }
 
         .video-player video {
             width: 100%;
+            height: 100%;
             display: block;
-            aspect-ratio: 16/9;
             background: #000;
-            object-fit: contain;
+            object-fit: cover;
+        }
+
+        /* ★ 视频加载失败时的兜底背景（渐变动画） */
+        .video-fallback {
+            position: absolute;
+            inset: 0;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            gap: 16px;
+            background: linear-gradient(135deg, #1f2544 0%, #3a4270 50%, #4f6ef7 140%);
+            background-size: 200% 200%;
+            animation: videoFallbackShift 8s ease-in-out infinite;
+            color: #fff;
+        }
+
+        .video-fallback.on { display: flex; }
+
+        @keyframes videoFallbackShift {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        .video-fallback-icon {
+            font-size: 72px;
+            opacity: 0.55;
+            animation: videoFallbackPulse 2.4s ease-in-out infinite;
+        }
+
+        @keyframes videoFallbackPulse {
+            0%, 100% { transform: scale(1); opacity: 0.5; }
+            50% { transform: scale(1.08); opacity: 0.7; }
+        }
+
+        .video-fallback-text {
+            font-size: 14px;
+            opacity: 0.7;
+            letter-spacing: 1px;
         }
 
         /* 视频上叠加的当前句字幕 */
@@ -1207,6 +1247,7 @@
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
+            z-index: 2;
         }
 
         .video-overlay-subtitle.on { opacity: 1; }
@@ -1264,6 +1305,7 @@
             position: relative;
             cursor: pointer;
             overflow: hidden;
+            z-index: 3;
         }
 
         .video-progress-fill {
@@ -1274,16 +1316,6 @@
             background: linear-gradient(90deg, #4f6ef7, #7b8fff);
             transition: width 0.1s linear;
             width: 0%;
-        }
-
-        /* 视频进度条上每个句子的分隔标记 */
-        .video-segment-marker {
-            position: absolute;
-            top: 0;
-            height: 100%;
-            width: 2px;
-            background: rgba(255, 255, 255, 0.35);
-            z-index: 1;
         }
 
         /* 当前句卡片 */
@@ -2511,7 +2543,7 @@
                 </div>
 
                 <!-- ============================================================
-                     ★★★ 视频观看模式 ★★★
+                     视频观看模式（★ 已修复 403 + 兜底）
                      ============================================================ -->
                 <div id="panel-video" class="mode-panel" style="display: none;">
 
@@ -2524,18 +2556,27 @@
                     </div>
 
                     <!-- 视频播放器 -->
-                    <div class="video-player">
+                    <div class="video-player" id="videoPlayerWrap">
                         <video
                             id="videoEl"
-                            preload="metadata"
+                            preload="auto"
                             playsinline
+                            muted
                             crossorigin="anonymous"
-                            poster=""
                         ></video>
+
+                        <!-- ★ 加载失败时的兜底动画 -->
+                        <div class="video-fallback" id="videoFallback">
+                            <div class="video-fallback-icon">🎬</div>
+                            <div class="video-fallback-text">视频加载中 / 不可用，但学习功能正常</div>
+                        </div>
+
                         <div class="video-overlay-subtitle" id="videoOverlaySubtitle"></div>
+
                         <div class="video-progress-bar" id="videoProgressBar">
                             <div class="video-progress-fill" id="videoProgressFill"></div>
                         </div>
+
                         <div class="video-controls">
                             <button class="video-ctrl-btn" id="videoPrevBtn">⏮ 上一句</button>
                             <button class="video-ctrl-btn primary" id="videoPlayBtn">▶ 播放本句</button>
@@ -2560,7 +2601,7 @@
                     <!-- 句子列表 -->
                     <div class="video-sent-list-head">
                         <div class="vslh-title">📝 全部句子</div>
-                        <div class="vslh-tip">点击任意一句，视频跳到该片段并朗读</div>
+                        <div class="vslh-tip">点击任意一句，跳到该片段并朗读</div>
                     </div>
                     <div class="video-sent-list" id="videoSentList"></div>
 
@@ -3165,13 +3206,13 @@ var WORD_DICT = {
 };
 
 /* ============================================================
-   ★★★ 视频数据 ★★★
-   可修改：视频地址、句子分段（start/end 单位：秒）
-   注：这里用 Google 公开示例视频（15 秒），把它分成 3 段
+   ★★★ 视频数据（已换稳定源 + 时间段调整） ★★★
    ============================================================ */
 var VIDEO_DATA = {
-    title: 'For Bigger Blazes · 逐句精听',
-    videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
+    title: 'Sintel 预告片 · 逐句精听',
+    // ★ 换成了 W3C 官方示例视频，非常稳定
+    videoUrl: 'https://media.w3.org/2010/05/sintel/trailer.mp4',
+    // ★ 时间段改小：每段 5 秒，总共 15 秒
     sentences: [
         {
             start: 0,
@@ -4866,23 +4907,23 @@ var Speaking = (function() {
 Speaking.init();
 
 /* ============================================================
-   ★★★ 视频观看（逐句精听） ★★★
+   ★★★ 视频观看（逐句精听）★ 已加 403 兜底
    ============================================================ */
 var VideoMode = (function() {
     var currentData = null;
     var videoEl = null;
     var currentIndex = 0;
-    var completedSet = {};        // { 0: true, 1: true } 已完成句子
+    var completedSet = {};
     var isPlayingSegment = false;
     var segmentRafId = null;
     var playToken = 0;
     var isEntered = false;
+    var videoLoadFailed = false;   // ★ 视频是否加载失败
 
     var PROGRESS_KEY = 'juyou_video_progress';
 
     function $(id) { return document.getElementById(id); }
 
-    /* ---------- 进度保存 ---------- */
     function loadProgress() {
         try {
             var raw = localStorage.getItem(PROGRESS_KEY);
@@ -4902,7 +4943,6 @@ var VideoMode = (function() {
         } catch (e) {}
     }
 
-    /* ---------- 更新 UI ---------- */
     function updateProgressText() {
         var total = currentData.sentences.length;
         var done = 0;
@@ -4940,7 +4980,6 @@ var VideoMode = (function() {
             doneBtn.textContent = '✓ 标记完成';
         }
 
-        // 视频叠加字幕
         var overlay = $('videoOverlaySubtitle');
         overlay.textContent = s.en;
         overlay.classList.add('on');
@@ -4968,21 +5007,33 @@ var VideoMode = (function() {
     }
 
     function updateTimeDisplay() {
-        if (!videoEl) return;
+        if (!videoEl || videoLoadFailed) {
+            var s = currentData.sentences[currentIndex];
+            $('videoTimeDisplay').textContent = formatSeconds(s.start) + ' / ' + formatSeconds(15);
+            return;
+        }
         var cur = videoEl.currentTime || 0;
         var dur = videoEl.duration || 15;
         $('videoTimeDisplay').textContent = formatSeconds(cur) + ' / ' + formatSeconds(dur);
     }
 
     function updateProgressBar() {
-        if (!videoEl) return;
+        if (!videoEl || videoLoadFailed) return;
         var dur = videoEl.duration || 15;
         var cur = videoEl.currentTime || 0;
         var pct = Math.min(100, (cur / dur) * 100);
         $('videoProgressFill').style.width = pct + '%';
     }
 
-    /* ---------- 播放指定句子的片段 ---------- */
+    /* ★ 显示兜底背景（视频加载失败时） */
+    function showFallback() {
+        videoLoadFailed = true;
+        var fb = $('videoFallback');
+        if (fb) fb.classList.add('on');
+        // 更新时间为静态
+        updateTimeDisplay();
+    }
+
     function goToSentence(index, autoPlay) {
         if (!currentData) return;
         if (index < 0 || index >= currentData.sentences.length) return;
@@ -4990,10 +5041,9 @@ var VideoMode = (function() {
         currentIndex = index;
         var s = currentData.sentences[index];
 
-        // 停止正在播放的
         stopSegment();
 
-        if (videoEl) {
+        if (videoEl && !videoLoadFailed) {
             try { videoEl.currentTime = s.start; } catch (e) {}
         }
 
@@ -5006,7 +5056,7 @@ var VideoMode = (function() {
     }
 
     function playSegment() {
-        if (!videoEl || !currentData) return;
+        if (!currentData) return;
         var s = currentData.sentences[currentIndex];
         if (!s) return;
 
@@ -5014,10 +5064,12 @@ var VideoMode = (function() {
         playToken++;
         var myToken = playToken;
 
-        // 视频从头
-        try { videoEl.currentTime = s.start; } catch (e) {}
+        // 视频跳转（失败不影响）
+        if (videoEl && !videoLoadFailed) {
+            try { videoEl.currentTime = s.start; } catch (e) {}
+        }
 
-        // 朗读句子（Web Speech API）
+        // 朗读句子（核心功能，不依赖视频）
         if ('speechSynthesis' in window) {
             window.speechSynthesis.cancel();
             setTimeout(function() {
@@ -5029,29 +5081,33 @@ var VideoMode = (function() {
             }, 100);
         }
 
-        // 视频播放
-        var playPromise = videoEl.play();
-        if (playPromise && playPromise.catch) {
-            playPromise.catch(function() {
-                // 自动播放被拒绝，忽略
-            });
-        }
-        isPlayingSegment = true;
+        // 尝试播放视频
+        if (videoEl && !videoLoadFailed) {
+            var playPromise = videoEl.play();
+            if (playPromise && playPromise.catch) {
+                playPromise.catch(function() {
+                    // 自动播放被拒绝，忽略
+                });
+            }
+            isPlayingSegment = true;
 
-        // 循环检查是否到 end
-        function check() {
-            if (myToken !== playToken) return;
-            if (!videoEl) return;
-            if (videoEl.currentTime >= s.end || videoEl.ended) {
-                videoEl.pause();
-                isPlayingSegment = false;
-                return;
+            function check() {
+                if (myToken !== playToken) return;
+                if (!videoEl) return;
+                if (videoEl.currentTime >= s.end || videoEl.ended) {
+                    videoEl.pause();
+                    isPlayingSegment = false;
+                    return;
+                }
+                if (!videoEl.paused) {
+                    segmentRafId = requestAnimationFrame(check);
+                }
             }
-            if (!videoEl.paused) {
-                segmentRafId = requestAnimationFrame(check);
-            }
+            segmentRafId = requestAnimationFrame(check);
+        } else {
+            // 视频不可用，但朗读已完成，只需等一会儿
+            isPlayingSegment = false;
         }
-        segmentRafId = requestAnimationFrame(check);
     }
 
     function stopSegment() {
@@ -5069,13 +5125,11 @@ var VideoMode = (function() {
         isPlayingSegment = false;
     }
 
-    /* ---------- 标记完成 ---------- */
     function markCompleted(index) {
         if (completedSet[index]) return;
         completedSet[index] = true;
         saveProgress();
 
-        // 写入 JYStore 记录
         var s = currentData.sentences[index];
         if (s) {
             JYStore.addRecord({
@@ -5086,15 +5140,12 @@ var VideoMode = (function() {
             });
         }
 
-        // 更新 UI
         updateProgressText();
         updateCurrentCard();
         updateSentList();
 
-        // 显示反馈
         showFeedback(true, '完成一句！', '继续下一句吧');
 
-        // 全部完成提示
         var total = currentData.sentences.length;
         var done = 0;
         for (var k in completedSet) {
@@ -5107,7 +5158,6 @@ var VideoMode = (function() {
         }
     }
 
-    /* ---------- 上一句 / 下一句 ---------- */
     function prevSentence() {
         if (currentIndex > 0) {
             goToSentence(currentIndex - 1, true);
@@ -5120,12 +5170,10 @@ var VideoMode = (function() {
         }
     }
 
-    /* ---------- 添加本句所有生词到生词本 ---------- */
     function addCurrentWordsToBook() {
         var s = currentData.sentences[currentIndex];
         if (!s) return;
 
-        // 拆词
         var words = s.en.match(/[A-Za-z][A-Za-z.''-]*/g) || [];
         var added = 0;
         words.forEach(function(w) {
@@ -5146,16 +5194,20 @@ var VideoMode = (function() {
         }
     }
 
-    /* ---------- 视频事件绑定 ---------- */
     function bindVideoEvents() {
         if (!videoEl) return;
 
-        // 时间更新
+        // ★ 视频加载出错：显示兜底
+        videoEl.addEventListener('error', function() {
+            console.warn('[Video] 视频加载失败，切换到兜底显示');
+            showFallback();
+        });
+
         videoEl.addEventListener('timeupdate', function() {
+            if (videoLoadFailed) return;
             updateTimeDisplay();
             updateProgressBar();
 
-            // 如果不在"播放片段"模式，但用户在手动拖动进度，就检测当前句
             if (!isPlayingSegment) {
                 var t = videoEl.currentTime;
                 var sents = currentData.sentences;
@@ -5172,23 +5224,24 @@ var VideoMode = (function() {
             }
         });
 
-        // 加载元数据后更新时长
         videoEl.addEventListener('loadedmetadata', function() {
+            videoLoadFailed = false;
+            var fb = $('videoFallback');
+            if (fb) fb.classList.remove('on');
             updateTimeDisplay();
             updateProgressBar();
         });
 
-        // 播放结束
         videoEl.addEventListener('ended', function() {
             isPlayingSegment = false;
         });
     }
 
-    /* ---------- 进度条点击跳转 ---------- */
     function initProgressBar() {
         var bar = $('videoProgressBar');
         if (!bar) return;
         bar.addEventListener('click', function(e) {
+            if (videoLoadFailed || !videoEl) return;
             var rect = this.getBoundingClientRect();
             var pct = (e.clientX - rect.left) / rect.width;
             var dur = videoEl.duration || 15;
@@ -5197,16 +5250,27 @@ var VideoMode = (function() {
         });
     }
 
-    /* ---------- 事件绑定 ---------- */
     function init() {
         videoEl = $('videoEl');
 
-        // 设置视频源
         if (videoEl) {
             videoEl.src = VIDEO_DATA.videoUrl;
+            // 设置 4 秒超时：4 秒内没有 loadedmetadata 就当加载失败
+            var loadTimeout = setTimeout(function() {
+                if (!videoLoadFailed && videoEl && videoEl.readyState < 1) {
+                    console.warn('[Video] 加载超时，切换到兜底显示');
+                    showFallback();
+                }
+            }, 4000);
+
+            videoEl.addEventListener('loadedmetadata', function() {
+                clearTimeout(loadTimeout);
+                videoLoadFailed = false;
+                var fb = $('videoFallback');
+                if (fb) fb.classList.remove('on');
+            });
         }
 
-        // 按钮
         $('videoPlayBtn').addEventListener('click', function() {
             if (isPlayingSegment) {
                 stopSegment();
@@ -5218,7 +5282,6 @@ var VideoMode = (function() {
         $('videoPrevBtn').addEventListener('click', prevSentence);
         $('videoNextBtn').addEventListener('click', nextSentence);
         $('videoSpeakBtn').addEventListener('click', function() {
-            // 只朗读不播视频
             var s = currentData.sentences[currentIndex];
             if (!s) return;
             if ('speechSynthesis' in window) {
@@ -5232,7 +5295,6 @@ var VideoMode = (function() {
 
         $('videoDoneBtn').addEventListener('click', function() {
             if (completedSet[currentIndex]) {
-                // 取消完成
                 delete completedSet[currentIndex];
                 saveProgress();
                 updateProgressText();
@@ -5245,9 +5307,7 @@ var VideoMode = (function() {
 
         $('videoAddWordBtn').addEventListener('click', addCurrentWordsToBook);
 
-        // 句子列表点击
         $('videoSentList').addEventListener('click', function(e) {
-            // 优先处理播放按钮
             var playBtn = e.target.closest('.video-sent-play');
             if (playBtn) {
                 e.stopPropagation();
@@ -5258,7 +5318,6 @@ var VideoMode = (function() {
                 return;
             }
 
-            // 点击整行
             var item = e.target.closest('.video-sent-item');
             if (!item) return;
             var idx = parseInt(item.getAttribute('data-index'));
@@ -5267,12 +5326,10 @@ var VideoMode = (function() {
             }
         });
 
-        // 视频事件
         bindVideoEvents();
         initProgressBar();
     }
 
-    /* ---------- 进入视频模式 ---------- */
     function enter() {
         if (!currentData || currentData !== VIDEO_DATA) {
             currentData = VIDEO_DATA;
@@ -5280,15 +5337,12 @@ var VideoMode = (function() {
         loadProgress();
         isEntered = true;
 
-        // 设置标题
         $('videoTitle').textContent = VIDEO_DATA.title;
 
-        // 视频源（首次设置）
         if (videoEl && !videoEl.src) {
             videoEl.src = VIDEO_DATA.videoUrl;
         }
 
-        // 重置到第一句
         currentIndex = 0;
         updateCurrentCard();
         updateSentList();
@@ -5296,12 +5350,11 @@ var VideoMode = (function() {
         updateTimeDisplay();
         updateProgressBar();
 
-        if (videoEl) {
+        if (videoEl && !videoLoadFailed) {
             try { videoEl.currentTime = currentData.sentences[0].start; } catch (e) {}
         }
     }
 
-    /* ---------- 退出 ---------- */
     function stop() {
         stopSegment();
         isEntered = false;
