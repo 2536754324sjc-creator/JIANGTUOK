@@ -442,9 +442,7 @@
             color: var(--text-sub);
         }
 
-        /* ============================================================
-           阅读模式
-           ============================================================ */
+        /* 阅读模式 */
         .read-sentence {
             font-size: 26px;
             line-height: 2.2;
@@ -502,7 +500,7 @@
         }
 
         /* ============================================================
-           ★★★ 听力模式（三阶段） ★★★
+           听力模式（三阶段 → 单次显示全部）
            ============================================================ */
         .listen-play-area {
             display: flex;
@@ -568,18 +566,18 @@
             box-shadow: 0 0 4px rgba(79, 110, 247, 0.5);
         }
 
+        /* ★ 字幕框 */
         .listen-subtitle-box {
             background: #f8faff;
             border: 2px dashed #d8dfee;
             border-radius: 16px;
-            min-height: 120px;
+            min-height: 150px;
             padding: 26px 22px;
             text-align: center;
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            gap: 12px;
             margin-bottom: 24px;
             transition: border-color 0.3s, background 0.3s;
         }
@@ -597,18 +595,85 @@
             line-height: 1.6;
         }
 
+        .listen-reveal-content {
+            width: 100%;
+        }
+
         .listen-en {
-            font-size: 22px;
+            font-size: 24px;
             font-weight: 700;
             color: var(--text-main);
             letter-spacing: 0.5px;
-            line-height: 1.6;
+            line-height: 1.5;
+            margin-bottom: 8px;
+        }
+
+        .listen-phonetic {
+            font-size: 14px;
+            color: #4f6ef7;
+            font-family: 'SF Mono', 'Monaco', 'Menlo', 'Consolas', monospace;
+            letter-spacing: 0.3px;
+            margin-bottom: 12px;
+            line-height: 1.5;
         }
 
         .listen-cn {
             font-size: 15px;
             color: var(--text-sub);
             line-height: 1.6;
+            margin-bottom: 6px;
+        }
+
+        .listen-structure {
+            display: flex;
+            gap: 14px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px dashed #eef1f8;
+            width: 100%;
+        }
+
+        .listen-structure-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .listen-structure-label {
+            font-size: 11px;
+            font-weight: 700;
+            color: #fda4af;
+            background: rgba(244, 63, 94, 0.1);
+            border: 1px solid rgba(244, 63, 94, 0.25);
+            border-radius: 20px;
+            padding: 2px 10px;
+            letter-spacing: 0.5px;
+        }
+
+        .listen-structure-word {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-main);
+            letter-spacing: 0.3px;
+        }
+
+        /* ★ 弹出动画（缓慢渐显+上移，总时长 0.35s） */
+        @keyframes listenReveal {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .listen-reveal-item {
+            animation: listenReveal 0.35s ease-out both;
         }
 
         .listen-actions {
@@ -1273,6 +1338,8 @@
             .word-popup { padding: 24px 22px; min-width: 240px; }
             .listen-play-btn { width: 80px; height: 80px; font-size: 34px; }
             .listen-en { font-size: 18px; }
+            .listen-phonetic { font-size: 12px; }
+            .listen-structure { gap: 8px; }
         }
     </style>
 </head>
@@ -1422,12 +1489,11 @@
 
                 <div id="panel-dictation" class="mode-panel" style="display: none;"></div>
 
-                <!-- ★★★ 听力模式（三阶段） ★★★ -->
+                <!-- 听力模式 -->
                 <div id="panel-listening" class="mode-panel" style="display: none;">
 
-                    <!-- 视图 1：播放 + 三阶段字幕 -->
                     <div id="listenPlayView">
-                        <div class="prompt-label">听力模式 · 听音频，逐步揭示字幕，然后作答</div>
+                        <div class="prompt-label">听力模式 · 听音频，显示句子，然后作答</div>
 
                         <div class="listen-play-area">
                             <button class="listen-play-btn" id="listenPlayBtn">🔊</button>
@@ -1436,19 +1502,22 @@
 
                         <div class="listen-subtitle-box" id="listenSubtitleBox">
                             <div class="listen-placeholder" id="listenPlaceholder">
-                                🎧 仔细听，可点下方按钮逐步显示字幕
+                                🎧 仔细听，可点下方按钮显示句子
                             </div>
-                            <div class="listen-en" id="listenEn" style="display: none;"></div>
-                            <div class="listen-cn" id="listenCn" style="display: none;"></div>
+                            <div class="listen-reveal-content" id="listenRevealContent" style="display: none;">
+                                <div class="listen-en listen-reveal-item" id="listenEn"></div>
+                                <div class="listen-phonetic listen-reveal-item" id="listenPhonetic"></div>
+                                <div class="listen-cn listen-reveal-item" id="listenCn"></div>
+                                <div class="listen-structure" id="listenStructure"></div>
+                            </div>
                         </div>
 
                         <div class="listen-actions">
-                            <button class="btn-secondary" id="listenHintBtn">👁 显示英文</button>
+                            <button class="btn-secondary" id="listenHintBtn">👁 显示句子</button>
                             <button class="btn-submit" id="listenStartBtn">🎯 开始作答</button>
                         </div>
                     </div>
 
-                    <!-- 视图 2：词块拼接作答 -->
                     <div id="listenQuizView" style="display: none;">
                         <div class="prompt-label">请用词块拼出刚才听到的句子</div>
 
@@ -1978,15 +2047,49 @@ window.JYStore = (function() {
 })();
 
 /* ============================================================
-   题库
+   ★★★ 题库（新增 phonetic 音标 + structure 主谓宾结构） ★★★
+   可修改：往这里加句子
+   - phonetic：整句音标
+   - structure：主谓宾等成分标注，每个元素 { label, word }
    ============================================================ */
 var QUESTION_BANK = [
-    { cn: '我喜欢吃苹果。', en: 'I like to eat apples.',
-      chunks: ['I', 'like', 'to eat', 'apples', '.'], distractors: ['bananas', 'she'] },
-    { cn: '它们又甜又健康。', en: 'They are sweet and healthy.',
-      chunks: ['They', 'are', 'sweet', 'and', 'healthy', '.'], distractors: ['but', 'sour'] },
-    { cn: '她坐公交车去上学。', en: 'She goes to school by bus.',
-      chunks: ['She', 'goes', 'to school', 'by bus', '.'], distractors: ['walk', 'car'] }
+    {
+        cn: '我喜欢吃苹果。',
+        en: 'I like to eat apples.',
+        phonetic: '/aɪ laɪk tuː iːt ˈæpəlz/',
+        structure: [
+            { label: '主语', word: 'I' },
+            { label: '谓语', word: 'like to eat' },
+            { label: '宾语', word: 'apples' }
+        ],
+        chunks: ['I', 'like', 'to eat', 'apples', '.'],
+        distractors: ['bananas', 'she']
+    },
+    {
+        cn: '它们又甜又健康。',
+        en: 'They are sweet and healthy.',
+        phonetic: '/ðeɪ ɑːr swiːt ænd ˈhelθi/',
+        structure: [
+            { label: '主语', word: 'They' },
+            { label: '系动词', word: 'are' },
+            { label: '表语', word: 'sweet and healthy' }
+        ],
+        chunks: ['They', 'are', 'sweet', 'and', 'healthy', '.'],
+        distractors: ['but', 'sour']
+    },
+    {
+        cn: '她坐公交车去上学。',
+        en: 'She goes to school by bus.',
+        phonetic: '/ʃiː ɡoʊz tuː skuːl baɪ bʌs/',
+        structure: [
+            { label: '主语', word: 'She' },
+            { label: '谓语', word: 'goes' },
+            { label: '地点状语', word: 'to school' },
+            { label: '方式状语', word: 'by bus' }
+        ],
+        chunks: ['She', 'goes', 'to school', 'by bus', '.'],
+        distractors: ['walk', 'car']
+    }
 ];
 
 var DICTATION_DATA = [
@@ -2808,11 +2911,11 @@ var Dictation = (function() {
 })();
 
 /* ============================================================
-   ★★★ 听力模式（三阶段） ★★★
+   ★★★ 听力模式（点击一次显示完整信息 + 缓慢弹出动画） ★★★
    ============================================================ */
 var Listening = (function() {
     var currentData = null;
-    var hintStage = 0;         // 0=无字幕, 1=英文字幕, 2=中英对照
+    var isRevealed = false;
     var selectedChunks = [];
     var isAnswered = false;
     var waveRafId = null;
@@ -2936,42 +3039,64 @@ var Listening = (function() {
         }
     }
 
-    /* ★ 阶段切换：无字幕 → 英文 → 中英 → 无字幕（循环） */
-    function cycleHint() {
-        var enEl = $('listenEn');
-        var cnEl = $('listenCn');
-        var placeholder = $('listenPlaceholder');
-        var box = $('listenSubtitleBox');
+    /* ★ 触发每个内容块的入场动画（重新触发） */
+    function retriggerAnimation() {
+        var items = $('listenRevealContent').querySelectorAll('.listen-reveal-item');
+        items.forEach(function(el, i) {
+            el.style.animation = 'none';
+            void el.offsetWidth; // 强制重排，重置动画
+            // 依次延迟 60ms 出现，最后一个用 0.35s 完成，总时长约 0.35 + 0.06*n
+            el.style.animation = 'listenReveal 0.35s ease-out both';
+            el.style.animationDelay = (i * 60) + 'ms';
+        });
+    }
+
+    /* ★ 显示/隐藏完整句子信息 */
+    function toggleReveal() {
         var btn = $('listenHintBtn');
+        var placeholder = $('listenPlaceholder');
+        var content = $('listenRevealContent');
+        var box = $('listenSubtitleBox');
 
-        hintStage++;
-        if (hintStage > 2) hintStage = 0;
-
-        if (hintStage === 0) {
+        if (isRevealed) {
+            // 隐藏
+            isRevealed = false;
             placeholder.style.display = 'block';
-            enEl.style.display = 'none';
-            cnEl.style.display = 'none';
+            content.style.display = 'none';
             box.classList.remove('revealed');
-            btn.textContent = '👁 显示英文';
-        } else if (hintStage === 1) {
-            placeholder.style.display = 'none';
-            enEl.style.display = 'block';
-            enEl.textContent = currentData.en;
-            cnEl.style.display = 'none';
-            box.classList.add('revealed');
-            btn.textContent = '👁 显示中文';
+            btn.textContent = '👁 显示句子';
         } else {
+            // 显示
+            isRevealed = true;
             placeholder.style.display = 'none';
-            enEl.style.display = 'block';
-            enEl.textContent = currentData.en;
-            cnEl.style.display = 'block';
-            cnEl.textContent = currentData.cn;
+            content.style.display = 'block';
             box.classList.add('revealed');
-            btn.textContent = '👁 隐藏字幕';
+            btn.textContent = '👁 隐藏句子';
+
+            // 填充内容
+            $('listenEn').textContent = currentData.en;
+            $('listenPhonetic').textContent = currentData.phonetic || '';
+            $('listenCn').textContent = currentData.cn;
+
+            // 填充结构
+            var structureEl = $('listenStructure');
+            structureEl.innerHTML = '';
+            if (currentData.structure && currentData.structure.length) {
+                currentData.structure.forEach(function(s) {
+                    var item = document.createElement('div');
+                    item.className = 'listen-structure-item listen-reveal-item';
+                    item.innerHTML =
+                        '<span class="listen-structure-label">' + s.label + '</span>' +
+                        '<span class="listen-structure-word">' + s.word + '</span>';
+                    structureEl.appendChild(item);
+                });
+            }
+
+            // 触发动画
+            retriggerAnimation();
         }
     }
 
-    /* ★ 开始作答：切到词块拼接视图 */
     function startQuiz() {
         $('listenPlayView').style.display = 'none';
         $('listenQuizView').style.display = 'block';
@@ -3026,7 +3151,6 @@ var Listening = (function() {
                     showComplete();
                     return;
                 }
-                // 重新进入听力模式，自动播放新句子
                 enter();
                 setTimeout(playAudio, 300);
             }, 1200);
@@ -3051,37 +3175,39 @@ var Listening = (function() {
         items.forEach(function(item) { item.classList.remove('used'); });
     }
 
-    /* ★ 进入听力模式：重置 UI，自动播放一遍 */
     function enter() {
         currentData = QUESTION_BANK[state.currentIndex];
         if (!currentData) return;
 
-        hintStage = 0;
+        isRevealed = false;
         selectedChunks = [];
         isAnswered = false;
 
         $('listenPlayView').style.display = 'block';
         $('listenQuizView').style.display = 'none';
-        $('listenEn').style.display = 'none';
-        $('listenCn').style.display = 'none';
         $('listenPlaceholder').style.display = 'block';
+        $('listenRevealContent').style.display = 'none';
         $('listenSubtitleBox').classList.remove('revealed');
-        $('listenHintBtn').textContent = '👁 显示英文';
+        $('listenHintBtn').textContent = '👁 显示句子';
+
+        // 清空旧内容（防止动画残留）
+        $('listenEn').textContent = '';
+        $('listenPhonetic').textContent = '';
+        $('listenCn').textContent = '';
+        $('listenStructure').innerHTML = '';
 
         buildWaveform();
         setTimeout(playAudio, 300);
     }
 
-    /* ★ 事件绑定（只做一次） */
     function init() {
         $('listenPlayBtn').addEventListener('click', playAudio);
-        $('listenHintBtn').addEventListener('click', cycleHint);
+        $('listenHintBtn').addEventListener('click', toggleReveal);
         $('listenStartBtn').addEventListener('click', startQuiz);
         $('listenReplay').addEventListener('click', playAudio);
         $('listenSubmit').addEventListener('click', submit);
         $('listenReset').addEventListener('click', reset);
 
-        // 词块点击
         $('listenChunkPool').addEventListener('click', function(e) {
             var target = e.target;
             if (!target.classList.contains('chunk-item')) return;
@@ -3170,7 +3296,6 @@ Listening.init();
 
             var mode = this.getAttribute('data-mode');
 
-            // ★ 切模式时停止所有音频（听力 + 听写）
             Listening.stop();
             if ('speechSynthesis' in window) window.speechSynthesis.cancel();
 
