@@ -34,9 +34,6 @@
 
         .app-layout { display: flex; min-height: 100vh; }
 
-        /* ============================================================
-           左侧导航栏
-           ============================================================ */
         .sidebar {
             width: 220px;
             flex-shrink: 0;
@@ -115,9 +112,6 @@
             flex-direction: column;
         }
 
-        /* ============================================================
-           学习页顶部栏
-           ============================================================ */
         .learn-topbar {
             background: #ffffff;
             border-bottom: 1px solid var(--border);
@@ -256,9 +250,6 @@
 
         .topbar-icon-btn:hover { background: #f4f6fc; }
 
-        /* ============================================================
-           内容区
-           ============================================================ */
         .learn-content {
             max-width: 1100px;
             width: 100%;
@@ -451,9 +442,6 @@
             color: var(--text-sub);
         }
 
-        /* ============================================================
-           反馈浮层
-           ============================================================ */
         .feedback-toast {
             position: fixed;
             top: 50%;
@@ -502,9 +490,6 @@
             z-index: 100;
         }
 
-        /* ============================================================
-           ★★★ 听写模式（全屏深色） ★★★
-           ============================================================ */
         #panel-dictation.fullscreen {
             position: fixed;
             top: 0;
@@ -518,7 +503,6 @@
             overflow: hidden;
         }
 
-        /* ---------- 顶部小工具栏 ---------- */
         .dictation-topbar {
             position: absolute;
             top: 0;
@@ -559,7 +543,6 @@
             letter-spacing: 1px;
         }
 
-        /* ---------- 主内容区（绝对定位居中） ---------- */
         .dictation-main {
             position: absolute;
             top: 50%;
@@ -579,7 +562,6 @@
 
         .dictation-main::-webkit-scrollbar { width: 0; }
 
-        /* ---------- 中文提示 ---------- */
         .cn-prompt {
             font-size: 28px;
             font-weight: 500;
@@ -591,7 +573,6 @@
             text-align: center;
         }
 
-        /* ---------- 单词槽位区 ---------- */
         .word-slots {
             display: flex;
             flex-wrap: wrap;
@@ -602,7 +583,6 @@
             text-align: center;
         }
 
-        /* ★ 输入框（加强清理，无矩形） */
         .slot-input {
             font-family: 'SF Mono', 'Monaco', 'Menlo', 'Consolas', monospace;
             font-size: 24px;
@@ -610,7 +590,6 @@
             letter-spacing: 0.5px;
             color: #e5e7eb;
 
-            /* ★★★ 彻底清除所有可能导致矩形的原生样式 ★★★ */
             background: transparent !important;
             background-color: transparent !important;
             background-image: none !important;
@@ -647,7 +626,6 @@
             text-shadow: none;
         }
 
-        /* 选中态：自定义选中色，避免出现原生选中矩形 */
         .slot-input::selection {
             background: rgba(6, 182, 212, 0.35);
             color: #ffffff;
@@ -657,7 +635,6 @@
             color: #ffffff;
         }
 
-        /* ★ 聚焦：微放大 + 蓝色字母发光（多层小半径，紧贴字母） */
         .slot-input:focus {
             transform: scale(1.12);
             border-bottom-color: #06b6d4;
@@ -667,7 +644,6 @@
                 0 0 10px rgba(6, 182, 212, 0.4);
         }
 
-        /* ★ 正确：绿色 + 绿色字母发光（多层） */
         .slot-input.correct {
             color: #4ade80;
             border-bottom-color: #4ade80;
@@ -677,7 +653,6 @@
                 0 0 10px rgba(74, 222, 128, 0.35);
         }
 
-        /* ★ 正确 + 聚焦：更强烈发光 */
         .slot-input.correct:focus {
             color: #4ade80;
             border-bottom-color: #4ade80;
@@ -688,7 +663,6 @@
                 0 0 22px rgba(74, 222, 128, 0.3);
         }
 
-        /* ★ 错误（持久状态）：红色 + 红色字母发光 */
         .slot-input.error {
             color: #ff5b5b;
             border-bottom-color: #ff5b5b;
@@ -698,7 +672,6 @@
                 0 0 10px rgba(255, 91, 91, 0.35);
         }
 
-        /* ★ 错误 + 聚焦：更强烈发光 */
         .slot-input.error:focus {
             color: #ff5b5b;
             border-bottom-color: #ff5b5b;
@@ -709,7 +682,6 @@
                 0 0 22px rgba(255, 91, 91, 0.3);
         }
 
-        /* ★ 错误触发闪烁 */
         .slot-input.wrong {
             animation: flashRed 0.6s ease;
         }
@@ -759,7 +731,6 @@
             }
         }
 
-        /* ---------- 语法弹出层（顶部 70px） ---------- */
         .grammar-popup {
             position: absolute;
             top: 70px;
@@ -862,7 +833,6 @@
             cursor: pointer;
         }
 
-        /* ---------- 底部区域（波形 + 工具栏，bottom: 70px） ---------- */
         .dictation-bottom {
             position: absolute;
             left: 0;
@@ -876,7 +846,6 @@
             pointer-events: none;
         }
 
-        /* 波形区 */
         .waveform {
             display: flex;
             align-items: center;
@@ -908,7 +877,6 @@
             box-shadow: 0 0 6px rgba(103, 232, 249, 0.8);
         }
 
-        /* 工具栏（白色描边矩形包裹） */
         .dictation-toolbar {
             display: flex;
             align-items: center;
@@ -958,7 +926,6 @@
             border-color: #fbbf24;
         }
 
-        /* 播放中的按钮脉冲反馈 */
         .d-tool-btn.d-primary.playing {
             animation: playPulse 0.4s ease;
         }
@@ -969,9 +936,6 @@
             100% { transform: scale(1); }
         }
 
-        /* ============================================================
-           移动端适配
-           ============================================================ */
         @media (max-width: 900px) {
             .sidebar { width: 64px; padding: 16px 8px; }
             .sidebar .logo { font-size: 0; justify-content: center; padding: 0; }
@@ -1210,29 +1174,190 @@
 })();
 
 /* ============================================================
-   ★★★ 本地学习数据存储 JYStore ★★★
-   所有学习数据保存在 localStorage 的 juyou_study 键里
-   数据结构：
-   {
-     records:     [ { id, en, cn, mode, correct, timestamp } ],   // 每次答题记录（最多 500 条）
-     reviewBook:  [ { en, cn, addTime, nextReview, state } ],     // 复习本（答错的句子）
-     wordBook:    [ { word, cn, addTime, count } ],               // 生词本（预留）
-     mastered:    [ { en, cn, masteredTime, accuracy } ],         // 掌握列表（答对 3 次以上）
-     starred:     [ { en, cn, timestamp } ],                      // 收藏
-     stats: {
-       totalDays: 0,          // 累计学习天数
-       totalTime: 0,          // 累计学习时长（秒，预留）
-       totalSentences: 0,     // 累计练习句子数
-       streak: 0,             // 当前连续打卡
-       lastStudyDate: null,   // 上次学习日期 YYYY-MM-DD
-       todayCount: 0,         // 今日已练习
-       todayDate: null        // 今日日期 YYYY-MM-DD
-     }
-   }
+   ★★★ 网络时间同步 JYTime（v2：多源并行，谁先成功用谁） ★★★
+   放在 JYStore 前面，因为 JYStore 需要用它来算"今天"
+   ============================================================ */
+window.JYTime = (function() {
+    var offset = 0;
+    var synced = false;
+    var syncPromise = null;
+    var syncedSource = '';
+
+    function fetchWithTimeout(url, opts, timeoutMs, parseFn) {
+        return new Promise(function(resolve) {
+            if (!window.fetch) return resolve(0);
+
+            var controller = ('AbortController' in window) ? new AbortController() : null;
+            var finished = false;
+
+            var timer = setTimeout(function() {
+                if (finished) return;
+                finished = true;
+                if (controller) { try { controller.abort(); } catch (e) {} }
+                resolve(0);
+            }, timeoutMs);
+
+            var fetchOpts = Object.assign({ cache: 'no-store' }, opts || {});
+            if (controller) fetchOpts.signal = controller.signal;
+
+            fetch(url, fetchOpts)
+                .then(function(res) {
+                    if (finished) return 0;
+                    return parseFn(res);
+                })
+                .then(function(ts) {
+                    if (finished) return;
+                    finished = true;
+                    clearTimeout(timer);
+                    resolve(ts > 0 ? ts : 0);
+                })
+                .catch(function() {
+                    if (finished) return;
+                    finished = true;
+                    clearTimeout(timer);
+                    resolve(0);
+                });
+        });
+    }
+
+    function tryGithub() {
+        return fetchWithTimeout(
+            'https://api.github.com/',
+            { method: 'HEAD' },
+            2500,
+            function(res) {
+                var dateStr = res.headers.get('date');
+                if (!dateStr) return 0;
+                var ts = new Date(dateStr).getTime();
+                return ts > 0 ? ts : 0;
+            }
+        ).then(function(ts) {
+            return { ts: ts || 0, source: 'GitHub API' };
+        });
+    }
+
+    function tryCloudflare() {
+        return fetchWithTimeout(
+            'https://www.cloudflare.com/cdn-cgi/trace',
+            {},
+            2500,
+            function(res) {
+                return res.text().then(function(text) {
+                    var m = text.match(/^ts=([\d.]+)/m);
+                    if (!m) return 0;
+                    return Math.round(parseFloat(m[1]) * 1000);
+                });
+            }
+        ).then(function(ts) {
+            return { ts: ts || 0, source: 'Cloudflare' };
+        });
+    }
+
+    function trySuning() {
+        return new Promise(function(resolve) {
+            var cbName = '__jySn_' + Date.now() + '_' + Math.floor(Math.random() * 1e6);
+            var script = document.createElement('script');
+            var done = false;
+
+            function cleanup() {
+                if (script.parentNode) script.parentNode.removeChild(script);
+                try { delete window[cbName]; } catch (e) { window[cbName] = undefined; }
+            }
+
+            var timer = setTimeout(function() {
+                if (done) return;
+                done = true;
+                cleanup();
+                resolve({ ts: 0, source: '苏宁' });
+            }, 2500);
+
+            window[cbName] = function(data) {
+                if (done) return;
+                done = true;
+                clearTimeout(timer);
+                var ts = 0;
+                try {
+                    if (data && data.sysTime1) {
+                        var s = String(data.sysTime1);
+                        var year = parseInt(s.slice(0, 4), 10);
+                        var mon = parseInt(s.slice(4, 6), 10) - 1;
+                        var day = parseInt(s.slice(6, 8), 10);
+                        var hr = parseInt(s.slice(8, 10), 10);
+                        var min = parseInt(s.slice(10, 12), 10);
+                        var sec = parseInt(s.slice(12, 14), 10);
+                        ts = new Date(year, mon, day, hr, min, sec).getTime();
+                    }
+                } catch (e) {}
+                cleanup();
+                resolve({ ts: ts > 0 ? ts : 0, source: '苏宁' });
+            };
+
+            script.src = 'https://quan.suning.com/getSysTime.do?callback=' + cbName;
+            script.onerror = function() {
+                if (done) return;
+                done = true;
+                clearTimeout(timer);
+                cleanup();
+                resolve({ ts: 0, source: '苏宁' });
+            };
+            document.head.appendChild(script);
+        });
+    }
+
+    function sync() {
+        if (syncPromise) return syncPromise;
+
+        syncPromise = Promise.all([tryGithub(), tryCloudflare(), trySuning()])
+            .then(function(results) {
+                console.log('[JYTime] 各源结果：', results);
+
+                var best = null;
+                for (var i = 0; i < results.length; i++) {
+                    if (results[i].ts > 0) { best = results[i]; break; }
+                }
+
+                if (best) {
+                    var localTs = Date.now();
+                    var diff = best.ts - localTs;
+                    if (Math.abs(diff) < 86400000 * 365) {
+                        offset = diff;
+                        synced = true;
+                        syncedSource = best.source;
+                        console.log('[JYTime] ✅ 同步成功（来源：' + best.source + '），校正 ' + diff + ' 毫秒');
+                        return true;
+                    }
+                }
+
+                console.log('[JYTime] ⚠️ 所有时间源均失败，使用本机时间');
+                return false;
+            });
+
+        return syncPromise;
+    }
+
+    function now() { return Date.now() + offset; }
+    function date() { return new Date(now()); }
+    function getOffset() { return offset; }
+    function isSynced() { return synced; }
+    function getSource() { return syncedSource; }
+
+    return {
+        sync: sync,
+        now: now,
+        date: date,
+        getOffset: getOffset,
+        isSynced: isSynced,
+        getSource: getSource
+    };
+})();
+
+/* ============================================================
+   ★★★ 本地学习数据存储 JYStore（★ 已改用 JYTime 网络时间） ★★★
+   所有时间戳都基于网络时间，保证多设备数据一致
    ============================================================ */
 window.JYStore = (function() {
     var KEY = 'juyou_study';
-    var MAX_RECORDS = 500;  // 可修改：最多保存多少条答题记录
+    var MAX_RECORDS = 500;
 
     function getDefault() {
         return {
@@ -1259,7 +1384,6 @@ window.JYStore = (function() {
             if (!raw) return getDefault();
             var data = JSON.parse(raw);
             var def = getDefault();
-            // 合并默认值，避免版本升级后缺字段
             return {
                 records: data.records || def.records,
                 reviewBook: data.reviewBook || def.reviewBook,
@@ -1276,42 +1400,38 @@ window.JYStore = (function() {
     function save(data) {
         try {
             localStorage.setItem(KEY, JSON.stringify(data));
-        } catch (e) {
-            // 存储空间满等异常，忽略
-        }
+        } catch (e) {}
     }
 
+    /* ★ 使用 JYTime 网络时间来算"今天" */
     function getTodayStr() {
-        var d = new Date();
+        var d = JYTime.date();
         var m = d.getMonth() + 1;
         var day = d.getDate();
         return d.getFullYear() + '-' + (m < 10 ? '0' + m : m) + '-' + (day < 10 ? '0' + day : day);
     }
 
-    /* 记录一次答题：opts = { en, cn, mode, correct } */
     function addRecord(opts) {
         var data = load();
+        var nowTs = JYTime.now();   // ★ 网络时间
         var record = {
-            id: Date.now() + '_' + Math.random().toString(36).slice(2, 8),
+            id: nowTs + '_' + Math.random().toString(36).slice(2, 8),
             en: opts.en || '',
             cn: opts.cn || '',
             mode: opts.mode || 'translate',
             correct: !!opts.correct,
-            timestamp: Date.now()
+            timestamp: nowTs
         };
         data.records.unshift(record);
         if (data.records.length > MAX_RECORDS) {
             data.records = data.records.slice(0, MAX_RECORDS);
         }
 
-        // 更新统计数据
         var today = getTodayStr();
         if (data.stats.todayDate !== today) {
-            // 进入新的一天
             data.stats.todayDate = today;
             data.stats.todayCount = 0;
 
-            // 计算连续打卡
             var last = data.stats.lastStudyDate;
             if (last) {
                 var lastTime = new Date(last + 'T00:00:00').getTime();
@@ -1322,7 +1442,6 @@ window.JYStore = (function() {
                 } else if (diffDays > 1) {
                     data.stats.streak = 1;
                 }
-                // diffDays === 0 不变
             } else {
                 data.stats.streak = 1;
             }
@@ -1336,22 +1455,21 @@ window.JYStore = (function() {
         return record;
     }
 
-    /* 加入复习本（答错的句子，去重） */
     function addToReviewBook(en, cn) {
         var data = load();
         var exists = data.reviewBook.some(function(item) { return item.en === en; });
         if (exists) return;
+        var nowTs = JYTime.now();   // ★ 网络时间
         data.reviewBook.unshift({
             en: en,
             cn: cn,
-            addTime: Date.now(),
-            nextReview: Date.now() + 24 * 3600 * 1000, // 24 小时后到期
+            addTime: nowTs,
+            nextReview: nowTs + 24 * 3600 * 1000,
             state: 'new'
         });
         save(data);
     }
 
-    /* 检查是否应该进入掌握列表（答对 3 次以上） */
     function checkMastered(en, cn) {
         var data = load();
         var exists = data.mastered.some(function(item) { return item.en === en; });
@@ -1365,10 +1483,9 @@ window.JYStore = (function() {
             data.mastered.unshift({
                 en: en,
                 cn: cn,
-                masteredTime: Date.now(),
+                masteredTime: JYTime.now(),   // ★ 网络时间
                 accuracy: 100
             });
-            // 从复习本移除
             data.reviewBook = data.reviewBook.filter(function(item) {
                 return item.en !== en;
             });
@@ -1376,7 +1493,6 @@ window.JYStore = (function() {
         }
     }
 
-    /* 切换收藏状态，返回 true 表示现在是已收藏 */
     function toggleStar(item) {
         var data = load();
         var idx = -1;
@@ -1391,7 +1507,7 @@ window.JYStore = (function() {
             data.starred.unshift({
                 en: item.en,
                 cn: item.cn,
-                timestamp: Date.now()
+                timestamp: JYTime.now()   // ★ 网络时间
             });
             save(data);
             return true;
@@ -1474,12 +1590,9 @@ var state = {
 
 var dictationState = {
     index: 0,
-    recorded: {}  // ★ 已记录过的句子索引（避免重复记录）
+    recorded: {}
 };
 
-/* ============================================================
-   工具函数
-   ============================================================ */
 function getRating(correctRate, total) {
     if (total === 0) return { label: 'C', cls: 'rating-c' };
     var rate = correctRate / total;
@@ -1530,9 +1643,6 @@ function normalize(str) {
         .toLowerCase();
 }
 
-/* ============================================================
-   中译英
-   ============================================================ */
 function loadQuestion() {
     var q = QUESTION_BANK[state.currentIndex];
     if (!q) { showComplete(); return; }
@@ -1576,7 +1686,6 @@ function submitAnswer() {
     state.isAnswered = true;
     state.totalAnswered++;
 
-    // ★★★ 记录到本地学习数据 ★★★
     JYStore.addRecord({
         en: q.en,
         cn: q.cn,
@@ -1584,9 +1693,9 @@ function submitAnswer() {
         correct: isCorrect
     });
     if (isCorrect) {
-        JYStore.checkMastered(q.en, q.cn);      // 检查是否进入掌握列表
+        JYStore.checkMastered(q.en, q.cn);
     } else {
-        JYStore.addToReviewBook(q.en, q.cn);    // 加入复习本
+        JYStore.addToReviewBook(q.en, q.cn);
     }
 
     if (isCorrect) {
@@ -1646,7 +1755,6 @@ function showComplete() {
         '评级 ' + rating.label + ' · 答对 ' + state.correctCount + '/' + state.totalAnswered);
 }
 
-/* 词块拼接 */
 (function() {
     var chunkPool = document.getElementById('chunkPool');
     var chunkAnswer = document.getElementById('chunkAnswer');
@@ -1736,11 +1844,8 @@ var Dictation = (function() {
     var currentData = null;
     var inputs = [];
     var waveRafId = null;
-
-    /* ★ 全局播放 token：每次点击 +1，旧的 setTimeout 回调会失效 */
     var playToken = 0;
 
-    /* ---------- 生成波形条 ---------- */
     function buildWaveform() {
         var wave = document.getElementById('waveform');
         if (!wave) return;
@@ -1752,16 +1857,15 @@ var Dictation = (function() {
         wave.innerHTML = html;
     }
 
-    /* ---------- ★ 检查当前听写并记录到本地 ★ ---------- */
     function checkAndRecordCurrent() {
         if (!currentData) return;
         var idx = dictationState.index;
-        if (dictationState.recorded[idx]) return; // 已记录过
+        if (dictationState.recorded[idx]) return;
 
         var hasAnyInput = inputs.some(function(input) {
             return input.value.trim() !== '';
         });
-        if (!hasAnyInput) return; // 用户完全没输入，跳过
+        if (!hasAnyInput) return;
 
         var allCorrect = inputs.every(function(input) {
             var i = parseInt(input.getAttribute('data-index'));
@@ -1783,7 +1887,6 @@ var Dictation = (function() {
         }
     }
 
-    /* ---------- 渲染 ---------- */
     function render() {
         currentData = DICTATION_DATA[dictationState.index];
         if (!currentData) return;
@@ -1854,7 +1957,6 @@ var Dictation = (function() {
         panel.querySelector('#dBtnStar').addEventListener('click', toggleStar);
         panel.querySelector('#grammarClose').addEventListener('click', toggleGrammar);
 
-        // ★ 星标状态从 JYStore 读取
         var starBtn = panel.querySelector('#dBtnStar');
         if (JYStore.isStarred(currentData.en)) {
             starBtn.classList.add('starred');
@@ -1864,7 +1966,6 @@ var Dictation = (function() {
         panel.classList.add('fullscreen');
     }
 
-    /* ---------- 输入实时验证 ---------- */
     function onInput(e) {
         var input = e.target;
         var idx = parseInt(input.getAttribute('data-index'));
@@ -1887,7 +1988,6 @@ var Dictation = (function() {
         }
     }
 
-    /* ---------- 失焦检查 ---------- */
     function onBlur(e) {
         var input = e.target;
         if (!input.value.trim()) return;
@@ -1908,7 +2008,6 @@ var Dictation = (function() {
         }
     }
 
-    /* ---------- 聚焦 ---------- */
     function onFocus(e) {
         var input = e.target;
         var idx = parseInt(input.getAttribute('data-index'));
@@ -1931,7 +2030,6 @@ var Dictation = (function() {
         input.classList.remove('correct', 'wrong');
     }
 
-    /* ---------- 键盘 ---------- */
     function onKeyDown(e) {
         var input = e.target;
         var idx = parseInt(input.getAttribute('data-index'));
@@ -1979,7 +2077,6 @@ var Dictation = (function() {
         }
     }
 
-    /* ---------- ★★★ 播放音频 + 波形（可重复点击） ---------- */
     function playAudio() {
         if (!currentData) return;
 
@@ -2035,7 +2132,6 @@ var Dictation = (function() {
         }
     }
 
-    /* ---------- 波形动画 ---------- */
     function startWaveAnimation(durationMs) {
         var bars = document.querySelectorAll('#waveform .wave-bar');
         if (!bars.length) return;
@@ -2094,7 +2190,7 @@ var Dictation = (function() {
     }
 
     function goPrev() {
-        checkAndRecordCurrent();  // ★ 切换前先记录
+        checkAndRecordCurrent();
         if (dictationState.index > 0) {
             dictationState.index--;
             render();
@@ -2102,7 +2198,7 @@ var Dictation = (function() {
     }
 
     function goNext() {
-        checkAndRecordCurrent();  // ★ 切换前先记录
+        checkAndRecordCurrent();
         if (dictationState.index < DICTATION_DATA.length - 1) {
             dictationState.index++;
             render();
@@ -2111,7 +2207,6 @@ var Dictation = (function() {
         }
     }
 
-    /* ★ 收藏：改用 JYStore */
     function toggleStar() {
         var nowStarred = JYStore.toggleStar({
             en: currentData.en,
@@ -2128,7 +2223,7 @@ var Dictation = (function() {
     }
 
     function exitFullscreen() {
-        checkAndRecordCurrent();  // ★ 退出前先记录
+        checkAndRecordCurrent();
 
         playToken++;
         if (waveRafId) cancelAnimationFrame(waveRafId);
@@ -2153,9 +2248,6 @@ var Dictation = (function() {
     };
 })();
 
-/* ============================================================
-   模式切换
-   ============================================================ */
 (function() {
     var modeBtns = document.querySelectorAll('.mode-btn[data-mode]');
     var panels = {
@@ -2199,7 +2291,6 @@ var Dictation = (function() {
     });
 })();
 
-/* 页面跳转 & 提示 */
 (function() {
     var currentPage = window.location.pathname.split('/').pop() || 'learn.html';
     document.querySelectorAll('[data-href]').forEach(function(el) {
@@ -2219,7 +2310,6 @@ var Dictation = (function() {
     });
 })();
 
-/* ESC 退出 */
 document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape') {
         var panel = document.getElementById('panel-dictation');
@@ -2229,6 +2319,10 @@ document.addEventListener('keydown', function(e) {
     }
 });
 
+/* ============================================================
+   ★ 初始化：先启动网络时间同步，再加载题目
+   ============================================================ */
+JYTime.sync();       // 异步同步，成功后 JYStore 就用网络时间了
 loadQuestion();
 </script>
 
