@@ -1149,7 +1149,7 @@
 
 <script>
 /* ============================================================
-   ★★★ 登录状态检查（脚本最前面，未登录立即跳回登录页） ★★★
+   ★★★ 登录状态检查 ★★★
    ============================================================ */
 (function() {
     var userStr = localStorage.getItem('juyou_user');
@@ -1174,8 +1174,7 @@
 })();
 
 /* ============================================================
-   ★★★ 网络时间同步 JYTime（v2：多源并行，谁先成功用谁） ★★★
-   放在 JYStore 前面，因为 JYStore 需要用它来算"今天"
+   ★★★ 网络时间同步 JYTime ★★★
    ============================================================ */
 window.JYTime = (function() {
     var offset = 0;
@@ -1186,20 +1185,16 @@ window.JYTime = (function() {
     function fetchWithTimeout(url, opts, timeoutMs, parseFn) {
         return new Promise(function(resolve) {
             if (!window.fetch) return resolve(0);
-
             var controller = ('AbortController' in window) ? new AbortController() : null;
             var finished = false;
-
             var timer = setTimeout(function() {
                 if (finished) return;
                 finished = true;
                 if (controller) { try { controller.abort(); } catch (e) {} }
                 resolve(0);
             }, timeoutMs);
-
             var fetchOpts = Object.assign({ cache: 'no-store' }, opts || {});
             if (controller) fetchOpts.signal = controller.signal;
-
             fetch(url, fetchOpts)
                 .then(function(res) {
                     if (finished) return 0;
@@ -1306,16 +1301,13 @@ window.JYTime = (function() {
 
     function sync() {
         if (syncPromise) return syncPromise;
-
         syncPromise = Promise.all([tryGithub(), tryCloudflare(), trySuning()])
             .then(function(results) {
                 console.log('[JYTime] 各源结果：', results);
-
                 var best = null;
                 for (var i = 0; i < results.length; i++) {
                     if (results[i].ts > 0) { best = results[i]; break; }
                 }
-
                 if (best) {
                     var localTs = Date.now();
                     var diff = best.ts - localTs;
@@ -1327,11 +1319,9 @@ window.JYTime = (function() {
                         return true;
                     }
                 }
-
                 console.log('[JYTime] ⚠️ 所有时间源均失败，使用本机时间');
                 return false;
             });
-
         return syncPromise;
     }
 
@@ -1352,12 +1342,24 @@ window.JYTime = (function() {
 })();
 
 /* ============================================================
-   ★★★ 本地学习数据存储 JYStore（★ 已改用 JYTime 网络时间） ★★★
-   所有时间戳都基于网络时间，保证多设备数据一致
+   ★★★ 本地学习数据存储 JYStore（★ 已加入 FSRS 复习进度管理） ★★★
+
+   新增逻辑（都在 addRecord 内部自动完成，调用方无需关心）：
+   - 答错 → 加入复习本（若已在则降级为 relearning，10 分钟后再来）
+   - 答对复习本里的句子 → 升级 state，延后下次复习时间
+     · streak 1 → learning, +1 天
+     · streak 2 → review,   +3 天
+     · streak 3 → 移入掌握列表
    ============================================================ */
 window.JYStore = (function() {
     var KEY = 'juyou_study';
     var MAX_RECORDS = 500;
+
+    // 可修改：答对复习本句子时，间隔天数（对应 streak 1/2）
+    var INTERVAL_DAYS = [0, 1, 3];        // 索引 0 未用；streak=1 → 1 天，streak=2 → 3 天
+    var RELEARNING_MINUTES = 10;          // 答错后 10 分钟后再来
+    var NEW_ITEM_HOURS = 24;              // 新加入复习本 24 小时后再来
+    var MASTERED_STREAK = 3;              // 连续答对 3 次 → 掌握
 
     function getDefault() {
         return {
@@ -1403,7 +1405,6 @@ window.JYStore = (function() {
         } catch (e) {}
     }
 
-    /* ★ 使用 JYTime 网络时间来算"今天" */
     function getTodayStr() {
         var d = JYTime.date();
         var m = d.getMonth() + 1;
@@ -1411,9 +1412,86 @@ window.JYStore = (function() {
         return d.getFullYear() + '-' + (m < 10 ? '0' + m : m) + '-' + (day < 10 ? '0' + day : day);
     }
 
+    /* ★★★ 核心：更新复习本状态（内部调用） ★★★ */
+    function updateReviewProgress(data, en, cn, correct, nowTs) {
+        // 找到复习本里这个句子
+        var idx = -1;
+        for (var i = 0; i < data.reviewBook.length; i++) {
+            if (data.reviewBook[i].en === en) { idx = i; break; }
+        }
+
+        if (correct) {
+            /* ---------- 答对 ---------- */
+            if (idx > -1) {
+                // 在复习本里答对：升级 state
+                var item = data.reviewBook[idx];
+                item.streak = (item.streak || 0) + 1;
+
+                if (item.streak >= MASTERED_STREAK) {
+                    // 连续答对足够多次 → 移入掌握列表
+                    data.reviewBook.splice(idx, 1);
+                    var alreadyM = data.mastered.some(function(m) { return m.en === en; });
+                    if (!alreadyM) {
+                        data.mastered.unshift({
+                            en: en,
+                            cn: cn,
+                            masteredTime: nowTs,
+                            accuracy: 100
+                        });
+                    }
+                } else {
+                    // 升级 state + 延后下次复习
+                    if (item.streak === 1) {
+                        item.state = 'learning';
+                        item.nextReview = nowTs + INTERVAL_DAYS[1] * 86400000;
+                    } else if (item.streak === 2) {
+                        item.state = 'review';
+                        item.nextReview = nowTs + INTERVAL_DAYS[2] * 86400000;
+                    }
+                }
+            } else {
+                // 不在复习本里答对：如果历史答对次数 ≥ 3，也放进掌握列表
+                var correctCount = data.records.filter(function(r) {
+                    return r.en === en && r.correct;
+                }).length;
+                if (correctCount >= MASTERED_STREAK) {
+                    var alreadyM2 = data.mastered.some(function(m) { return m.en === en; });
+                    if (!alreadyM2) {
+                        data.mastered.unshift({
+                            en: en,
+                            cn: cn,
+                            masteredTime: nowTs,
+                            accuracy: 100
+                        });
+                    }
+                }
+            }
+        } else {
+            /* ---------- 答错 ---------- */
+            if (idx > -1) {
+                // 在复习本里答错：降级为 relearning，10 分钟后再来
+                var item2 = data.reviewBook[idx];
+                item2.streak = 0;
+                item2.state = 'relearning';
+                item2.nextReview = nowTs + RELEARNING_MINUTES * 60000;
+            } else {
+                // 首次答错：加入复习本
+                data.reviewBook.unshift({
+                    en: en,
+                    cn: cn,
+                    addTime: nowTs,
+                    nextReview: nowTs + NEW_ITEM_HOURS * 3600000,
+                    state: 'new',
+                    streak: 0
+                });
+            }
+        }
+    }
+
+    /* 记录一次答题（含复习进度自动更新） */
     function addRecord(opts) {
         var data = load();
-        var nowTs = JYTime.now();   // ★ 网络时间
+        var nowTs = JYTime.now();
         var record = {
             id: nowTs + '_' + Math.random().toString(36).slice(2, 8),
             en: opts.en || '',
@@ -1427,11 +1505,11 @@ window.JYStore = (function() {
             data.records = data.records.slice(0, MAX_RECORDS);
         }
 
+        /* 更新统计数据 */
         var today = getTodayStr();
         if (data.stats.todayDate !== today) {
             data.stats.todayDate = today;
             data.stats.todayCount = 0;
-
             var last = data.stats.lastStudyDate;
             if (last) {
                 var lastTime = new Date(last + 'T00:00:00').getTime();
@@ -1451,48 +1529,16 @@ window.JYStore = (function() {
         data.stats.totalSentences += 1;
         data.stats.lastStudyDate = today;
 
+        /* ★★★ 更新复习本进度（内部完成，调用方无需再调用其它方法）★★★ */
+        if (record.en) {
+            updateReviewProgress(data, record.en, record.cn, record.correct, nowTs);
+        }
+
         save(data);
         return record;
     }
 
-    function addToReviewBook(en, cn) {
-        var data = load();
-        var exists = data.reviewBook.some(function(item) { return item.en === en; });
-        if (exists) return;
-        var nowTs = JYTime.now();   // ★ 网络时间
-        data.reviewBook.unshift({
-            en: en,
-            cn: cn,
-            addTime: nowTs,
-            nextReview: nowTs + 24 * 3600 * 1000,
-            state: 'new'
-        });
-        save(data);
-    }
-
-    function checkMastered(en, cn) {
-        var data = load();
-        var exists = data.mastered.some(function(item) { return item.en === en; });
-        if (exists) return;
-
-        var correctCount = data.records.filter(function(r) {
-            return r.en === en && r.correct;
-        }).length;
-
-        if (correctCount >= 3) {
-            data.mastered.unshift({
-                en: en,
-                cn: cn,
-                masteredTime: JYTime.now(),   // ★ 网络时间
-                accuracy: 100
-            });
-            data.reviewBook = data.reviewBook.filter(function(item) {
-                return item.en !== en;
-            });
-            save(data);
-        }
-    }
-
+    /* 收藏（未改动） */
     function toggleStar(item) {
         var data = load();
         var idx = -1;
@@ -1507,7 +1553,7 @@ window.JYStore = (function() {
             data.starred.unshift({
                 en: item.en,
                 cn: item.cn,
-                timestamp: JYTime.now()   // ★ 网络时间
+                timestamp: JYTime.now()
             });
             save(data);
             return true;
@@ -1530,8 +1576,6 @@ window.JYStore = (function() {
         load: load,
         save: save,
         addRecord: addRecord,
-        addToReviewBook: addToReviewBook,
-        checkMastered: checkMastered,
         toggleStar: toggleStar,
         isStarred: isStarred,
         clear: clear
@@ -1686,17 +1730,13 @@ function submitAnswer() {
     state.isAnswered = true;
     state.totalAnswered++;
 
+    /* ★ 只需一次 addRecord，复习进度由 JYStore 内部处理 */
     JYStore.addRecord({
         en: q.en,
         cn: q.cn,
         mode: 'translate',
         correct: isCorrect
     });
-    if (isCorrect) {
-        JYStore.checkMastered(q.en, q.cn);
-    } else {
-        JYStore.addToReviewBook(q.en, q.cn);
-    }
 
     if (isCorrect) {
         state.correctCount++;
@@ -1874,17 +1914,13 @@ var Dictation = (function() {
 
         dictationState.recorded[idx] = true;
 
+        /* ★ 只需一次 addRecord */
         JYStore.addRecord({
             en: currentData.en,
             cn: currentData.cn,
             mode: 'dictation',
             correct: allCorrect
         });
-        if (allCorrect) {
-            JYStore.checkMastered(currentData.en, currentData.cn);
-        } else {
-            JYStore.addToReviewBook(currentData.en, currentData.cn);
-        }
     }
 
     function render() {
@@ -2319,10 +2355,7 @@ document.addEventListener('keydown', function(e) {
     }
 });
 
-/* ============================================================
-   ★ 初始化：先启动网络时间同步，再加载题目
-   ============================================================ */
-JYTime.sync();       // 异步同步，成功后 JYStore 就用网络时间了
+JYTime.sync();
 loadQuestion();
 </script>
 
