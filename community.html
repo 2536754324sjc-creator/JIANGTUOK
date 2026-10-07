@@ -1617,173 +1617,659 @@
 </div>
 
 <script>
-    /* ============================================================
-       ★★★ 登录状态检查（放在最前面，未登录立即跳回登录页） ★★★
-       ============================================================ */
-    (function() {
-        var userStr = localStorage.getItem('juyou_user');
-        if (!userStr) {
-            window.location.href = 'index.html';
-            return;
-        }
-        var user = null;
-        try {
-            user = JSON.parse(userStr);
-        } catch (e) {
-            localStorage.removeItem('juyou_user');
-            window.location.href = 'index.html';
-            return;
-        }
-        if (!user || !user.phone) {
-            localStorage.removeItem('juyou_user');
-            window.location.href = 'index.html';
-            return;
-        }
-        window.currentUser = user;
-    })();
+/* ============================================================
+   登录状态检查
+   ============================================================ */
+(function() {
+    var userStr = localStorage.getItem('juyou_user');
+    if (!userStr) {
+        window.location.href = 'index.html';
+        return;
+    }
+    var user = null;
+    try {
+        user = JSON.parse(userStr);
+    } catch (e) {
+        localStorage.removeItem('juyou_user');
+        window.location.href = 'index.html';
+        return;
+    }
+    if (!user || !user.phone) {
+        localStorage.removeItem('juyou_user');
+        window.location.href = 'index.html';
+        return;
+    }
+    window.currentUser = user;
+})();
 
-    /* ============================================================
-       页面跳转逻辑
-       ============================================================ */    (function() {
-        var currentPage = window.location.pathname.split('/').pop() || 'community.html';
-        var clickables = document.querySelectorAll('[data-href]');
-        clickables.forEach(function(el) {
-            el.addEventListener('click', function(e) {
-                e.stopPropagation();
-                var href = this.getAttribute('data-href');
-                if (!href) return;
-                if (href === currentPage) return;
-                window.location.href = href;
+/* ============================================================
+   网络时间 JYTime（Cloudflare + 苏宁 双源）
+   ============================================================ */
+window.JYTime = (function() {
+    var offset = 0;
+    var synced = false;
+    var syncPromise = null;
+    var syncedSource = '';
+
+    function fetchWithTimeout(url, opts, timeoutMs, parseFn) {
+        return new Promise(function(resolve) {
+            if (!window.fetch) return resolve(0);
+            var controller = ('AbortController' in window) ? new AbortController() : null;
+            var finished = false;
+            var timer = setTimeout(function() {
+                if (finished) return;
+                finished = true;
+                if (controller) { try { controller.abort(); } catch (e) {} }
+                resolve(0);
+            }, timeoutMs);
+            var fetchOpts = Object.assign({ cache: 'no-store' }, opts || {});
+            if (controller) fetchOpts.signal = controller.signal;
+            fetch(url, fetchOpts)
+                .then(function(res) {
+                    if (finished) return 0;
+                    return parseFn(res);
+                })
+                .then(function(ts) {
+                    if (finished) return;
+                    finished = true;
+                    clearTimeout(timer);
+                    resolve(ts > 0 ? ts : 0);
+                })
+                .catch(function() {
+                    if (finished) return;
+                    finished = true;
+                    clearTimeout(timer);
+                    resolve(0);
+                });
+        });
+    }
+
+    function tryCloudflare() {
+        return fetchWithTimeout(
+            'https://www.cloudflare.com/cdn-cgi/trace',
+            {},
+            2500,
+            function(res) {
+                return res.text().then(function(text) {
+                    var m = text.match(/^ts=([\d.]+)/m);
+                    if (!m) return 0;
+                    return Math.round(parseFloat(m[1]) * 1000);
+                });
+            }
+        ).then(function(ts) {
+            return { ts: ts || 0, source: 'Cloudflare' };
+        });
+    }
+
+    function trySuning() {
+        return new Promise(function(resolve) {
+            var cbName = '__jySn_' + Date.now() + '_' + Math.floor(Math.random() * 1e6);
+            var script = document.createElement('script');
+            var done = false;
+
+            function cleanup() {
+                if (script.parentNode) script.parentNode.removeChild(script);
+                try { delete window[cbName]; } catch (e) { window[cbName] = undefined; }
+            }
+
+            var timer = setTimeout(function() {
+                if (done) return;
+                done = true;
+                cleanup();
+                resolve({ ts: 0, source: '苏宁' });
+            }, 2500);
+
+            window[cbName] = function(data) {
+                if (done) return;
+                done = true;
+                clearTimeout(timer);
+                var ts = 0;
+                try {
+                    if (data && data.sysTime1) {
+                        var s = String(data.sysTime1);
+                        var year = parseInt(s.slice(0, 4), 10);
+                        var mon = parseInt(s.slice(4, 6), 10) - 1;
+                        var day = parseInt(s.slice(6, 8), 10);
+                        var hr = parseInt(s.slice(8, 10), 10);
+                        var min = parseInt(s.slice(10, 12), 10);
+                        var sec = parseInt(s.slice(12, 14), 10);
+                        ts = new Date(year, mon, day, hr, min, sec).getTime();
+                    }
+                } catch (e) {}
+                cleanup();
+                resolve({ ts: ts > 0 ? ts : 0, source: '苏宁' });
+            };
+
+            script.src = 'https://quan.suning.com/getSysTime.do?callback=' + cbName;
+            script.onerror = function() {
+                if (done) return;
+                done = true;
+                clearTimeout(timer);
+                cleanup();
+                resolve({ ts: 0, source: '苏宁' });
+            };
+            document.head.appendChild(script);
+        });
+    }
+
+    function sync() {
+        if (syncPromise) return syncPromise;
+        syncPromise = Promise.all([tryCloudflare(), trySuning()])
+            .then(function(results) {
+                console.log('[JYTime] 各源结果：', results);
+                var best = null;
+                for (var i = 0; i < results.length; i++) {
+                    if (results[i].ts > 0) { best = results[i]; break; }
+                }
+                if (best) {
+                    var localTs = Date.now();
+                    var diff = best.ts - localTs;
+                    if (Math.abs(diff) < 86400000 * 365) {
+                        offset = diff;
+                        synced = true;
+                        syncedSource = best.source;
+                        console.log('[JYTime] ✅ 同步成功（来源：' + best.source + '），校正 ' + diff + ' 毫秒');
+                        return true;
+                    }
+                }
+                console.log('[JYTime] ⚠️ 所有时间源均失败，使用本机时间');
+                return false;
+            });
+        return syncPromise;
+    }
+
+    function now() { return Date.now() + offset; }
+    function date() { return new Date(now()); }
+
+    return {
+        sync: sync,
+        now: now,
+        date: date
+    };
+})();
+
+/* ============================================================
+   ★★★ 社区本地数据存储 JYCommunity ★★★
+   数据结构：
+   {
+     postStats: { '文本hash': { liked: true/false, count: 数字 } },
+     follows: { '用户名': true },
+     groups: { '组名': 'joined' | 'waiting' },
+     myPosts: [ { id, content, visibility, timestamp, likes, comments } ]
+   }
+   ============================================================ */
+window.JYCommunity = (function() {
+    var KEY = 'juyou_community';
+
+    function getDefault() {
+        return {
+            postStats: {},
+            follows: {},
+            groups: {},
+            myPosts: []
+        };
+    }
+
+    function load() {
+        try {
+            var raw = localStorage.getItem(KEY);
+            if (!raw) return getDefault();
+            var data = JSON.parse(raw);
+            var def = getDefault();
+            return {
+                postStats: data.postStats || def.postStats,
+                follows: data.follows || def.follows,
+                groups: data.groups || def.groups,
+                myPosts: data.myPosts || def.myPosts
+            };
+        } catch (e) {
+            return getDefault();
+        }
+    }
+
+    function save(data) {
+        try {
+            localStorage.setItem(KEY, JSON.stringify(data));
+        } catch (e) {}
+    }
+
+    return { load: load, save: save };
+})();
+
+/* ============================================================
+   工具函数
+   ============================================================ */
+function escapeHtml(str) {
+    if (str == null) return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
+/* 把动态文本转成稳定的 key（用于识别同一条动态） */
+function hashText(text) {
+    var s = String(text || '').trim().slice(0, 60);
+    var h = 0;
+    for (var i = 0; i < s.length; i++) {
+        h = ((h << 5) - h + s.charCodeAt(i)) | 0;
+    }
+    return 'p_' + Math.abs(h);
+}
+
+function formatTimeAgo(ts) {
+    var diff = JYTime.now() - ts;
+    var minutes = Math.floor(diff / 60000);
+    if (minutes < 1) return '刚刚';
+    if (minutes < 60) return minutes + ' 分钟前';
+    var hours = Math.floor(minutes / 60);
+    if (hours < 24) return hours + ' 小时前';
+    var days = Math.floor(hours / 24);
+    if (days < 30) return days + ' 天前';
+    var d = new Date(ts);
+    return (d.getMonth() + 1) + '月' + d.getDate() + '日';
+}
+
+/* ============================================================
+   页面跳转
+   ============================================================ */
+(function() {
+    var currentPage = window.location.pathname.split('/').pop() || 'community.html';
+    document.querySelectorAll('[data-href]').forEach(function(el) {
+        el.addEventListener('click', function(e) {
+            e.stopPropagation();
+            var href = this.getAttribute('data-href');
+            if (!href || href === currentPage) return;
+            window.location.href = href;
+        });
+    });
+})();
+
+/* ============================================================
+   一级 Tab 切换
+   ============================================================ */
+(function() {
+    var tabs = document.querySelectorAll('.main-tab');
+    var panels = {
+        groups: document.getElementById('panel-groups'),
+        feed: document.getElementById('panel-feed'),
+        rank: document.getElementById('panel-rank'),
+        pk: document.getElementById('panel-pk')
+    };
+
+    tabs.forEach(function(tab) {
+        tab.addEventListener('click', function(e) {
+            e.stopPropagation();
+            tabs.forEach(function(t) { t.classList.remove('on'); });
+            this.classList.add('on');
+
+            var name = this.getAttribute('data-tab');
+            Object.keys(panels).forEach(function(key) {
+                if (panels[key]) {
+                    panels[key].style.display = (key === name) ? 'block' : 'none';
+                }
             });
         });
-    })();
+    });
+})();
 
-    /* ============================================================
-       一级 Tab 切换
-       ============================================================ */
-    (function() {
-        var tabs = document.querySelectorAll('.main-tab');
-        var panels = {
-            groups: document.getElementById('panel-groups'),
-            feed: document.getElementById('panel-feed'),
-            rank: document.getElementById('panel-rank'),
-            pk: document.getElementById('panel-pk')
+/* ============================================================
+   filter-chip 分组单选
+   ============================================================ */
+(function() {
+    var containers = new Set();
+    document.querySelectorAll('.filter-chip').forEach(function(chip) {
+        containers.add(chip.parentElement);
+    });
+
+    containers.forEach(function(container) {
+        var chips = container.querySelectorAll('.filter-chip');
+        chips.forEach(function(chip) {
+            chip.addEventListener('click', function(e) {
+                e.stopPropagation();
+                chips.forEach(function(c) { c.classList.remove('on'); });
+                this.classList.add('on');
+            });
+        });
+    });
+})();
+
+/* ============================================================
+   创建"我的动态" DOM 元素（供发布和加载时使用）
+   ============================================================ */
+function createMyPostEl(post) {
+    var el = document.createElement('div');
+    el.className = 'feed-item';
+    el.setAttribute('data-mine-id', post.id);
+
+    var nickname = (window.currentUser && window.currentUser.nickname) || '我';
+    var avatarChar = nickname.slice(-1);
+
+    var visibilityTag = '🌐 公开';
+    if (post.visibility === 'followers') visibilityTag = '👥 关注可见';
+    else if (post.visibility === 'private') visibilityTag = '🔒 仅自己';
+
+    el.innerHTML =
+        '<div class="feed-avatar" style="background: linear-gradient(135deg, #4f6ef7, #7b8fff); color: #fff;">' + escapeHtml(avatarChar) + '</div>' +
+        '<div class="feed-body">' +
+            '<div class="feed-head">' +
+                '<div>' +
+                    '<span class="feed-user">' + escapeHtml(nickname) + '</span>' +
+                    '<span class="feed-user-tag">' + visibilityTag + '</span>' +
+                '</div>' +
+                '<div class="feed-time">' + escapeHtml(formatTimeAgo(post.timestamp)) + '</div>' +
+            '</div>' +
+            '<div class="feed-text">' + escapeHtml(post.content) + '</div>' +
+            '<div class="feed-foot">' +
+                '<div class="feed-action">🤍 0</div>' +
+                '<div class="feed-action" data-tip="评论（后续步骤实现）">💬 0</div>' +
+                '<div class="feed-action" data-tip="分享（后续步骤实现）">🔗 分享</div>' +
+            '</div>' +
+        '</div>';
+
+    return el;
+}
+
+/* ============================================================
+   ★★★ 页面加载时：恢复本地状态 ★★★
+   ============================================================ */
+(function() {
+    var data = JYCommunity.load();
+
+    // 1. 恢复点赞状态
+    document.querySelectorAll('.feed-item').forEach(function(item) {
+        var feedText = item.querySelector('.feed-text');
+        var action = item.querySelector('.feed-action');
+        if (!feedText || !action) return;
+
+        var text = action.textContent.trim();
+        var isLike = text.indexOf('❤️') === 0 || text.indexOf('🤍') === 0;
+        if (!isLike) return;
+
+        var key = hashText(feedText.textContent);
+        var stat = data.postStats[key];
+        if (!stat) return;
+
+        if (stat.liked) {
+            action.classList.add('liked');
+            action.textContent = '❤️ ' + stat.count;
+        } else {
+            action.classList.remove('liked');
+            action.textContent = '🤍 ' + stat.count;
+        }
+    });
+
+    // 2. 恢复关注状态
+    document.querySelectorAll('.follow-item').forEach(function(item) {
+        var nameEl = item.querySelector('.follow-name');
+        var btn = item.querySelector('.btn-follow');
+        if (!nameEl || !btn) return;
+
+        var name = nameEl.textContent.trim();
+        if (data.follows[name]) {
+            btn.classList.add('followed');
+            btn.textContent = '已关注';
+        } else {
+            btn.classList.remove('followed');
+            btn.textContent = '关注';
+        }
+    });
+
+    // 3. 恢复小组加入状态
+    document.querySelectorAll('.group-card').forEach(function(card) {
+        var nameEl = card.querySelector('.group-name');
+        var btn = card.querySelector('.btn-join');
+        if (!nameEl || !btn) return;
+
+        var name = nameEl.textContent.trim();
+        var status = data.groups[name];
+        if (status === 'joined') {
+            btn.classList.add('joined');
+            btn.textContent = '已加入';
+        } else if (status === 'waiting') {
+            btn.classList.add('waiting');
+            btn.textContent = '申请中';
+        }
+    });
+
+    // 4. 渲染我发布的动态（插入到 post-box 后面）
+    var feedCard = document.querySelector('#panel-feed .card');
+    if (feedCard && data.myPosts.length > 0) {
+        var postBox = feedCard.querySelector('.post-box');
+        if (postBox) {
+            // 倒序插入，让最新的在最上面
+            data.myPosts.slice().reverse().forEach(function(post) {
+                var itemEl = createMyPostEl(post);
+                postBox.parentNode.insertBefore(itemEl, postBox.nextSibling);
+            });
+        }
+    }
+})();
+
+/* ============================================================
+   ★★★ 点赞（事件委托，支持动态生成的元素） ★★★
+   ============================================================ */
+document.addEventListener('click', function(e) {
+    var action = e.target.closest('.feed-action');
+    if (!action) return;
+
+    var text = action.textContent.trim();
+    var isLike = text.indexOf('❤️') === 0 || text.indexOf('🤍') === 0;
+    if (!isLike) return;
+
+    var feedItem = action.closest('.feed-item');
+    if (!feedItem) return;
+    var feedText = feedItem.querySelector('.feed-text');
+    if (!feedText) return;
+
+    var key = hashText(feedText.textContent);
+    var data = JYCommunity.load();
+
+    if (!data.postStats[key]) {
+        // 首次：用当前 HTML 显示的数字作为基准
+        var num = parseInt(text.replace(/[^\d]/g, '')) || 0;
+        data.postStats[key] = { liked: false, count: num };
+    }
+
+    var stat = data.postStats[key];
+
+    if (stat.liked) {
+        stat.liked = false;
+        stat.count = Math.max(0, stat.count - 1);
+        action.classList.remove('liked');
+        action.textContent = '🤍 ' + stat.count;
+    } else {
+        stat.liked = true;
+        stat.count = stat.count + 1;
+        action.classList.add('liked');
+        action.textContent = '❤️ ' + stat.count;
+    }
+
+    JYCommunity.save(data);
+});
+
+/* ============================================================
+   ★★★ 关注（事件委托） ★★★
+   ============================================================ */
+document.addEventListener('click', function(e) {
+    var btn = e.target.closest('.btn-follow');
+    if (!btn) return;
+    e.stopPropagation();
+
+    var followItem = btn.closest('.follow-item');
+    if (!followItem) return;
+    var nameEl = followItem.querySelector('.follow-name');
+    if (!nameEl) return;
+
+    var name = nameEl.textContent.trim();
+    var data = JYCommunity.load();
+
+    if (data.follows[name]) {
+        delete data.follows[name];
+        btn.classList.remove('followed');
+        btn.textContent = '关注';
+    } else {
+        data.follows[name] = true;
+        btn.classList.add('followed');
+        btn.textContent = '已关注';
+    }
+
+    JYCommunity.save(data);
+});
+
+/* ============================================================
+   ★★★ 加入小组（事件委托） ★★★
+   ============================================================ */
+document.addEventListener('click', function(e) {
+    var btn = e.target.closest('.btn-join');
+    if (!btn) return;
+    e.stopPropagation();
+
+    var card = btn.closest('.group-card');
+    if (!card) return;
+    var nameEl = card.querySelector('.group-name');
+    if (!nameEl) return;
+
+    var name = nameEl.textContent.trim();
+    var data = JYCommunity.load();
+
+    // 已加入 → 允许退出
+    if (btn.classList.contains('joined')) {
+        if (!confirm('确定要退出小组吗？')) return;
+        delete data.groups[name];
+        btn.classList.remove('joined');
+        btn.textContent = '加入';
+        JYCommunity.save(data);
+        return;
+    }
+
+    // 申请中 → 不重复提交
+    if (btn.classList.contains('waiting')) {
+        alert('申请已提交，正在等待审核');
+        return;
+    }
+
+    // 申请制 → 显示"申请中"
+    var typeEl = card.querySelector('.group-type');
+    var isApply = typeEl && typeEl.classList.contains('apply');
+
+    if (isApply) {
+        data.groups[name] = 'waiting';
+        btn.classList.add('waiting');
+        btn.textContent = '申请中';
+        JYCommunity.save(data);
+        alert('申请已提交，请等待组长审核');
+    } else {
+        data.groups[name] = 'joined';
+        btn.classList.add('joined');
+        btn.textContent = '已加入';
+        JYCommunity.save(data);
+    }
+});
+
+/* ============================================================
+   ★★★ 发布动态 ★★★
+   ============================================================ */
+(function() {
+    var postBox = document.querySelector('#panel-feed .post-box');
+    if (!postBox) return;
+
+    var publishBtn = postBox.querySelector('.btn-primary');
+    var textarea = postBox.querySelector('.post-input');
+    if (!publishBtn || !textarea) return;
+
+    // 移除原本的 data-tip，避免弹"后续步骤实现"
+    publishBtn.removeAttribute('data-tip');
+
+    // 当前可见范围
+    var currentVisibility = 'public';
+
+    // 找"可见范围"按钮并接管
+    var visibilityBtn = null;
+    postBox.querySelectorAll('.post-tool-btn').forEach(function(b) {
+        if (b.textContent.indexOf('🌐') >= 0) visibilityBtn = b;
+    });
+
+    if (visibilityBtn) {
+        visibilityBtn.removeAttribute('data-tip');
+        visibilityBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            if (currentVisibility === 'public') {
+                currentVisibility = 'followers';
+                visibilityBtn.textContent = '👥 关注可见';
+            } else if (currentVisibility === 'followers') {
+                currentVisibility = 'private';
+                visibilityBtn.textContent = '🔒 仅自己';
+            } else {
+                currentVisibility = 'public';
+                visibilityBtn.textContent = '🌐 公开';
+            }
+        });
+    }
+
+    publishBtn.addEventListener('click', function(e) {
+        e.stopPropagation();
+
+        var content = textarea.value.trim();
+        if (!content) {
+            alert('请输入内容');
+            return;
+        }
+        if (content.length > 500) {
+            alert('内容不能超过 500 字');
+            return;
+        }
+
+        var post = {
+            id: 'mine_' + JYTime.now() + '_' + Math.floor(Math.random() * 1000),
+            content: content,
+            visibility: currentVisibility,
+            timestamp: JYTime.now(),
+            likes: 0,
+            comments: 0
         };
 
-        tabs.forEach(function(tab) {
-            tab.addEventListener('click', function(e) {
-                e.stopPropagation();
-                tabs.forEach(function(t) { t.classList.remove('on'); });
-                this.classList.add('on');
+        var data = JYCommunity.load();
+        data.myPosts.unshift(post);
+        if (data.myPosts.length > 100) {
+            data.myPosts = data.myPosts.slice(0, 100);
+        }
+        JYCommunity.save(data);
 
-                var name = this.getAttribute('data-tab');
-                Object.keys(panels).forEach(function(key) {
-                    if (panels[key]) {
-                        panels[key].style.display = (key === name) ? 'block' : 'none';
-                    }
-                });
-            });
-        });
-    })();
+        var itemEl = createMyPostEl(post);
+        postBox.parentNode.insertBefore(itemEl, postBox.nextSibling);
 
-    /* ============================================================
-       filter-chip 分组单选
-       ============================================================ */
-    (function() {
-        var containers = new Set();
-        document.querySelectorAll('.filter-chip').forEach(function(chip) {
-            containers.add(chip.parentElement);
-        });
+        textarea.value = '';
+        currentVisibility = 'public';
+        if (visibilityBtn) visibilityBtn.textContent = '🌐 公开';
 
-        containers.forEach(function(container) {
-            var chips = container.querySelectorAll('.filter-chip');
-            chips.forEach(function(chip) {
-                chip.addEventListener('click', function(e) {
-                    e.stopPropagation();
-                    chips.forEach(function(c) { c.classList.remove('on'); });
-                    this.classList.add('on');
-                });
-            });
-        });
-    })();
+        alert('发布成功！');
+    });
+})();
 
-    /* ============================================================
-       动态点赞切换
-       ============================================================ */
-    (function() {
-        var actions = document.querySelectorAll('.feed-action');
-        actions.forEach(function(action) {
-            action.addEventListener('click', function(e) {
-                var text = this.textContent.trim();
-                if (text.indexOf('❤️') === 0 || text.indexOf('🤍') === 0) {
-                    e.stopPropagation();
-                    this.classList.toggle('liked');
-                    if (this.classList.contains('liked')) {
-                        var num = text.replace('🤍 ', '').replace('❤️ ', '');
-                        var count = parseInt(num) || 0;
-                        this.textContent = '❤️ ' + (count + 1);
-                    } else {
-                        var num2 = text.replace('❤️ ', '').replace('🤍 ', '');
-                        var count2 = parseInt(num2) || 1;
-                        this.textContent = '🤍 ' + Math.max(0, count2 - 1);
-                    }
-                }
-            });
-        });
-    })();
+/* ============================================================
+   data-tip 提示（排除已接管功能的按钮）
+   ============================================================ */
+(function() {
+    document.querySelectorAll('[data-tip]').forEach(function(el) {
+        el.addEventListener('click', function(e) {
+            if (el.classList.contains('btn-follow')) return;
+            if (el.classList.contains('btn-join')) return;
+            if (el.closest('.post-actions')) return;
 
-    /* ============================================================
-       加入按钮点击切换为已加入
-       ============================================================ */
-    (function() {
-        var joinBtns = document.querySelectorAll('.btn-join');
-        joinBtns.forEach(function(btn) {
-            btn.addEventListener('click', function(e) {
-                e.stopPropagation();
-                if (this.classList.contains('joined')) return;
-                if (this.classList.contains('waiting')) {
-                    alert('申请已提交，请等待组长审核（后续步骤实现）');
-                    return;
-                }
-                this.classList.add('joined');
-                this.textContent = '已加入';
-            });
+            e.stopPropagation();
+            var tip = this.getAttribute('data-tip');
+            if (tip) alert(tip);
         });
+    });
+})();
 
-        var followBtns = document.querySelectorAll('.btn-follow');
-        followBtns.forEach(function(btn) {
-            btn.addEventListener('click', function(e) {
-                e.stopPropagation();
-                if (this.classList.contains('followed')) {
-                    this.classList.remove('followed');
-                    this.textContent = '关注';
-                } else {
-                    this.classList.add('followed');
-                    this.textContent = '已关注';
-                }
-            });
-        });
-    })();
-
-    /* ============================================================
-       所有带 data-tip 属性的元素，点击后弹出提示
-       ============================================================ */
-    (function() {
-        var tipElements = document.querySelectorAll('[data-tip]');
-        tipElements.forEach(function(el) {
-            el.addEventListener('click', function(e) {
-                e.stopPropagation();
-                // 跳过点赞按钮（已在上面单独处理）
-                if (el.classList.contains('feed-action')) {
-                    var text = el.textContent.trim();
-                    if (text.indexOf('❤️') === 0 || text.indexOf('🤍') === 0) return;
-                }
-                var tip = this.getAttribute('data-tip');
-                alert(tip);
-            });
-        });
-    })();
+/* ============================================================
+   初始化：启动网络时间
+   ============================================================ */
+JYTime.sync();
 </script>
-
 </body>
 </html>
