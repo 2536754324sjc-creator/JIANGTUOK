@@ -1132,7 +1132,7 @@
         }
 
         /* ============================================================
-           视频观看模式（★ 已修复 403 + 兜底）
+           视频观看模式
            ============================================================ */
 
         .video-title-bar {
@@ -1185,7 +1185,6 @@
             object-fit: cover;
         }
 
-        /* ★ 视频加载失败时的兜底背景（渐变动画） */
         .video-fallback {
             position: absolute;
             inset: 0;
@@ -1224,7 +1223,6 @@
             letter-spacing: 1px;
         }
 
-        /* 视频上叠加的当前句字幕 */
         .video-overlay-subtitle {
             position: absolute;
             bottom: 60px;
@@ -1252,7 +1250,6 @@
 
         .video-overlay-subtitle.on { opacity: 1; }
 
-        /* 视频控制条 */
         .video-controls {
             display: flex;
             align-items: center;
@@ -1298,7 +1295,6 @@
             white-space: nowrap;
         }
 
-        /* 视频进度条 */
         .video-progress-bar {
             height: 4px;
             background: rgba(255, 255, 255, 0.08);
@@ -1318,7 +1314,6 @@
             width: 0%;
         }
 
-        /* 当前句卡片 */
         .video-current-card {
             background: linear-gradient(135deg, #eef2ff, #f8faff);
             border-radius: 16px;
@@ -1418,7 +1413,6 @@
             color: var(--success);
         }
 
-        /* 句子列表 */
         .video-sent-list-head {
             display: flex;
             align-items: center;
@@ -2543,7 +2537,7 @@
                 </div>
 
                 <!-- ============================================================
-                     视频观看模式（★ 已修复 403 + 兜底）
+                     视频观看模式
                      ============================================================ -->
                 <div id="panel-video" class="mode-panel" style="display: none;">
 
@@ -2557,12 +2551,12 @@
 
                     <!-- 视频播放器 -->
                     <div class="video-player" id="videoPlayerWrap">
+                        <!-- ★ 已去掉 crossorigin="anonymous" -->
                         <video
                             id="videoEl"
                             preload="auto"
                             playsinline
                             muted
-                            crossorigin="anonymous"
                         ></video>
 
                         <!-- ★ 加载失败时的兜底动画 -->
@@ -2663,7 +2657,7 @@
 })();
 
 /* ============================================================
-   网络时间同步 JYTime
+   ★★★ 网络时间同步 JYTime（★ 已去掉 GitHub 源，双源：Cloudflare + 苏宁） ★★★
    ============================================================ */
 window.JYTime = (function() {
     var offset = 0;
@@ -2704,22 +2698,7 @@ window.JYTime = (function() {
         });
     }
 
-    function tryGithub() {
-        return fetchWithTimeout(
-            'https://api.github.com/',
-            { method: 'HEAD' },
-            2500,
-            function(res) {
-                var dateStr = res.headers.get('date');
-                if (!dateStr) return 0;
-                var ts = new Date(dateStr).getTime();
-                return ts > 0 ? ts : 0;
-            }
-        ).then(function(ts) {
-            return { ts: ts || 0, source: 'GitHub API' };
-        });
-    }
-
+    /* 源 1：Cloudflare trace */
     function tryCloudflare() {
         return fetchWithTimeout(
             'https://www.cloudflare.com/cdn-cgi/trace',
@@ -2737,6 +2716,7 @@ window.JYTime = (function() {
         });
     }
 
+    /* 源 2：苏宁时间（JSONP 兜底） */
     function trySuning() {
         return new Promise(function(resolve) {
             var cbName = '__jySn_' + Date.now() + '_' + Math.floor(Math.random() * 1e6);
@@ -2790,7 +2770,7 @@ window.JYTime = (function() {
 
     function sync() {
         if (syncPromise) return syncPromise;
-        syncPromise = Promise.all([tryGithub(), tryCloudflare(), trySuning()])
+        syncPromise = Promise.all([tryCloudflare(), trySuning()])
             .then(function(results) {
                 console.log('[JYTime] 各源结果：', results);
                 var best = null;
@@ -3206,13 +3186,11 @@ var WORD_DICT = {
 };
 
 /* ============================================================
-   ★★★ 视频数据（已换稳定源 + 时间段调整） ★★★
+   视频数据
    ============================================================ */
 var VIDEO_DATA = {
     title: 'Sintel 预告片 · 逐句精听',
-    // ★ 换成了 W3C 官方示例视频，非常稳定
     videoUrl: 'https://media.w3.org/2010/05/sintel/trailer.mp4',
-    // ★ 时间段改小：每段 5 秒，总共 15 秒
     sentences: [
         {
             start: 0,
@@ -4907,7 +4885,7 @@ var Speaking = (function() {
 Speaking.init();
 
 /* ============================================================
-   ★★★ 视频观看（逐句精听）★ 已加 403 兜底
+   ★★★ 视频观看（逐句精听）★ 已修复 null 检查
    ============================================================ */
 var VideoMode = (function() {
     var currentData = null;
@@ -4918,7 +4896,7 @@ var VideoMode = (function() {
     var segmentRafId = null;
     var playToken = 0;
     var isEntered = false;
-    var videoLoadFailed = false;   // ★ 视频是否加载失败
+    var videoLoadFailed = false;
 
     var PROGRESS_KEY = 'juyou_video_progress';
 
@@ -4944,12 +4922,16 @@ var VideoMode = (function() {
     }
 
     function updateProgressText() {
+        // ★ 加 null 检查
+        if (!currentData || !currentData.sentences) return;
+
         var total = currentData.sentences.length;
         var done = 0;
         for (var k in completedSet) {
             if (completedSet[k]) done++;
         }
         var el = $('videoProgressText');
+        if (!el) return;
         el.textContent = '完成 ' + done + ' / ' + total;
         if (done >= total) {
             el.classList.add('all-done');
@@ -4960,6 +4942,9 @@ var VideoMode = (function() {
     }
 
     function updateCurrentCard() {
+        // ★ 加 null 检查
+        if (!currentData || !currentData.sentences) return;
+
         var s = currentData.sentences[currentIndex];
         if (!s) return;
 
@@ -4986,7 +4971,12 @@ var VideoMode = (function() {
     }
 
     function updateSentList() {
+        // ★ 加 null 检查
+        if (!currentData || !currentData.sentences) return;
+
         var list = $('videoSentList');
+        if (!list) return;
+
         var html = '';
         currentData.sentences.forEach(function(s, i) {
             var cls = 'video-sent-item';
@@ -5006,36 +4996,50 @@ var VideoMode = (function() {
         list.innerHTML = html;
     }
 
+    /* ★ 修复：加 null 检查 */
     function updateTimeDisplay() {
+        var el = $('videoTimeDisplay');
+        if (!el) return;
+
+        if (!currentData || !currentData.sentences || currentIndex >= currentData.sentences.length) {
+            el.textContent = '00:00 / 00:15';
+            return;
+        }
         if (!videoEl || videoLoadFailed) {
             var s = currentData.sentences[currentIndex];
-            $('videoTimeDisplay').textContent = formatSeconds(s.start) + ' / ' + formatSeconds(15);
+            el.textContent = formatSeconds(s.start) + ' / ' + formatSeconds(15);
             return;
         }
         var cur = videoEl.currentTime || 0;
         var dur = videoEl.duration || 15;
-        $('videoTimeDisplay').textContent = formatSeconds(cur) + ' / ' + formatSeconds(dur);
+        el.textContent = formatSeconds(cur) + ' / ' + formatSeconds(dur);
     }
 
+    /* ★ 修复：加 null 检查 */
     function updateProgressBar() {
+        var el = $('videoProgressFill');
+        if (!el) return;
+
         if (!videoEl || videoLoadFailed) return;
         var dur = videoEl.duration || 15;
         var cur = videoEl.currentTime || 0;
         var pct = Math.min(100, (cur / dur) * 100);
-        $('videoProgressFill').style.width = pct + '%';
+        el.style.width = pct + '%';
     }
 
-    /* ★ 显示兜底背景（视频加载失败时） */
+    /* ★ 修复：加 null 检查 */
     function showFallback() {
         videoLoadFailed = true;
         var fb = $('videoFallback');
         if (fb) fb.classList.add('on');
-        // 更新时间为静态
-        updateTimeDisplay();
+        // 只有在 currentData 已就绪时才更新时间显示
+        if (currentData && currentData.sentences) {
+            updateTimeDisplay();
+        }
     }
 
     function goToSentence(index, autoPlay) {
-        if (!currentData) return;
+        if (!currentData || !currentData.sentences) return;
         if (index < 0 || index >= currentData.sentences.length) return;
 
         currentIndex = index;
@@ -5056,7 +5060,7 @@ var VideoMode = (function() {
     }
 
     function playSegment() {
-        if (!currentData) return;
+        if (!currentData || !currentData.sentences) return;
         var s = currentData.sentences[currentIndex];
         if (!s) return;
 
@@ -5064,12 +5068,11 @@ var VideoMode = (function() {
         playToken++;
         var myToken = playToken;
 
-        // 视频跳转（失败不影响）
         if (videoEl && !videoLoadFailed) {
             try { videoEl.currentTime = s.start; } catch (e) {}
         }
 
-        // 朗读句子（核心功能，不依赖视频）
+        // 朗读句子（核心功能）
         if ('speechSynthesis' in window) {
             window.speechSynthesis.cancel();
             setTimeout(function() {
@@ -5081,13 +5084,10 @@ var VideoMode = (function() {
             }, 100);
         }
 
-        // 尝试播放视频
         if (videoEl && !videoLoadFailed) {
             var playPromise = videoEl.play();
             if (playPromise && playPromise.catch) {
-                playPromise.catch(function() {
-                    // 自动播放被拒绝，忽略
-                });
+                playPromise.catch(function() {});
             }
             isPlayingSegment = true;
 
@@ -5105,7 +5105,6 @@ var VideoMode = (function() {
             }
             segmentRafId = requestAnimationFrame(check);
         } else {
-            // 视频不可用，但朗读已完成，只需等一会儿
             isPlayingSegment = false;
         }
     }
@@ -5126,7 +5125,9 @@ var VideoMode = (function() {
     }
 
     function markCompleted(index) {
+        if (!currentData || !currentData.sentences) return;
         if (completedSet[index]) return;
+
         completedSet[index] = true;
         saveProgress();
 
@@ -5159,18 +5160,21 @@ var VideoMode = (function() {
     }
 
     function prevSentence() {
+        if (!currentData || !currentData.sentences) return;
         if (currentIndex > 0) {
             goToSentence(currentIndex - 1, true);
         }
     }
 
     function nextSentence() {
+        if (!currentData || !currentData.sentences) return;
         if (currentIndex < currentData.sentences.length - 1) {
             goToSentence(currentIndex + 1, true);
         }
     }
 
     function addCurrentWordsToBook() {
+        if (!currentData || !currentData.sentences) return;
         var s = currentData.sentences[currentIndex];
         if (!s) return;
 
@@ -5197,7 +5201,6 @@ var VideoMode = (function() {
     function bindVideoEvents() {
         if (!videoEl) return;
 
-        // ★ 视频加载出错：显示兜底
         videoEl.addEventListener('error', function() {
             console.warn('[Video] 视频加载失败，切换到兜底显示');
             showFallback();
@@ -5205,6 +5208,7 @@ var VideoMode = (function() {
 
         videoEl.addEventListener('timeupdate', function() {
             if (videoLoadFailed) return;
+            if (!currentData || !currentData.sentences) return;
             updateTimeDisplay();
             updateProgressBar();
 
@@ -5255,7 +5259,8 @@ var VideoMode = (function() {
 
         if (videoEl) {
             videoEl.src = VIDEO_DATA.videoUrl;
-            // 设置 4 秒超时：4 秒内没有 loadedmetadata 就当加载失败
+
+            // 4 秒超时：4 秒内没有 loadedmetadata 就当加载失败
             var loadTimeout = setTimeout(function() {
                 if (!videoLoadFailed && videoEl && videoEl.readyState < 1) {
                     console.warn('[Video] 加载超时，切换到兜底显示');
@@ -5282,6 +5287,7 @@ var VideoMode = (function() {
         $('videoPrevBtn').addEventListener('click', prevSentence);
         $('videoNextBtn').addEventListener('click', nextSentence);
         $('videoSpeakBtn').addEventListener('click', function() {
+            if (!currentData || !currentData.sentences) return;
             var s = currentData.sentences[currentIndex];
             if (!s) return;
             if ('speechSynthesis' in window) {
@@ -5294,6 +5300,7 @@ var VideoMode = (function() {
         });
 
         $('videoDoneBtn').addEventListener('click', function() {
+            if (!currentData || !currentData.sentences) return;
             if (completedSet[currentIndex]) {
                 delete completedSet[currentIndex];
                 saveProgress();
