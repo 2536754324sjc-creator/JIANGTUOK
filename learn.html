@@ -500,13 +500,90 @@
         }
 
         /* ============================================================
-           听力模式（三阶段 → 单次显示全部）
+           听力模式（三阶段：盲听 → 慢听 → 字幕）
            ============================================================ */
+
+        /* 阶段步骤条 */
+        .listen-steps {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 26px;
+            padding: 0 10px;
+        }
+
+        .listen-step {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            border-radius: 20px;
+            background: #f4f6fc;
+            color: var(--text-mute);
+            font-size: 13px;
+            font-weight: 600;
+            transition: background 0.25s, color 0.25s, box-shadow 0.25s;
+            white-space: nowrap;
+        }
+
+        .listen-step.on {
+            background: linear-gradient(135deg, #4f6ef7, #6b8aff);
+            color: #fff;
+            box-shadow: 0 4px 12px rgba(79, 110, 247, 0.3);
+        }
+
+        .listen-step.done {
+            background: #e6f7ef;
+            color: var(--success);
+        }
+
+        .listen-step .step-num {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #e2e8f5;
+            color: var(--text-sub);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            font-weight: 800;
+            flex-shrink: 0;
+        }
+
+        .listen-step.on .step-num {
+            background: rgba(255, 255, 255, 0.3);
+            color: #fff;
+        }
+
+        .listen-step.done .step-num {
+            background: #22a06b;
+            color: #fff;
+        }
+
+        .step-connector {
+            width: 22px;
+            height: 2px;
+            background: #e2e8f5;
+            border-radius: 2px;
+            flex-shrink: 0;
+        }
+
+        .listen-stage-tip {
+            text-align: center;
+            font-size: 13px;
+            color: var(--text-mute);
+            margin-bottom: 16px;
+            letter-spacing: 0.5px;
+            line-height: 1.6;
+        }
+
         .listen-play-area {
             display: flex;
             flex-direction: column;
             align-items: center;
-            margin: 20px 0 28px;
+            margin: 12px 0 22px;
         }
 
         .listen-play-btn {
@@ -525,9 +602,18 @@
             transition: transform 0.15s, box-shadow 0.2s;
         }
 
+        .listen-play-btn.slow {
+            background: linear-gradient(135deg, #22a06b, #35b87d);
+            box-shadow: 0 12px 36px rgba(34, 160, 107, 0.4);
+        }
+
         .listen-play-btn:hover {
             transform: scale(1.05);
             box-shadow: 0 16px 44px rgba(79, 110, 247, 0.5);
+        }
+
+        .listen-play-btn.slow:hover {
+            box-shadow: 0 16px 44px rgba(34, 160, 107, 0.5);
         }
 
         .listen-play-btn:active { transform: scale(0.95); }
@@ -550,7 +636,7 @@
             height: 40px;
             width: 70%;
             max-width: 480px;
-            margin-top: 22px;
+            margin-top: 18px;
             opacity: 0;
             transition: opacity 0.3s ease;
         }
@@ -566,38 +652,45 @@
             box-shadow: 0 0 4px rgba(79, 110, 247, 0.5);
         }
 
-        /* ★ 字幕框 */
-        .listen-subtitle-box {
+        /* 盲听/慢听的不显示文字框 */
+        .listen-blind-box {
             background: #f8faff;
             border: 2px dashed #d8dfee;
             border-radius: 16px;
-            min-height: 150px;
+            min-height: 120px;
+            padding: 26px 22px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 22px;
+            text-align: center;
+        }
+
+        .listen-blind-icon { font-size: 34px; opacity: 0.5; }
+        .listen-blind-text {
+            font-size: 14px;
+            color: var(--text-mute);
+            letter-spacing: 0.5px;
+        }
+
+        /* 字幕框 */
+        .listen-subtitle-box {
+            background: #fff;
+            border: 2px solid #c9d4f5;
+            border-radius: 16px;
+            min-height: 140px;
             padding: 26px 22px;
             text-align: center;
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            margin-bottom: 24px;
-            transition: border-color 0.3s, background 0.3s;
+            margin-bottom: 22px;
         }
 
-        .listen-subtitle-box.revealed {
-            border-color: #c9d4f5;
-            background: #fff;
-            border-style: solid;
-        }
-
-        .listen-placeholder {
-            font-size: 15px;
-            color: var(--text-mute);
-            letter-spacing: 0.5px;
-            line-height: 1.6;
-        }
-
-        .listen-reveal-content {
-            width: 100%;
-        }
+        .listen-reveal-content { width: 100%; }
 
         .listen-en {
             font-size: 24px;
@@ -660,7 +753,6 @@
             letter-spacing: 0.3px;
         }
 
-        /* ★ 弹出动画（缓慢渐显+上移，总时长 0.35s） */
         @keyframes listenReveal {
             from {
                 opacity: 0;
@@ -1340,6 +1432,10 @@
             .listen-en { font-size: 18px; }
             .listen-phonetic { font-size: 12px; }
             .listen-structure { gap: 8px; }
+            .listen-step { padding: 6px 10px; font-size: 12px; }
+            .listen-step .step-label { display: none; }
+            .listen-step .step-num { width: 22px; height: 22px; font-size: 12px; }
+            .step-connector { width: 14px; }
         }
     </style>
 </head>
@@ -1489,22 +1585,80 @@
 
                 <div id="panel-dictation" class="mode-panel" style="display: none;"></div>
 
-                <!-- 听力模式 -->
+                <!-- ============================================================
+                     听力模式（三阶段：盲听 → 慢听 → 字幕）
+                     ============================================================ -->
                 <div id="panel-listening" class="mode-panel" style="display: none;">
 
-                    <div id="listenPlayView">
-                        <div class="prompt-label">听力模式 · 听音频，显示句子，然后作答</div>
+                    <!-- 阶段步骤条 -->
+                    <div class="listen-steps" id="listenSteps">
+                        <div class="listen-step on" data-step="1">
+                            <span class="step-num">1</span>
+                            <span class="step-label">盲听</span>
+                        </div>
+                        <div class="step-connector"></div>
+                        <div class="listen-step" data-step="2">
+                            <span class="step-num">2</span>
+                            <span class="step-label">慢听</span>
+                        </div>
+                        <div class="step-connector"></div>
+                        <div class="listen-step" data-step="3">
+                            <span class="step-num">3</span>
+                            <span class="step-label">字幕</span>
+                        </div>
+                    </div>
+
+                    <!-- 阶段 1：盲听 -->
+                    <div id="listenStage1" class="listen-stage">
+                        <div class="listen-stage-tip">🎧 第一遍：纯听音，不看文字，凭听感理解</div>
 
                         <div class="listen-play-area">
-                            <button class="listen-play-btn" id="listenPlayBtn">🔊</button>
-                            <div class="listen-waveform" id="listenWaveform"></div>
+                            <button class="listen-play-btn" id="listenPlayBtn1">🔊</button>
+                            <div class="listen-waveform" id="listenWaveform1"></div>
+                        </div>
+
+                        <div class="listen-blind-box">
+                            <div class="listen-blind-icon">🎵</div>
+                            <div class="listen-blind-text">不显示任何文字</div>
+                        </div>
+
+                        <div class="listen-actions">
+                            <button class="btn-secondary" id="listenReplay1">🔁 再听一遍</button>
+                            <button class="btn-submit" id="listenNext1">已听懂，进入慢听 →</button>
+                        </div>
+                    </div>
+
+                    <!-- 阶段 2：慢听 -->
+                    <div id="listenStage2" class="listen-stage" style="display: none;">
+                        <div class="listen-stage-tip">🐢 第二遍：慢速播放，可反复听，仍不显示文字</div>
+
+                        <div class="listen-play-area">
+                            <button class="listen-play-btn slow" id="listenPlayBtn2">🐢</button>
+                            <div class="listen-waveform" id="listenWaveform2"></div>
+                        </div>
+
+                        <div class="listen-blind-box">
+                            <div class="listen-blind-icon">🐢</div>
+                            <div class="listen-blind-text">慢速播放 · 仍不显示文字</div>
+                        </div>
+
+                        <div class="listen-actions">
+                            <button class="btn-secondary" id="listenReplay2">🔁 再听一遍</button>
+                            <button class="btn-submit" id="listenNext2">听不懂，显示字幕 →</button>
+                        </div>
+                    </div>
+
+                    <!-- 阶段 3：字幕 -->
+                    <div id="listenStage3" class="listen-stage" style="display: none;">
+                        <div class="listen-stage-tip">📖 第三遍：看字幕，理解句子结构</div>
+
+                        <div class="listen-play-area">
+                            <button class="listen-play-btn" id="listenPlayBtn3">🔊</button>
+                            <div class="listen-waveform" id="listenWaveform3"></div>
                         </div>
 
                         <div class="listen-subtitle-box" id="listenSubtitleBox">
-                            <div class="listen-placeholder" id="listenPlaceholder">
-                                🎧 仔细听，可点下方按钮显示句子
-                            </div>
-                            <div class="listen-reveal-content" id="listenRevealContent" style="display: none;">
+                            <div class="listen-reveal-content" id="listenRevealContent">
                                 <div class="listen-en listen-reveal-item" id="listenEn"></div>
                                 <div class="listen-phonetic listen-reveal-item" id="listenPhonetic"></div>
                                 <div class="listen-cn listen-reveal-item" id="listenCn"></div>
@@ -1513,11 +1667,12 @@
                         </div>
 
                         <div class="listen-actions">
-                            <button class="btn-secondary" id="listenHintBtn">👁 显示句子</button>
+                            <button class="btn-secondary" id="listenReplay3">🔁 再听一遍</button>
                             <button class="btn-submit" id="listenStartBtn">🎯 开始作答</button>
                         </div>
                     </div>
 
+                    <!-- 作答视图 -->
                     <div id="listenQuizView" style="display: none;">
                         <div class="prompt-label">请用词块拼出刚才听到的句子</div>
 
@@ -1529,7 +1684,7 @@
 
                         <div class="action-bar">
                             <button class="btn-submit" id="listenSubmit">提交答案</button>
-                            <button class="btn-secondary" id="listenReplay">🔁 再听一遍</button>
+                            <button class="btn-secondary" id="listenReplayQuiz">🔁 再听一遍</button>
                             <button class="btn-secondary" id="listenReset">重置</button>
                         </div>
                     </div>
@@ -2047,10 +2202,7 @@ window.JYStore = (function() {
 })();
 
 /* ============================================================
-   ★★★ 题库（新增 phonetic 音标 + structure 主谓宾结构） ★★★
-   可修改：往这里加句子
-   - phonetic：整句音标
-   - structure：主谓宾等成分标注，每个元素 { label, word }
+   题库
    ============================================================ */
 var QUESTION_BANK = [
     {
@@ -2911,11 +3063,11 @@ var Dictation = (function() {
 })();
 
 /* ============================================================
-   ★★★ 听力模式（点击一次显示完整信息 + 缓慢弹出动画） ★★★
+   ★★★ 听力模式（三阶段：盲听 → 慢听 → 字幕） ★★★
    ============================================================ */
 var Listening = (function() {
     var currentData = null;
-    var isRevealed = false;
+    var currentStage = 1;          // 1=盲听 2=慢听 3=字幕 4=作答
     var selectedChunks = [];
     var isAnswered = false;
     var waveRafId = null;
@@ -2923,8 +3075,9 @@ var Listening = (function() {
 
     function $(id) { return document.getElementById(id); }
 
-    function buildWaveform() {
-        var wave = $('listenWaveform');
+    /* ---------- 波形 ---------- */
+    function buildWaveform(containerId) {
+        var wave = $(containerId);
         if (!wave) return;
         var html = '';
         for (var i = 0; i < 50; i++) {
@@ -2933,8 +3086,8 @@ var Listening = (function() {
         wave.innerHTML = html;
     }
 
-    function startWaveAnimation(durationMs) {
-        var bars = document.querySelectorAll('#listenWaveform .wave-bar');
+    function startWaveAnimation(containerId, durationMs) {
+        var bars = document.querySelectorAll('#' + containerId + ' .wave-bar');
         if (!bars.length) return;
 
         if (waveRafId) cancelAnimationFrame(waveRafId);
@@ -2976,21 +3129,28 @@ var Listening = (function() {
         waveRafId = requestAnimationFrame(frame);
     }
 
-    function stopWaveAnimation() {
+    function stopWaveAnimation(containerId) {
         if (waveRafId) {
             cancelAnimationFrame(waveRafId);
             waveRafId = null;
         }
-        var bars = document.querySelectorAll('#listenWaveform .wave-bar');
-        bars.forEach(function(bar) { bar.style.height = '6px'; });
+        if (containerId) {
+            var bars = document.querySelectorAll('#' + containerId + ' .wave-bar');
+            bars.forEach(function(bar) { bar.style.height = '6px'; });
+        }
     }
 
-    function playAudio() {
+    /* ---------- 播放音频 ----------
+       rate: 语速（0.85 正常 / 0.6 慢速）
+       containerId: 波形容器 id（可传 null，表示不显示波形）
+       btnId: 播放按钮 id（可传 null）
+    */
+    function playAudio(rate, containerId, btnId) {
         if (!currentData) return;
+        rate = rate || 0.85;
 
-        var waveform = $('listenWaveform');
-        var playBtn = $('listenPlayBtn');
-        if (!waveform) return;
+        var waveform = containerId ? $(containerId) : null;
+        var playBtn = btnId ? $(btnId) : null;
 
         playToken++;
         var myToken = playToken;
@@ -2999,9 +3159,11 @@ var Listening = (function() {
             window.speechSynthesis.cancel();
         }
 
-        waveform.classList.add('active');
-        stopWaveAnimation();
-        buildWaveform();
+        if (waveform) {
+            waveform.classList.add('active');
+            stopWaveAnimation(containerId);
+            buildWaveform(containerId);
+        }
 
         if (playBtn) {
             playBtn.classList.remove('playing');
@@ -3012,13 +3174,20 @@ var Listening = (function() {
             }, 500);
         }
 
-        var estimatedDuration = Math.max(1200, currentData.en.length * 65);
-        startWaveAnimation(estimatedDuration);
+        // 估算时长：慢速会更长
+        var baseLen = currentData.en.length;
+        var estimatedDuration = Math.max(1200, baseLen * 65 / rate);
+
+        if (waveform) {
+            startWaveAnimation(containerId, estimatedDuration);
+        }
 
         var stopWave = function() {
             if (myToken !== playToken) return;
-            stopWaveAnimation();
-            waveform.classList.remove('active');
+            if (containerId) {
+                stopWaveAnimation(containerId);
+                if (waveform) waveform.classList.remove('active');
+            }
         };
 
         if ('speechSynthesis' in window) {
@@ -3027,7 +3196,7 @@ var Listening = (function() {
 
                 var u = new SpeechSynthesisUtterance(currentData.en);
                 u.lang = 'en-US';
-                u.rate = 0.85;
+                u.rate = rate;
                 u.onend = stopWave;
                 u.onerror = stopWave;
                 window.speechSynthesis.speak(u);
@@ -3039,68 +3208,88 @@ var Listening = (function() {
         }
     }
 
-    /* ★ 触发每个内容块的入场动画（重新触发） */
+    /* ---------- 步骤条 ---------- */
+    function updateSteps(stage) {
+        var steps = document.querySelectorAll('.listen-step');
+        steps.forEach(function(el) {
+            var s = parseInt(el.getAttribute('data-step'));
+            el.classList.remove('on', 'done');
+            if (s < stage) {
+                el.classList.add('done');
+            } else if (s === stage) {
+                el.classList.add('on');
+            }
+        });
+    }
+
+    /* ---------- 切换阶段 ---------- */
+    function goToStage(stage) {
+        // 停止当前播放
+        playToken++;
+        if (waveRafId) cancelAnimationFrame(waveRafId);
+        if ('speechSynthesis' in window) {
+            window.speechSynthesis.cancel();
+        }
+
+        currentStage = stage;
+        updateSteps(stage >= 4 ? 3 : stage);
+
+        // 隐藏所有视图
+        $('listenStage1').style.display = 'none';
+        $('listenStage2').style.display = 'none';
+        $('listenStage3').style.display = 'none';
+        $('listenQuizView').style.display = 'none';
+
+        if (stage === 1) {
+            $('listenStage1').style.display = 'block';
+            setTimeout(function() { playAudio(0.85, 'listenWaveform1', 'listenPlayBtn1'); }, 300);
+        } else if (stage === 2) {
+            $('listenStage2').style.display = 'block';
+            setTimeout(function() { playAudio(0.6, 'listenWaveform2', 'listenPlayBtn2'); }, 300);
+        } else if (stage === 3) {
+            $('listenStage3').style.display = 'block';
+            fillSubtitle();
+            setTimeout(function() { playAudio(0.85, 'listenWaveform3', 'listenPlayBtn3'); }, 300);
+        } else if (stage === 4) {
+            $('listenQuizView').style.display = 'block';
+            buildQuiz();
+        }
+    }
+
+    /* ---------- 填充字幕内容 ---------- */
+    function fillSubtitle() {
+        $('listenEn').textContent = currentData.en;
+        $('listenPhonetic').textContent = currentData.phonetic || '';
+        $('listenCn').textContent = currentData.cn;
+
+        var structureEl = $('listenStructure');
+        structureEl.innerHTML = '';
+        if (currentData.structure && currentData.structure.length) {
+            currentData.structure.forEach(function(s) {
+                var item = document.createElement('div');
+                item.className = 'listen-structure-item listen-reveal-item';
+                item.innerHTML =
+                    '<span class="listen-structure-label">' + s.label + '</span>' +
+                    '<span class="listen-structure-word">' + s.word + '</span>';
+                structureEl.appendChild(item);
+            });
+        }
+
+        retriggerAnimation();
+    }
+
     function retriggerAnimation() {
         var items = $('listenRevealContent').querySelectorAll('.listen-reveal-item');
         items.forEach(function(el, i) {
             el.style.animation = 'none';
-            void el.offsetWidth; // 强制重排，重置动画
-            // 依次延迟 60ms 出现，最后一个用 0.35s 完成，总时长约 0.35 + 0.06*n
+            void el.offsetWidth;
             el.style.animation = 'listenReveal 0.35s ease-out both';
             el.style.animationDelay = (i * 60) + 'ms';
         });
     }
 
-    /* ★ 显示/隐藏完整句子信息 */
-    function toggleReveal() {
-        var btn = $('listenHintBtn');
-        var placeholder = $('listenPlaceholder');
-        var content = $('listenRevealContent');
-        var box = $('listenSubtitleBox');
-
-        if (isRevealed) {
-            // 隐藏
-            isRevealed = false;
-            placeholder.style.display = 'block';
-            content.style.display = 'none';
-            box.classList.remove('revealed');
-            btn.textContent = '👁 显示句子';
-        } else {
-            // 显示
-            isRevealed = true;
-            placeholder.style.display = 'none';
-            content.style.display = 'block';
-            box.classList.add('revealed');
-            btn.textContent = '👁 隐藏句子';
-
-            // 填充内容
-            $('listenEn').textContent = currentData.en;
-            $('listenPhonetic').textContent = currentData.phonetic || '';
-            $('listenCn').textContent = currentData.cn;
-
-            // 填充结构
-            var structureEl = $('listenStructure');
-            structureEl.innerHTML = '';
-            if (currentData.structure && currentData.structure.length) {
-                currentData.structure.forEach(function(s) {
-                    var item = document.createElement('div');
-                    item.className = 'listen-structure-item listen-reveal-item';
-                    item.innerHTML =
-                        '<span class="listen-structure-label">' + s.label + '</span>' +
-                        '<span class="listen-structure-word">' + s.word + '</span>';
-                    structureEl.appendChild(item);
-                });
-            }
-
-            // 触发动画
-            retriggerAnimation();
-        }
-    }
-
-    function startQuiz() {
-        $('listenPlayView').style.display = 'none';
-        $('listenQuizView').style.display = 'block';
-
+    /* ---------- 构建作答区 ---------- */
+    function buildQuiz() {
         selectedChunks = [];
         isAnswered = false;
 
@@ -3118,8 +3307,10 @@ var Listening = (function() {
         });
 
         $('listenChunkAnswer').innerHTML = '<span class="chunk-cursor"></span>';
+        $('listenChunkAnswer').classList.remove('correct', 'wrong');
     }
 
+    /* ---------- 提交答案 ---------- */
     function submit() {
         if (isAnswered) return;
         var userAnswer = selectedChunks.join(' ');
@@ -3151,8 +3342,7 @@ var Listening = (function() {
                     showComplete();
                     return;
                 }
-                enter();
-                setTimeout(playAudio, 300);
+                enter(); // 下一句重新从阶段 1 开始
             }, 1200);
         } else {
             state.combo = 0;
@@ -3167,7 +3357,7 @@ var Listening = (function() {
         }
     }
 
-    function reset() {
+    function resetQuiz() {
         if (isAnswered) return;
         selectedChunks = [];
         $('listenChunkAnswer').innerHTML = '<span class="chunk-cursor"></span>';
@@ -3175,38 +3365,65 @@ var Listening = (function() {
         items.forEach(function(item) { item.classList.remove('used'); });
     }
 
+    /* ---------- 进入听力模式 ---------- */
     function enter() {
         currentData = QUESTION_BANK[state.currentIndex];
         if (!currentData) return;
 
-        isRevealed = false;
+        currentStage = 1;
         selectedChunks = [];
         isAnswered = false;
 
-        $('listenPlayView').style.display = 'block';
-        $('listenQuizView').style.display = 'none';
-        $('listenPlaceholder').style.display = 'block';
-        $('listenRevealContent').style.display = 'none';
-        $('listenSubtitleBox').classList.remove('revealed');
-        $('listenHintBtn').textContent = '👁 显示句子';
-
-        // 清空旧内容（防止动画残留）
+        // 清空字幕内容，防止动画残留
         $('listenEn').textContent = '';
         $('listenPhonetic').textContent = '';
         $('listenCn').textContent = '';
         $('listenStructure').innerHTML = '';
 
-        buildWaveform();
-        setTimeout(playAudio, 300);
+        goToStage(1);
     }
 
+    /* ---------- 事件绑定 ---------- */
     function init() {
-        $('listenPlayBtn').addEventListener('click', playAudio);
-        $('listenHintBtn').addEventListener('click', toggleReveal);
-        $('listenStartBtn').addEventListener('click', startQuiz);
-        $('listenReplay').addEventListener('click', playAudio);
+        // 阶段 1
+        $('listenPlayBtn1').addEventListener('click', function() {
+            playAudio(0.85, 'listenWaveform1', 'listenPlayBtn1');
+        });
+        $('listenReplay1').addEventListener('click', function() {
+            playAudio(0.85, 'listenWaveform1', 'listenPlayBtn1');
+        });
+        $('listenNext1').addEventListener('click', function() {
+            goToStage(2);
+        });
+
+        // 阶段 2
+        $('listenPlayBtn2').addEventListener('click', function() {
+            playAudio(0.6, 'listenWaveform2', 'listenPlayBtn2');
+        });
+        $('listenReplay2').addEventListener('click', function() {
+            playAudio(0.6, 'listenWaveform2', 'listenPlayBtn2');
+        });
+        $('listenNext2').addEventListener('click', function() {
+            goToStage(3);
+        });
+
+        // 阶段 3
+        $('listenPlayBtn3').addEventListener('click', function() {
+            playAudio(0.85, 'listenWaveform3', 'listenPlayBtn3');
+        });
+        $('listenReplay3').addEventListener('click', function() {
+            playAudio(0.85, 'listenWaveform3', 'listenPlayBtn3');
+        });
+        $('listenStartBtn').addEventListener('click', function() {
+            goToStage(4);
+        });
+
+        // 作答区
+        $('listenReplayQuiz').addEventListener('click', function() {
+            playAudio(0.85, null, null);
+        });
         $('listenSubmit').addEventListener('click', submit);
-        $('listenReset').addEventListener('click', reset);
+        $('listenReset').addEventListener('click', resetQuiz);
 
         $('listenChunkPool').addEventListener('click', function(e) {
             var target = e.target;
@@ -3267,7 +3484,9 @@ var Listening = (function() {
             playToken++;
             if (waveRafId) cancelAnimationFrame(waveRafId);
             if ('speechSynthesis' in window) window.speechSynthesis.cancel();
-            stopWaveAnimation();
+            stopWaveAnimation('listenWaveform1');
+            stopWaveAnimation('listenWaveform2');
+            stopWaveAnimation('listenWaveform3');
         }
     };
 })();
