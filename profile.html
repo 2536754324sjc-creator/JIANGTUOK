@@ -36,9 +36,6 @@
 
         .app-layout { display: flex; min-height: 100vh; }
 
-        /* ============================================================
-           左侧导航栏
-           ============================================================ */
         .sidebar {
             width: 220px;
             flex-shrink: 0;
@@ -206,9 +203,6 @@
 
         .content-scroll { padding: 24px 28px 40px; }
 
-        /* ============================================================
-           个人资料卡片
-           ============================================================ */
         .profile-hero {
             background: linear-gradient(135deg, #4f6ef7 0%, #7b8fff 50%, #a8b8ff 100%);
             border-radius: 20px;
@@ -485,7 +479,6 @@
 
         .btn-danger:hover { background: #ffeaea; }
 
-        /* 数据概览 */
         .overview-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
@@ -525,6 +518,14 @@
         }
 
         .overview-card .oc-label { font-size: 12px; color: var(--text-mute); }
+
+        /* 评级专用颜色（与 learn 页保持一致） */
+        .oc-value.rating-c { color: #ff5b5b; }
+        .oc-value.rating-b { color: #ff9f43; }
+        .oc-value.rating-a { color: #22a06b; }
+        .oc-value.rating-s { color: #4f6ef7; }
+        .oc-value.rating-ss { color: #8b5cf6; }
+        .oc-value.rating-sss { color: #ff9f43; }
 
         .two-col {
             display: grid;
@@ -614,7 +615,6 @@
             flex-shrink: 0;
         }
 
-        /* 我的动态 */
         .filter-row {
             display: flex;
             gap: 8px;
@@ -735,7 +735,6 @@
         .mini-btn:hover { background: #e9edfa; color: var(--brand); }
         .mini-btn.danger:hover { background: #ffeaea; color: var(--danger); }
 
-        /* 账户设置 */
         .setting-group { margin-bottom: 24px; }
         .setting-group:last-child { margin-bottom: 0; }
 
@@ -788,7 +787,6 @@
             flex-shrink: 0;
         }
 
-        /* 会员管理 */
         .current-vip-card {
             background: linear-gradient(135deg, #1f2544 0%, #3a4270 100%);
             border-radius: 18px;
@@ -1019,7 +1017,6 @@
 
 <div class="app-layout">
 
-    <!-- 左侧导航栏 -->
     <aside class="sidebar">
 
         <div class="logo">
@@ -1070,7 +1067,6 @@
 
             <div class="nav-group">
                 <div class="nav-group-title">我的</div>
-                <!-- 当前页：个人中心 -->
                 <div class="nav-item on" data-href="profile.html">
                     <span class="nav-icon">👤</span>
                     <span class="nav-text">个人中心</span>
@@ -1095,7 +1091,6 @@
 
     </aside>
 
-    <!-- 右侧主区域 -->
     <div class="main-area">
 
         <header class="topbar">
@@ -1116,7 +1111,6 @@
 
         <div class="content-scroll">
 
-            <!-- 个人资料卡片 -->
             <div class="profile-hero">
 
                 <div class="profile-avatar-big" data-tip="更换头像（后续步骤实现）">
@@ -1145,7 +1139,6 @@
 
             </div>
 
-            <!-- 一级 Tab -->
             <div class="main-tabs" id="mainTabs">
                 <div class="main-tab on" data-tab="home">🏠 我的主页</div>
                 <div class="main-tab" data-tab="feed">📝 我的动态</div>
@@ -1156,35 +1149,36 @@
             <!-- Tab 1：我的主页 -->
             <div id="panel-home" class="tab-panel">
 
+                <!-- ★★★ 6 个数据卡，数字由 JS 从 JYStore 读取 ★★★ -->
                 <div class="overview-grid">
                     <div class="overview-card" data-href="archive.html">
                         <div class="oc-icon">📖</div>
-                        <div class="oc-value">1,286<span class="unit">句</span></div>
+                        <div class="oc-value"><span id="ocSentences">0</span><span class="unit">句</span></div>
                         <div class="oc-label">累计练习</div>
                     </div>
                     <div class="overview-card" data-href="growth.html">
                         <div class="oc-icon">⏱️</div>
-                        <div class="oc-value">48.5<span class="unit">h</span></div>
+                        <div class="oc-value"><span id="ocHours">0</span><span class="unit">h</span></div>
                         <div class="oc-label">累计时长</div>
                     </div>
                     <div class="overview-card" data-href="growth.html">
                         <div class="oc-icon">🔥</div>
-                        <div class="oc-value">12<span class="unit">天</span></div>
+                        <div class="oc-value"><span id="ocStreak">0</span><span class="unit">天</span></div>
                         <div class="oc-label">连续打卡</div>
                     </div>
                     <div class="overview-card" data-href="learn.html">
                         <div class="oc-icon">🏆</div>
-                        <div class="oc-value">SSS</div>
+                        <div class="oc-value" id="ocRating">—</div>
                         <div class="oc-label">最高评级</div>
                     </div>
                     <div class="overview-card" data-href="community.html">
                         <div class="oc-icon">📊</div>
-                        <div class="oc-value">28<span class="unit">名</span></div>
+                        <div class="oc-value" id="ocRank">—</div>
                         <div class="oc-label">月榜排名</div>
                     </div>
                     <div class="overview-card" data-href="community.html">
                         <div class="oc-icon">👥</div>
-                        <div class="oc-value">5<span class="unit">个</span></div>
+                        <div class="oc-value" id="ocGroups">—</div>
                         <div class="oc-label">加入小组</div>
                     </div>
                 </div>
@@ -1501,7 +1495,6 @@
                                 <div class="setting-name">退出登录</div>
                                 <div class="setting-desc">退出当前账号，下次需重新登录</div>
                             </div>
-                            <!-- 退出登录：跳到 index.html -->
                             <button class="btn-ghost" id="btnLogout">退出</button>
                         </div>
 
@@ -1687,6 +1680,237 @@
     })();
 
     /* ============================================================
+       ★★★ 网络时间同步 JYTime（多源并行，谁先成功用谁） ★★★
+       ============================================================ */
+    window.JYTime = (function() {
+        var offset = 0;
+        var synced = false;
+        var syncPromise = null;
+        var syncedSource = '';
+
+        function fetchWithTimeout(url, opts, timeoutMs, parseFn) {
+            return new Promise(function(resolve) {
+                if (!window.fetch) return resolve(0);
+
+                var controller = ('AbortController' in window) ? new AbortController() : null;
+                var finished = false;
+
+                var timer = setTimeout(function() {
+                    if (finished) return;
+                    finished = true;
+                    if (controller) { try { controller.abort(); } catch (e) {} }
+                    resolve(0);
+                }, timeoutMs);
+
+                var fetchOpts = Object.assign({ cache: 'no-store' }, opts || {});
+                if (controller) fetchOpts.signal = controller.signal;
+
+                fetch(url, fetchOpts)
+                    .then(function(res) {
+                        if (finished) return 0;
+                        return parseFn(res);
+                    })
+                    .then(function(ts) {
+                        if (finished) return;
+                        finished = true;
+                        clearTimeout(timer);
+                        resolve(ts > 0 ? ts : 0);
+                    })
+                    .catch(function() {
+                        if (finished) return;
+                        finished = true;
+                        clearTimeout(timer);
+                        resolve(0);
+                    });
+            });
+        }
+
+        function tryGithub() {
+            return fetchWithTimeout(
+                'https://api.github.com/',
+                { method: 'HEAD' },
+                2500,
+                function(res) {
+                    var dateStr = res.headers.get('date');
+                    if (!dateStr) return 0;
+                    var ts = new Date(dateStr).getTime();
+                    return ts > 0 ? ts : 0;
+                }
+            ).then(function(ts) {
+                return { ts: ts || 0, source: 'GitHub API' };
+            });
+        }
+
+        function tryCloudflare() {
+            return fetchWithTimeout(
+                'https://www.cloudflare.com/cdn-cgi/trace',
+                {},
+                2500,
+                function(res) {
+                    return res.text().then(function(text) {
+                        var m = text.match(/^ts=([\d.]+)/m);
+                        if (!m) return 0;
+                        return Math.round(parseFloat(m[1]) * 1000);
+                    });
+                }
+            ).then(function(ts) {
+                return { ts: ts || 0, source: 'Cloudflare' };
+            });
+        }
+
+        function trySuning() {
+            return new Promise(function(resolve) {
+                var cbName = '__jySn_' + Date.now() + '_' + Math.floor(Math.random() * 1e6);
+                var script = document.createElement('script');
+                var done = false;
+
+                function cleanup() {
+                    if (script.parentNode) script.parentNode.removeChild(script);
+                    try { delete window[cbName]; } catch (e) { window[cbName] = undefined; }
+                }
+
+                var timer = setTimeout(function() {
+                    if (done) return;
+                    done = true;
+                    cleanup();
+                    resolve({ ts: 0, source: '苏宁' });
+                }, 2500);
+
+                window[cbName] = function(data) {
+                    if (done) return;
+                    done = true;
+                    clearTimeout(timer);
+                    var ts = 0;
+                    try {
+                        if (data && data.sysTime1) {
+                            var s = String(data.sysTime1);
+                            var year = parseInt(s.slice(0, 4), 10);
+                            var mon = parseInt(s.slice(4, 6), 10) - 1;
+                            var day = parseInt(s.slice(6, 8), 10);
+                            var hr = parseInt(s.slice(8, 10), 10);
+                            var min = parseInt(s.slice(10, 12), 10);
+                            var sec = parseInt(s.slice(12, 14), 10);
+                            ts = new Date(year, mon, day, hr, min, sec).getTime();
+                        }
+                    } catch (e) {}
+                    cleanup();
+                    resolve({ ts: ts > 0 ? ts : 0, source: '苏宁' });
+                };
+
+                script.src = 'https://quan.suning.com/getSysTime.do?callback=' + cbName;
+                script.onerror = function() {
+                    if (done) return;
+                    done = true;
+                    clearTimeout(timer);
+                    cleanup();
+                    resolve({ ts: 0, source: '苏宁' });
+                };
+                document.head.appendChild(script);
+            });
+        }
+
+        function sync() {
+            if (syncPromise) return syncPromise;
+
+            syncPromise = Promise.all([tryGithub(), tryCloudflare(), trySuning()])
+                .then(function(results) {
+                    console.log('[JYTime] 各源结果：', results);
+
+                    var best = null;
+                    for (var i = 0; i < results.length; i++) {
+                        if (results[i].ts > 0) { best = results[i]; break; }
+                    }
+
+                    if (best) {
+                        var localTs = Date.now();
+                        var diff = best.ts - localTs;
+                        if (Math.abs(diff) < 86400000 * 365) {
+                            offset = diff;
+                            synced = true;
+                            syncedSource = best.source;
+                            console.log('[JYTime] ✅ 同步成功（来源：' + best.source + '），校正 ' + diff + ' 毫秒');
+                            return true;
+                        }
+                    }
+
+                    console.log('[JYTime] ⚠️ 所有时间源均失败，使用本机时间');
+                    return false;
+                });
+
+            return syncPromise;
+        }
+
+        function now() { return Date.now() + offset; }
+        function date() { return new Date(now()); }
+        function getOffset() { return offset; }
+        function isSynced() { return synced; }
+        function getSource() { return syncedSource; }
+
+        return {
+            sync: sync,
+            now: now,
+            date: date,
+            getOffset: getOffset,
+            isSynced: isSynced,
+            getSource: getSource
+        };
+    })();
+
+    /* ============================================================
+       ★★★ 本地学习数据访问 JYStore（只读） ★★★
+       ============================================================ */
+    window.JYStore = (function() {
+        var KEY = 'juyou_study';
+
+        function getDefault() {
+            return {
+                records: [], reviewBook: [], wordBook: [], mastered: [], starred: [],
+                stats: {
+                    totalDays: 0, totalTime: 0, totalSentences: 0,
+                    streak: 0, lastStudyDate: null,
+                    todayCount: 0, todayDate: null
+                }
+            };
+        }
+
+        function load() {
+            try {
+                var raw = localStorage.getItem(KEY);
+                if (!raw) return getDefault();
+                var data = JSON.parse(raw);
+                var def = getDefault();
+                return {
+                    records: data.records || def.records,
+                    reviewBook: data.reviewBook || def.reviewBook,
+                    wordBook: data.wordBook || def.wordBook,
+                    mastered: data.mastered || def.mastered,
+                    starred: data.starred || def.starred,
+                    stats: Object.assign({}, def.stats, data.stats || {})
+                };
+            } catch (e) {
+                return getDefault();
+            }
+        }
+
+        return { load: load };
+    })();
+
+    /* ============================================================
+       工具：根据正确率算评级（与 learn 页保持一致的阈值）
+       ============================================================ */
+    function calcRating(records) {
+        if (!records || records.length === 0) return { label: '—', cls: '' };
+        var correctCount = records.filter(function(r) { return r.correct; }).length;
+        var rate = correctCount / records.length;
+        if (rate >= 0.95) return { label: 'SSS', cls: 'rating-sss' };
+        if (rate >= 0.85) return { label: 'SS', cls: 'rating-ss' };
+        if (rate >= 0.75) return { label: 'S', cls: 'rating-s' };
+        if (rate >= 0.60) return { label: 'A', cls: 'rating-a' };
+        if (rate >= 0.40) return { label: 'B', cls: 'rating-b' };
+        return { label: 'C', cls: 'rating-c' };
+    }
+
+    /* ============================================================
        页面跳转逻辑
        ============================================================ */
     (function() {
@@ -1712,47 +1936,77 @@
         var nickname = window.currentUser.nickname || '学习者';
         var phone = window.currentUser.phone || '';
 
-        // 1. 昵称
         var nicknameEl = document.querySelector('.profile-nickname');
         if (nicknameEl) {
-            // 保留 VIP 徽章，只替换文字部分
             var vipBadge = nicknameEl.querySelector('.vip-badge');
             nicknameEl.textContent = '';
             nicknameEl.appendChild(document.createTextNode(nickname));
             if (vipBadge) nicknameEl.appendChild(vipBadge);
         }
 
-        // 2. 大号头像文字
         var bigAvatar = document.querySelector('.profile-avatar-big');
         if (bigAvatar) {
-            // 保留相机图标
             var editIcon = bigAvatar.querySelector('.avatar-edit-icon');
             bigAvatar.textContent = '';
             bigAvatar.appendChild(document.createTextNode(nickname.slice(-1)));
             if (editIcon) bigAvatar.appendChild(editIcon);
         }
 
-        // 3. 右上角小头像
         var smallAvatar = document.querySelector('.user-avatar');
         if (smallAvatar) {
             smallAvatar.textContent = nickname.slice(-1);
         }
 
-        // 4. 手机号（在账户设置里）
         var settingValues = document.querySelectorAll('.setting-value');
         settingValues.forEach(function(el) {
             if (el.textContent.indexOf('138') === 0 && phone.length === 11) {
-                // 脱敏显示：138****8888
                 el.textContent = phone.slice(0, 3) + '****' + phone.slice(-4);
             }
         });
 
-        // 5. 用户 ID（取手机号后 6 位）
         var idEl = document.querySelector('.profile-id');
         if (idEl && phone.length === 11) {
             idEl.textContent = 'ID: JY' + phone.slice(-6) + ' · 加入于 2026-03-15';
         }
     })();
+
+    /* ============================================================
+       ★★★ 渲染「我的主页」6 个数据卡（★ 读真实数据） ★★★
+       ============================================================ */
+    function renderOverview() {
+        var data = JYStore.load();
+        var s = data.stats;
+        var records = data.records;
+
+        // 1. 累计练习
+        var totalSentences = s.totalSentences || 0;
+        var ocSentences = document.getElementById('ocSentences');
+        if (ocSentences) ocSentences.textContent = totalSentences.toLocaleString();
+
+        // 2. 累计时长：totalSentences × 3 分钟 → 小时
+        var minutes = totalSentences * 3;
+        var hours = (minutes / 60).toFixed(1);
+        var ocHours = document.getElementById('ocHours');
+        if (ocHours) ocHours.textContent = hours;
+
+        // 3. 连续打卡
+        var ocStreak = document.getElementById('ocStreak');
+        if (ocStreak) ocStreak.textContent = s.streak || 0;
+
+        // 4. 最高评级：由所有答题记录的整体正确率算出
+        var rating = calcRating(records);
+        var ocRating = document.getElementById('ocRating');
+        if (ocRating) {
+            ocRating.textContent = rating.label;
+            ocRating.className = 'oc-value ' + rating.cls;
+        }
+
+        // 5 & 6. 月榜排名 / 加入小组：暂无后端数据
+        var ocRank = document.getElementById('ocRank');
+        if (ocRank) ocRank.textContent = '—';
+        var ocGroups = document.getElementById('ocGroups');
+        if (ocGroups) ocGroups.textContent = '—';
+    }
 
     /* ============================================================
        退出登录
@@ -1764,11 +2018,7 @@
         btnLogout.addEventListener('click', function(e) {
             e.stopPropagation();
             if (!confirm('确定要退出登录吗？')) return;
-
-            // 清除登录信息
             localStorage.removeItem('juyou_user');
-
-            // 跳回登录页
             window.location.href = 'index.html';
         });
     })();
@@ -1835,6 +2085,15 @@
             });
         });
     })();
+
+    /* ============================================================
+       ★ 初始化：先渲染一遍（用本机时间兜底），再异步同步网络时间后重渲染
+       ============================================================ */
+    renderOverview();
+
+    JYTime.sync().then(function() {
+        renderOverview();
+    });
 </script>
 
 </body>
