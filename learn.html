@@ -442,7 +442,9 @@
             color: var(--text-sub);
         }
 
-        /* 阅读模式 */
+        /* ============================================================
+           阅读模式
+           ============================================================ */
         .read-sentence {
             font-size: 26px;
             line-height: 2.2;
@@ -497,6 +499,125 @@
             display: flex;
             align-items: center;
             gap: 6px;
+        }
+
+        /* ============================================================
+           ★★★ 听力模式（三阶段） ★★★
+           ============================================================ */
+        .listen-play-area {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 20px 0 28px;
+        }
+
+        .listen-play-btn {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #4f6ef7, #7b8fff);
+            border: none;
+            color: #fff;
+            font-size: 42px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 12px 36px rgba(79, 110, 247, 0.4);
+            transition: transform 0.15s, box-shadow 0.2s;
+        }
+
+        .listen-play-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 16px 44px rgba(79, 110, 247, 0.5);
+        }
+
+        .listen-play-btn:active { transform: scale(0.95); }
+
+        .listen-play-btn.playing {
+            animation: listenPlayPulse 0.5s ease;
+        }
+
+        @keyframes listenPlayPulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.12); }
+            100% { transform: scale(1); }
+        }
+
+        .listen-waveform {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 3px;
+            height: 40px;
+            width: 70%;
+            max-width: 480px;
+            margin-top: 22px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .listen-waveform.active { opacity: 1; }
+
+        .listen-waveform .wave-bar {
+            width: 3px;
+            height: 6px;
+            border-radius: 2px;
+            background: linear-gradient(180deg, #4f6ef7, #7b8fff);
+            transition: height 0.08s linear;
+            box-shadow: 0 0 4px rgba(79, 110, 247, 0.5);
+        }
+
+        .listen-subtitle-box {
+            background: #f8faff;
+            border: 2px dashed #d8dfee;
+            border-radius: 16px;
+            min-height: 120px;
+            padding: 26px 22px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 24px;
+            transition: border-color 0.3s, background 0.3s;
+        }
+
+        .listen-subtitle-box.revealed {
+            border-color: #c9d4f5;
+            background: #fff;
+            border-style: solid;
+        }
+
+        .listen-placeholder {
+            font-size: 15px;
+            color: var(--text-mute);
+            letter-spacing: 0.5px;
+            line-height: 1.6;
+        }
+
+        .listen-en {
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--text-main);
+            letter-spacing: 0.5px;
+            line-height: 1.6;
+        }
+
+        .listen-cn {
+            font-size: 15px;
+            color: var(--text-sub);
+            line-height: 1.6;
+        }
+
+        .listen-actions {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: auto;
+            padding-top: 8px;
         }
 
         /* 单词弹层 */
@@ -605,7 +726,6 @@
             color: #fff;
         }
 
-        /* ★ 已加入生词本状态：可再次点击移除（不再是禁用） */
         .word-popup .wp-btn.added {
             background: #e6f7ef;
             color: var(--success);
@@ -1050,9 +1170,7 @@
             pointer-events: none;
         }
 
-        .waveform.active {
-            opacity: 1;
-        }
+        .waveform.active { opacity: 1; }
 
         .wave-bar {
             width: 3px;
@@ -1153,6 +1271,8 @@
             .grammar-popup { top: 60px; padding: 18px 18px 12px; }
             .read-sentence { font-size: 20px; line-height: 2; }
             .word-popup { padding: 24px 22px; min-width: 240px; }
+            .listen-play-btn { width: 80px; height: 80px; font-size: 34px; }
+            .listen-en { font-size: 18px; }
         }
     </style>
 </head>
@@ -1302,13 +1422,49 @@
 
                 <div id="panel-dictation" class="mode-panel" style="display: none;"></div>
 
+                <!-- ★★★ 听力模式（三阶段） ★★★ -->
                 <div id="panel-listening" class="mode-panel" style="display: none;">
-                    <div class="prompt-label">听力模式</div>
-                    <div style="background: #f8faff; border-radius: 14px; padding: 20px; min-height: 100px;">
-                        <div style="font-size: 15px; color: var(--text-main); line-height: 1.8;" id="listenSubtitle">
-                            I like to eat apples.
+
+                    <!-- 视图 1：播放 + 三阶段字幕 -->
+                    <div id="listenPlayView">
+                        <div class="prompt-label">听力模式 · 听音频，逐步揭示字幕，然后作答</div>
+
+                        <div class="listen-play-area">
+                            <button class="listen-play-btn" id="listenPlayBtn">🔊</button>
+                            <div class="listen-waveform" id="listenWaveform"></div>
+                        </div>
+
+                        <div class="listen-subtitle-box" id="listenSubtitleBox">
+                            <div class="listen-placeholder" id="listenPlaceholder">
+                                🎧 仔细听，可点下方按钮逐步显示字幕
+                            </div>
+                            <div class="listen-en" id="listenEn" style="display: none;"></div>
+                            <div class="listen-cn" id="listenCn" style="display: none;"></div>
+                        </div>
+
+                        <div class="listen-actions">
+                            <button class="btn-secondary" id="listenHintBtn">👁 显示英文</button>
+                            <button class="btn-submit" id="listenStartBtn">🎯 开始作答</button>
                         </div>
                     </div>
+
+                    <!-- 视图 2：词块拼接作答 -->
+                    <div id="listenQuizView" style="display: none;">
+                        <div class="prompt-label">请用词块拼出刚才听到的句子</div>
+
+                        <div class="chunk-answer" id="listenChunkAnswer">
+                            <span class="chunk-cursor"></span>
+                        </div>
+
+                        <div class="chunk-pool" id="listenChunkPool"></div>
+
+                        <div class="action-bar">
+                            <button class="btn-submit" id="listenSubmit">提交答案</button>
+                            <button class="btn-secondary" id="listenReplay">🔁 再听一遍</button>
+                            <button class="btn-secondary" id="listenReset">重置</button>
+                        </div>
+                    </div>
+
                 </div>
 
                 <div id="panel-speaking" class="mode-panel" style="display: none;">
@@ -1549,7 +1705,7 @@ window.JYTime = (function() {
 })();
 
 /* ============================================================
-   本地学习数据存储 JYStore（含 FSRS + 生词本开关）
+   本地学习数据存储 JYStore
    ============================================================ */
 window.JYStore = (function() {
     var KEY = 'juyou_study';
@@ -1723,7 +1879,6 @@ window.JYStore = (function() {
         return record;
     }
 
-    /* 加入生词本 */
     function addToWordBook(word, cn) {
         var data = load();
         var lower = word.toLowerCase();
@@ -1747,7 +1902,6 @@ window.JYStore = (function() {
         save(data);
     }
 
-    /* ★ 新增：从生词本移除 */
     function removeFromWordBook(word) {
         var data = load();
         var lower = word.toLowerCase();
@@ -1757,7 +1911,6 @@ window.JYStore = (function() {
         save(data);
     }
 
-    /* ★ 新增：切换生词本状态，返回 true 表示当前已在生词本 */
     function toggleWordBook(word, cn) {
         if (isInWordBook(word)) {
             removeFromWordBook(word);
@@ -1868,10 +2021,6 @@ var DICTATION_DATA = [
     }
 ];
 
-/* ============================================================
-   阅读模式内置小词典
-   可修改：往这里加词
-   ============================================================ */
 var WORD_DICT = {
     'i':          { phonetic: '/aɪ/',        cn: '我' },
     'like':       { phonetic: '/laɪk/',      cn: '喜欢' },
@@ -1963,7 +2112,7 @@ function normalize(str) {
 }
 
 /* ============================================================
-   阅读模式：渲染可点击单词
+   阅读模式
    ============================================================ */
 function renderReadMode(en) {
     var el = document.getElementById('readContent');
@@ -1988,7 +2137,6 @@ function openWordPopup(word) {
 
     currentWord = { word: word, cn: dict.cn || '' };
 
-    // ★ 按钮状态：根据是否已在生词本决定样式和文字
     var addBtn = document.getElementById('wpAdd');
     if (JYStore.isInWordBook(word)) {
         addBtn.classList.add('added');
@@ -2034,13 +2182,11 @@ document.getElementById('wpSpeak').addEventListener('click', function() {
     window.speechSynthesis.speak(u);
 });
 
-/* ★★★ 弹层按钮：一键切换加入/移除 ★★★ */
 document.getElementById('wpAdd').addEventListener('click', function() {
     if (!currentWord) return;
 
     var isNowIn = JYStore.toggleWordBook(currentWord.word, currentWord.cn);
 
-    // 更新按钮外观
     if (isNowIn) {
         this.classList.remove('primary');
         this.classList.add('added');
@@ -2051,7 +2197,6 @@ document.getElementById('wpAdd').addEventListener('click', function() {
         this.textContent = '⭐ 加入生词本';
     }
 
-    // 同步句子里的高亮
     var spans = document.querySelectorAll('.read-word');
     spans.forEach(function(span) {
         if (span.getAttribute('data-word') === currentWord.word) {
@@ -2096,7 +2241,6 @@ function loadQuestion() {
     updateTopbar();
     renderReadMode(q.en);
 
-    document.getElementById('listenSubtitle').textContent = q.en;
     document.getElementById('speakSentence').textContent = q.en;
 }
 
@@ -2664,86 +2808,34 @@ var Dictation = (function() {
 })();
 
 /* ============================================================
-   模式切换
+   ★★★ 听力模式（三阶段） ★★★
    ============================================================ */
-(function() {
-    var modeBtns = document.querySelectorAll('.mode-btn[data-mode]');
-    var panels = {
-        read: document.getElementById('panel-read'),
-        translate: document.getElementById('panel-translate'),
-        dictation: document.getElementById('panel-dictation'),
-        listening: document.getElementById('panel-listening'),
-        speaking: document.getElementById('panel-speaking'),
-        video: document.getElementById('panel-video')
-    };
+var Listening = (function() {
+    var currentData = null;
+    var hintStage = 0;         // 0=无字幕, 1=英文字幕, 2=中英对照
+    var selectedChunks = [];
+    var isAnswered = false;
+    var waveRafId = null;
+    var playToken = 0;
 
-    modeBtns.forEach(function(btn) {
-        btn.addEventListener('click', function(e) {
-            e.stopPropagation();
-            modeBtns.forEach(function(b) { b.classList.remove('on'); });
-            this.classList.add('on');
+    function $(id) { return document.getElementById(id); }
 
-            var mode = this.getAttribute('data-mode');
-
-            ['read', 'translate', 'listening', 'speaking', 'video'].forEach(function(k) {
-                if (panels[k]) panels[k].style.display = 'none';
-            });
-
-            if (mode === 'dictation') {
-                Dictation.enter();
-            } else {
-                Object.keys(panels).forEach(function(key) {
-                    if (panels[key] && key !== 'dictation') {
-                        panels[key].style.display = (key === mode) ? 'block' : 'none';
-                    }
-                });
-
-                var q = QUESTION_BANK[state.currentIndex];
-                if (q) {
-                    if (mode === 'read') {
-                        renderReadMode(q.en);
-                    }
-                    document.getElementById('listenSubtitle').textContent = q.en;
-                    document.getElementById('speakSentence').textContent = q.en;
-                }
-            }
-        });
-    });
-})();
-
-(function() {
-    var currentPage = window.location.pathname.split('/').pop() || 'learn.html';
-    document.querySelectorAll('[data-href]').forEach(function(el) {
-        el.addEventListener('click', function(e) {
-            e.stopPropagation();
-            var href = this.getAttribute('data-href');
-            if (!href || href === currentPage) return;
-            window.location.href = href;
-        });
-    });
-
-    document.querySelectorAll('[data-tip]').forEach(function(el) {
-        el.addEventListener('click', function(e) {
-            e.stopPropagation();
-            alert(this.getAttribute('data-tip'));
-        });
-    });
-})();
-
-document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape') {
-        var panel = document.getElementById('panel-dictation');
-        if (panel && panel.classList.contains('fullscreen')) {
-            Dictation.exit();
-        } else {
-            closeWordPopup();
+    function buildWaveform() {
+        var wave = $('listenWaveform');
+        if (!wave) return;
+        var html = '';
+        for (var i = 0; i < 50; i++) {
+            html += '<div class="wave-bar"></div>';
         }
+        wave.innerHTML = html;
     }
-});
 
-JYTime.sync();
-loadQuestion();
-</script>
+    function startWaveAnimation(durationMs) {
+        var bars = document.querySelectorAll('#listenWaveform .wave-bar');
+        if (!bars.length) return;
 
-</body>
-</html>
+        if (waveRafId) cancelAnimationFrame(waveRafId);
+
+        var startTime = performance.now();
+        var BAR_COUNT = bars.length;
+        var CENTER = (BAR_COUNT - 1) /
