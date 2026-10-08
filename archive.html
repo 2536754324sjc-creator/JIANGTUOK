@@ -516,7 +516,7 @@
             background: linear-gradient(135deg, #22a06b, #35b87d);
         }
 
-        /* ★ 新增：复习状态标签样式 */
+        /* ★ 复习状态标签样式 */
         .item-tag.state-new {
             color: #666;
             background: #eef1f8;
@@ -871,7 +871,7 @@
 })();
 
 /* ============================================================
-   ★★★ 网络时间同步 JYTime ★★★
+   ★★★ 网络时间同步 JYTime（双源：Cloudflare + 苏宁，已去掉 GitHub） ★★★
    ============================================================ */
 window.JYTime = (function() {
     var offset = 0;
@@ -912,22 +912,7 @@ window.JYTime = (function() {
         });
     }
 
-    function tryGithub() {
-        return fetchWithTimeout(
-            'https://api.github.com/',
-            { method: 'HEAD' },
-            2500,
-            function(res) {
-                var dateStr = res.headers.get('date');
-                if (!dateStr) return 0;
-                var ts = new Date(dateStr).getTime();
-                return ts > 0 ? ts : 0;
-            }
-        ).then(function(ts) {
-            return { ts: ts || 0, source: 'GitHub API' };
-        });
-    }
-
+    /* 源 1：Cloudflare trace */
     function tryCloudflare() {
         return fetchWithTimeout(
             'https://www.cloudflare.com/cdn-cgi/trace',
@@ -945,6 +930,7 @@ window.JYTime = (function() {
         });
     }
 
+    /* 源 2：苏宁时间（JSONP 兜底） */
     function trySuning() {
         return new Promise(function(resolve) {
             var cbName = '__jySn_' + Date.now() + '_' + Math.floor(Math.random() * 1e6);
@@ -998,7 +984,7 @@ window.JYTime = (function() {
 
     function sync() {
         if (syncPromise) return syncPromise;
-        syncPromise = Promise.all([tryGithub(), tryCloudflare(), trySuning()])
+        syncPromise = Promise.all([tryCloudflare(), trySuning()])
             .then(function(results) {
                 console.log('[JYTime] 各源结果：', results);
                 var best = null;
@@ -1457,13 +1443,21 @@ document.addEventListener('click', function(e) {
 })();
 
 /* ============================================================
-   初始化
+   初始化：先立即渲染一次（用本地缓存），再异步拉云端 + 同步网络时间，完成后重渲染
    ============================================================ */
 renderAll();
 
-JYTime.sync().then(function() {
-    renderAll();
-});
+(async function() {
+    try {
+        await Promise.all([
+            JYTime.sync(),
+            window.JYSync ? JYSync.pull().catch(function() { return null; }) : Promise.resolve(null)
+        ]);
+        renderAll();
+    } catch (e) {
+        console.warn('[Archive] 云端拉取失败，使用本地数据：', e);
+    }
+})();
 </script>
 
 </body>
