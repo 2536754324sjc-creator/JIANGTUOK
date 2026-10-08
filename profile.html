@@ -2088,14 +2088,22 @@
         });
     })();
 
-    /* ============================================================
-       ★ 初始化：先渲染一遍（用本机时间兜底），再异步同步网络时间后重渲染
-       ============================================================ */
-    renderOverview();
+   /* ============================================================
+   ★ 初始化：先立即渲染一次（用本地缓存），再异步拉云端 + 同步网络时间，完成后重渲染
+   ============================================================ */
+renderOverview();
 
-    JYTime.sync().then(function() {
+(async function() {
+    try {
+        await Promise.all([
+            JYTime.sync(),
+            window.JYSync ? JYSync.pull().catch(function() { return null; }) : Promise.resolve(null)
+        ]);
         renderOverview();
-    });
+    } catch (e) {
+        console.warn('[Profile] 云端拉取失败，使用本地数据：', e);
+    }
+})();
 </script>
 
 </body>
