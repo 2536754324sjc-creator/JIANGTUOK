@@ -1200,22 +1200,14 @@ window.JYStore = (function() {
 })();
 
 /* ============================================================
-   ★★★ 网络时间同步 JYTime（v2：多源并行，谁先成功用谁） ★★★
-
-   三个时间源同时请求，2.5 秒超时：
-   - 源 1：GitHub API 的 Date 响应头
-   - 源 2：Cloudflare trace（返回 ts=Unix 时间戳）
-   - 源 3：苏宁时间（JSONP 兜底）
-
-   控制台会打印每个源的结果（F12 → Console 可见）
+   ★★★ 网络时间同步 JYTime（双源：Cloudflare + 苏宁，已去掉 GitHub） ★★★
    ============================================================ */
 window.JYTime = (function() {
-    var offset = 0;             // 本机时间 + offset = 网络时间
+    var offset = 0;
     var synced = false;
     var syncPromise = null;
     var syncedSource = '';
 
-    /* 通用的 fetch + 超时 + 解析封装 */
     function fetchWithTimeout(url, opts, timeoutMs, parseFn) {
         return new Promise(function(resolve) {
             if (!window.fetch) return resolve(0);
@@ -1253,24 +1245,7 @@ window.JYTime = (function() {
         });
     }
 
-    /* ---------- 源 1：GitHub API 的 Date 响应头 ---------- */
-    function tryGithub() {
-        return fetchWithTimeout(
-            'https://api.github.com/',
-            { method: 'HEAD' },
-            2500,
-            function(res) {
-                var dateStr = res.headers.get('date');
-                if (!dateStr) return 0;
-                var ts = new Date(dateStr).getTime();
-                return ts > 0 ? ts : 0;
-            }
-        ).then(function(ts) {
-            return { ts: ts || 0, source: 'GitHub API' };
-        });
-    }
-
-    /* ---------- 源 2：Cloudflare trace ---------- */
+    /* ---------- 源 1：Cloudflare trace ---------- */
     function tryCloudflare() {
         return fetchWithTimeout(
             'https://www.cloudflare.com/cdn-cgi/trace',
@@ -1278,7 +1253,6 @@ window.JYTime = (function() {
             2500,
             function(res) {
                 return res.text().then(function(text) {
-                    // 响应格式里有一行 ts=1699999999.123（Unix 秒）
                     var m = text.match(/^ts=([\d.]+)/m);
                     if (!m) return 0;
                     return Math.round(parseFloat(m[1]) * 1000);
@@ -1289,7 +1263,7 @@ window.JYTime = (function() {
         });
     }
 
-    /* ---------- 源 3：苏宁时间（JSONP 兜底） ---------- */
+    /* ---------- 源 2：苏宁时间（JSONP 兜底） ---------- */
     function trySuning() {
         return new Promise(function(resolve) {
             var cbName = '__jySn_' + Date.now() + '_' + Math.floor(Math.random() * 1e6);
@@ -1314,7 +1288,6 @@ window.JYTime = (function() {
                 clearTimeout(timer);
                 var ts = 0;
                 try {
-                    // 苏宁返回格式：{"sysTime2":"2024-01-01 12:00:00","sysTime1":"20240101120000"}
                     if (data && data.sysTime1) {
                         var s = String(data.sysTime1);
                         var year = parseInt(s.slice(0, 4), 10);
@@ -1345,7 +1318,7 @@ window.JYTime = (function() {
     function sync() {
         if (syncPromise) return syncPromise;
 
-        syncPromise = Promise.all([tryGithub(), tryCloudflare(), trySuning()])
+        syncPromise = Promise.all([tryCloudflare(), trySuning()])
             .then(function(results) {
                 console.log('[JYTime] 各源结果：', results);
 
@@ -1357,15 +1330,12 @@ window.JYTime = (function() {
                 if (best) {
                     var localTs = Date.now();
                     var diff = best.ts - localTs;
-                    // 校验：时间差异不超过 1 年，防止脏数据
                     if (Math.abs(diff) < 86400000 * 365) {
                         offset = diff;
                         synced = true;
                         syncedSource = best.source;
                         console.log('[JYTime] ✅ 同步成功（来源：' + best.source + '），校正 ' + diff + ' 毫秒');
                         return true;
-                    } else {
-                        console.log('[JYTime] ⚠️ 时间差异过大，忽略。来源=' + best.source + '，差值=' + diff);
                     }
                 }
 
@@ -1393,7 +1363,7 @@ window.JYTime = (function() {
 })();
 
 /* ============================================================
-   工具：把日期对象转成 "YYYY-MM-DD"（使用校准后的时间）
+   工具：把日期对象转成 "YYYY-MM-DD"
    ============================================================ */
 function dateKey(d) {
     var m = d.getMonth() + 1;
