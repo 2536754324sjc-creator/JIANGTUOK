@@ -1070,105 +1070,495 @@
 </div>
 
 <script>
-    /* ============================================================
-       ★★★ 登录状态检查（放在最前面，未登录立即跳回登录页） ★★★
-       ============================================================ */
-    (function() {
-        var userStr = localStorage.getItem('juyou_user');
-        if (!userStr) {
-            window.location.href = 'index.html';
-            return;
-        }
-        var user = null;
-        try {
-            user = JSON.parse(userStr);
-        } catch (e) {
-            localStorage.removeItem('juyou_user');
-            window.location.href = 'index.html';
-            return;
-        }
-        if (!user || !user.phone) {
-            localStorage.removeItem('juyou_user');
-            window.location.href = 'index.html';
-            return;
-        }
-        window.currentUser = user;
-    })();
+/* ============================================================
+   登录状态检查
+   ============================================================ */
+(function() {
+    var userStr = localStorage.getItem('juyou_user');
+    if (!userStr) {
+        window.location.href = 'index.html';
+        return;
+    }
+    var user = null;
+    try {
+        user = JSON.parse(userStr);
+    } catch (e) {
+        localStorage.removeItem('juyou_user');
+        window.location.href = 'index.html';
+        return;
+    }
+    if (!user || !user.phone) {
+        localStorage.removeItem('juyou_user');
+        window.location.href = 'index.html';
+        return;
+    }
+    window.currentUser = user;
+})();
 
-    /* ============================================================
-       页面跳转逻辑
-       ============================================================ */    (function() {
-        var currentPage = window.location.pathname.split('/').pop() || 'mall.html';
-        var clickables = document.querySelectorAll('[data-href]');
-        clickables.forEach(function(el) {
-            el.addEventListener('click', function(e) {
-                e.stopPropagation();
-                var href = this.getAttribute('data-href');
-                if (!href) return;
-                if (href === currentPage) return;
-                window.location.href = href;
+/* ============================================================
+   ★★★ 商城本地数据 JYMall ★★★
+   数据结构：
+   {
+     votes: { '课程名': 数字 }  // 求课程投票数（偏移量，基准从 HTML 里的数字开始）
+     votesBase: { '课程名': 数字 }  // 初始基准数
+     voted: { '课程名': true }  // 是否已投票
+     requests: [ { id, title, author, timestamp, votes } ]  // 我发布的需求
+   }
+   ============================================================ */
+window.JYMall = (function() {
+    var KEY = 'juyou_mall';
+
+    function getDefault() {
+        return {
+            votes: {},
+            votesBase: {},
+            voted: {},
+            requests: []
+        };
+    }
+
+    function load() {
+        try {
+            var raw = localStorage.getItem(KEY);
+            if (!raw) return getDefault();
+            var data = JSON.parse(raw);
+            var def = getDefault();
+            return {
+                votes: data.votes || def.votes,
+                votesBase: data.votesBase || def.votesBase,
+                voted: data.voted || def.voted,
+                requests: data.requests || def.requests
+            };
+        } catch (e) {
+            return getDefault();
+        }
+    }
+
+    function save(data) {
+        try {
+            localStorage.setItem(KEY, JSON.stringify(data));
+        } catch (e) {}
+    }
+
+    return { load: load, save: save };
+})();
+
+/* ============================================================
+   工具函数
+   ============================================================ */
+function escapeHtml(str) {
+    if (str == null) return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
+/* 从"12.8k 人学"提取数字（12800） */
+function parseLearners(text) {
+    if (!text) return 0;
+    var m = String(text).match(/([\d.]+)\s*([kK万]?)/);
+    if (!m) return 0;
+    var n = parseFloat(m[1]);
+    if (isNaN(n)) return 0;
+    if (m[2] === 'k' || m[2] === 'K') n *= 1000;
+    if (m[2] === '万') n *= 10000;
+    return n;
+}
+
+/* ============================================================
+   页面跳转（data-href）
+   ============================================================ */
+(function() {
+    var currentPage = window.location.pathname.split('/').pop() || 'mall.html';
+    document.querySelectorAll('[data-href]').forEach(function(el) {
+        el.addEventListener('click', function(e) {
+            e.stopPropagation();
+            var href = this.getAttribute('data-href');
+            if (!href || href === currentPage) return;
+            window.location.href = href;
+        });
+    });
+})();
+
+/* ============================================================
+   一级 Tab 切换
+   ============================================================ */
+(function() {
+    var tabs = document.querySelectorAll('.main-tab');
+    var panels = {
+        featured: document.getElementById('panel-featured'),
+        community: document.getElementById('panel-community'),
+        request: document.getElementById('panel-request')
+    };
+
+    tabs.forEach(function(tab) {
+        tab.addEventListener('click', function(e) {
+            e.stopPropagation();
+            tabs.forEach(function(t) { t.classList.remove('on'); });
+            this.classList.add('on');
+
+            var name = this.getAttribute('data-tab');
+            Object.keys(panels).forEach(function(key) {
+                if (panels[key]) {
+                    panels[key].style.display = (key === name) ? 'block' : 'none';
+                }
             });
         });
-    })();
+    });
+})();
 
-    /* ============================================================
-       一级 Tab 切换
-       ============================================================ */
-    (function() {
-        var tabs = document.querySelectorAll('.main-tab');
-        var panels = {
-            featured: document.getElementById('panel-featured'),
-            community: document.getElementById('panel-community'),
-            request: document.getElementById('panel-request')
-        };
+/* ============================================================
+   ★★★ 给所有课程卡片打标签（用于后续筛选/排序） ★★★
+   ============================================================ */
+(function() {
+    var featuredGrid = document.querySelector('#panel-featured .course-grid');
+    var communityGrid = document.querySelector('#panel-community .course-grid');
 
-        tabs.forEach(function(tab) {
-            tab.addEventListener('click', function(e) {
+    function tagCards(grid) {
+        if (!grid) return;
+        var cards = grid.querySelectorAll('.course-card');
+        cards.forEach(function(card, idx) {
+            var nameEl = card.querySelector('.course-name');
+            var descEl = card.querySelector('.course-desc');
+            var tagEls = card.querySelectorAll('.course-tags .tag');
+            var learnersEl = card.querySelector('.course-learners');
+
+            var tags = [];
+            tagEls.forEach(function(t) { tags.push(t.textContent.trim()); });
+
+            card.setAttribute('data-name', (nameEl ? nameEl.textContent : '').toLowerCase());
+            card.setAttribute('data-desc', (descEl ? descEl.textContent : '').toLowerCase());
+            card.setAttribute('data-tags', tags.join('|').toLowerCase());
+            card.setAttribute('data-learners', parseLearners(learnersEl ? learnersEl.textContent : ''));
+            card.setAttribute('data-sort-index', idx);
+            card.setAttribute('data-grid', grid.id || (grid.closest('.tab-panel') ? grid.closest('.tab-panel').id : ''));
+        });
+    }
+
+    tagCards(featuredGrid);
+    tagCards(communityGrid);
+})();
+
+/* ============================================================
+   ★★★ 筛选 + 搜索 + 排序 ★★★
+   ============================================================ */
+(function() {
+    var searchInput = document.querySelector('.search-box input');
+    var featuredGrid = document.querySelector('#panel-featured .course-grid');
+    if (!featuredGrid) return;
+
+    // 当前筛选状态
+    var filters = {
+        audience: '全部',
+        difficulty: '全部',
+        sort: '推荐'
+    };
+
+    // 人群 → 匹配的 tag 关键词
+    var audienceMap = {
+        '零基础': ['零基础', '入门'],
+        '中小学生': ['小学', '中学', '小学'],
+        '备考': ['备考', '应试'],
+        '上班族': ['职场', '商务'],
+        '大学生': ['大学', '校园']
+    };
+
+    // 难度 → 匹配的 tag 关键词
+    var difficultyMap = {
+        '入门': ['入门'],
+        '初级': ['初级'],
+        '中级': ['中级'],
+        '高级': ['高级']
+    };
+
+    function applyFilters() {
+        var keyword = (searchInput ? searchInput.value.trim().toLowerCase() : '');
+        var cards = featuredGrid.querySelectorAll('.course-card');
+        var visibleCards = [];
+
+        cards.forEach(function(card) {
+            var name = card.getAttribute('data-name') || '';
+            var desc = card.getAttribute('data-desc') || '';
+            var tags = card.getAttribute('data-tags') || '';
+
+            // 1. 搜索
+            if (keyword) {
+                if (name.indexOf(keyword) < 0 && desc.indexOf(keyword) < 0 && tags.indexOf(keyword) < 0) {
+                    card.style.display = 'none';
+                    return;
+                }
+            }
+
+            // 2. 适用人群
+            if (filters.audience !== '全部') {
+                var keywords = audienceMap[filters.audience] || [];
+                var matched = keywords.some(function(kw) { return tags.indexOf(kw.toLowerCase()) >= 0; });
+                if (!matched) {
+                    card.style.display = 'none';
+                    return;
+                }
+            }
+
+            // 3. 难度
+            if (filters.difficulty !== '全部') {
+                var diffKeywords = difficultyMap[filters.difficulty] || [];
+                var diffMatched = diffKeywords.some(function(kw) { return tags.indexOf(kw.toLowerCase()) >= 0; });
+                if (!diffMatched) {
+                    card.style.display = 'none';
+                    return;
+                }
+            }
+
+            card.style.display = '';
+            visibleCards.push(card);
+        });
+
+        // 4. 排序
+        if (filters.sort === '最多人学') {
+            visibleCards.sort(function(a, b) {
+                return parseFloat(b.getAttribute('data-learners') || 0) - parseFloat(a.getAttribute('data-learners') || 0);
+            });
+        } else if (filters.sort === '最新') {
+            visibleCards.sort(function(a, b) {
+                return parseFloat(b.getAttribute('data-sort-index') || 0) - parseFloat(a.getAttribute('data-sort-index') || 0);
+            });
+        } else {
+            // 推荐 / 评分最高：保持原顺序
+            visibleCards.sort(function(a, b) {
+                return parseFloat(a.getAttribute('data-sort-index') || 0) - parseFloat(b.getAttribute('data-sort-index') || 0);
+            });
+        }
+
+        // 重排
+        visibleCards.forEach(function(card) {
+            featuredGrid.appendChild(card);
+        });
+
+        // 更新"共 X 个课程包"
+        var countEl = document.querySelector('#panel-featured .list-count');
+        if (countEl) {
+            countEl.textContent = '共 ' + visibleCards.length + ' 个课程包';
+        }
+    }
+
+    // 搜索框输入
+    if (searchInput) {
+        searchInput.addEventListener('input', function() {
+            applyFilters();
+        });
+    }
+
+    // 筛选 chip 点击
+    var rows = document.querySelectorAll('#panel-featured .filter-row');
+    rows.forEach(function(row, rowIdx) {
+        var chips = row.querySelectorAll('.filter-chip');
+        chips.forEach(function(chip) {
+            chip.addEventListener('click', function(e) {
                 e.stopPropagation();
-                tabs.forEach(function(t) { t.classList.remove('on'); });
+                chips.forEach(function(c) { c.classList.remove('on'); });
                 this.classList.add('on');
 
-                var name = this.getAttribute('data-tab');
-                Object.keys(panels).forEach(function(key) {
-                    if (panels[key]) {
-                        panels[key].style.display = (key === name) ? 'block' : 'none';
-                    }
-                });
+                var value = this.textContent.trim();
+                if (rowIdx === 0) filters.audience = value;
+                else if (rowIdx === 1) filters.difficulty = value;
+                else if (rowIdx === 2) filters.sort = value;
+
+                applyFilters();
             });
         });
-    })();
+    });
+})();
 
-    /* ============================================================
-       筛选栏 chip 分组单选
-       ============================================================ */
-    (function() {
-        var rows = document.querySelectorAll('.filter-row');
-        rows.forEach(function(row) {
-            var chips = row.querySelectorAll('.filter-chip');
-            chips.forEach(function(chip) {
-                chip.addEventListener('click', function(e) {
-                    e.stopPropagation();
-                    chips.forEach(function(c) { c.classList.remove('on'); });
-                    this.classList.add('on');
-                });
-            });
-        });
-    })();
+/* ============================================================
+   其他 filter-chip（社区区/非 feature 区域）保持单选视觉
+   ============================================================ */
+(function() {
+    var containers = new Set();
+    document.querySelectorAll('.filter-chip').forEach(function(chip) {
+        // 跳过 featured 里的（已经单独处理）
+        if (chip.closest('#panel-featured .filter-row')) return;
+        containers.add(chip.parentElement);
+    });
 
-    /* ============================================================
-       所有带 data-tip 属性的元素，点击后弹出提示
-       ============================================================ */
-    (function() {
-        var tipElements = document.querySelectorAll('[data-tip]');
-        tipElements.forEach(function(el) {
-            el.addEventListener('click', function(e) {
+    containers.forEach(function(container) {
+        var chips = container.querySelectorAll('.filter-chip');
+        chips.forEach(function(chip) {
+            chip.addEventListener('click', function(e) {
                 e.stopPropagation();
-                var tip = this.getAttribute('data-tip');
-                alert(tip);
+                chips.forEach(function(c) { c.classList.remove('on'); });
+                this.classList.add('on');
             });
         });
-    })();
-</script>
+    });
+})();
 
+/* ============================================================
+   ★★★ 求课程投票持久化 ★★★
+   ============================================================ */
+(function() {
+    var requestList = document.querySelector('#panel-request .request-section');
+    if (!requestList) return;
+
+    var data = JYMall.load();
+    var voteEls = requestList.querySelectorAll('.req-votes');
+
+    // 初始化：显示投票数和已投状态
+    voteEls.forEach(function(el) {
+        var item = el.closest('.request-item');
+        if (!item) return;
+        var nameEl = item.querySelector('.req-name');
+        if (!nameEl) return;
+        var name = nameEl.textContent.trim();
+
+        // 首次访问，记录基准值
+        if (!data.votesBase[name]) {
+            var base = parseInt(el.textContent.replace(/[^\d]/g, '')) || 0;
+            data.votesBase[name] = base;
+            data.votes[name] = base;
+        }
+
+        // 显示当前值
+        el.textContent = '👍 ' + (data.votes[name] || 0);
+
+        // 已投票，加高亮
+        if (data.voted[name]) {
+            el.style.background = '#dfe7ff';
+            el.style.cursor = 'default';
+        }
+
+        // 点击投票
+        el.addEventListener('click', function(e) {
+            e.stopPropagation();
+            var d = JYMall.load();
+            if (d.voted[name]) {
+                alert('你已经投过票了');
+                return;
+            }
+            d.voted[name] = true;
+            d.votes[name] = (d.votes[name] || 0) + 1;
+            JYMall.save(d);
+
+            el.textContent = '👍 ' + d.votes[name];
+            el.style.background = '#dfe7ff';
+            el.style.cursor = 'default';
+        });
+    });
+
+    // 保存基准数据
+    JYMall.save(data);
+
+    // 渲染用户已发布的需求
+    function renderMyRequests() {
+        var d = JYMall.load();
+        if (!d.requests || d.requests.length === 0) return;
+
+        var header = requestList.querySelector('.request-header');
+        if (!header) return;
+
+        d.requests.forEach(function(req) {
+            // 检查是否已渲染
+            if (requestList.querySelector('[data-my-req="' + req.id + '"]')) return;
+
+            var el = document.createElement('div');
+            el.className = 'request-item';
+            el.setAttribute('data-my-req', req.id);
+
+            var now = Date.now();
+            var diffMin = Math.floor((now - req.timestamp) / 60000);
+            var timeText = diffMin < 1 ? '刚刚' :
+                           diffMin < 60 ? diffMin + ' 分钟前' :
+                           Math.floor(diffMin / 60) + ' 小时前';
+
+            el.innerHTML =
+                '<div class="req-emoji">💡</div>' +
+                '<div class="req-body">' +
+                    '<div class="req-name">' + escapeHtml(req.title) + '</div>' +
+                    '<div class="req-meta">由 ' + escapeHtml(req.author) + ' 发起 · ' + timeText + '</div>' +
+                '</div>' +
+                '<div class="req-votes" data-my-vote="' + req.id + '">👍 ' + (req.votes || 0) + '</div>';
+
+            // 插到第一个 request-item 前面（倒序）
+            var firstItem = requestList.querySelector('.request-item');
+            if (firstItem) {
+                firstItem.parentNode.insertBefore(el, firstItem);
+            }
+        });
+    }
+
+    renderMyRequests();
+    window.__renderMyRequests = renderMyRequests;
+})();
+
+/* ============================================================
+   ★★★ 发布需求 ★★★
+   ============================================================ */
+(function() {
+    var requestSection = document.querySelector('#panel-request .request-section');
+    if (!requestSection) return;
+
+    var publishBtn = requestSection.querySelector('.request-header .btn-primary');
+    if (!publishBtn) return;
+
+    // 移除原本的 data-tip
+    publishBtn.removeAttribute('data-tip');
+
+    publishBtn.addEventListener('click', function(e) {
+        e.stopPropagation();
+
+        var title = prompt('请输入你想要的课程主题：');
+        if (!title) return;
+        title = title.trim();
+        if (!title) return;
+        if (title.length > 50) {
+            alert('标题不能超过 50 字');
+            return;
+        }
+
+        var nickname = (window.currentUser && window.currentUser.nickname) || '我';
+
+        var req = {
+            id: 'req_' + Date.now() + '_' + Math.floor(Math.random() * 1000),
+            title: title,
+            author: nickname,
+            timestamp: Date.now(),
+            votes: 0
+        };
+
+        var data = JYMall.load();
+        data.requests.unshift(req);
+        if (data.requests.length > 50) {
+            data.requests = data.requests.slice(0, 50);
+        }
+        JYMall.save(data);
+
+        // 立刻渲染
+        if (window.__renderMyRequests) {
+            window.__renderMyRequests();
+        }
+
+        alert('需求已发布！');
+    });
+})();
+
+/* ============================================================
+   data-tip 提示（排除已接管功能的元素）
+   ============================================================ */
+(function() {
+    document.querySelectorAll('[data-tip]').forEach(function(el) {
+        // 排除已接管的
+        if (el.classList.contains('req-votes')) return;
+        if (el.closest('.request-header')) return;
+
+        el.addEventListener('click', function(e) {
+            e.stopPropagation();
+            var tip = this.getAttribute('data-tip');
+            if (tip) alert(tip);
+        });
+    });
+})();
+</script>
 </body>
 </html>
