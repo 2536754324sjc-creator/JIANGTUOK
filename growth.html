@@ -1605,19 +1605,25 @@ function renderCalendar() {
 })();
 
 /* ============================================================
-   初始化：先用本机时间渲染一次，再异步同步网络时间，成功后重新渲染
+   初始化：先立即渲染一次（用本地缓存），再异步拉云端 + 同步网络时间，完成后重渲染
    ============================================================ */
 renderHeroStats();
 renderChart();
 renderCalendar();
 
-JYTime.sync().then(function(ok) {
-    if (ok) {
+(async function() {
+    try {
+        await Promise.all([
+            JYTime.sync(),
+            window.JYSync ? JYSync.pull().catch(function() { return null; }) : Promise.resolve(null)
+        ]);
         renderHeroStats();
         renderChart();
         renderCalendar();
+    } catch (e) {
+        console.warn('[Growth] 云端拉取失败，使用本地数据：', e);
     }
-});
+})();
 </script>
 
 </body>
