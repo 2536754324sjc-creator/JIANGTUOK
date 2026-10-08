@@ -497,6 +497,9 @@
             }
         }
     </style>
+        <!-- 云端同步模块 -->
+    <script src="juyou-sync.js"></script>
+</head>
 </head>
 <body>
 
@@ -789,11 +792,12 @@
         });
     })();
 
-    /* ============================================================
-       登录按钮 - 保存登录状态并跳转
+        /* ============================================================
+       登录按钮 - 调用 Supabase 登录 + 首次云端同步
        ============================================================ */
     (function() {
         var btn = document.getElementById('btnLogin');
+        var originalText = btn.textContent;
 
         btn.addEventListener('click', function() {
             // 1. 获取输入
@@ -810,20 +814,40 @@
                 return;
             }
 
-            // 3. 生成昵称（手机号后 4 位）
-            // 可修改：这里可以改成任意生成规则
+            // 3. 生成昵称
             var nickname = '学员' + phone.slice(-4);
-
-            // 4. 保存用户信息到 localStorage
             var userInfo = {
                 phone: phone,
                 nickname: nickname,
                 loginTime: Date.now()
             };
-            localStorage.setItem('juyou_user', JSON.stringify(userInfo));
 
-            // 5. 跳转到主页面
-            window.location.href = 'home.html';
+            // 4. 调云端登录 + 同步（按钮变"登录中..."防重复点击）
+            btn.disabled = true;
+            btn.textContent = '登录中...';
+
+            window.JYSync.loginAndSync(phone)
+                .then(function(result) {
+                    console.log('[登录] 同步来源：', result.source);
+
+                    // 5. 保存用户信息
+                    localStorage.setItem('juyou_user', JSON.stringify(userInfo));
+
+                    // 6. 跳转到主页面
+                    window.location.href = 'home.html';
+                })
+                .catch(function(err) {
+                    console.error('[登录] 失败：', err);
+                    btn.disabled = false;
+                    btn.textContent = originalText;
+
+                    // 云端失败也不挡本地登录（弱网/未配置时仍可离线使用）
+                    var goOn = confirm('云端同步失败（' + (err.message || '未知错误') + '）\n\n是否继续以本地模式进入？\n（数据只存在本设备，换设备不同步）');
+                    if (goOn) {
+                        localStorage.setItem('juyou_user', JSON.stringify(userInfo));
+                        window.location.href = 'home.html';
+                    }
+                });
         });
     })();
 </script>
