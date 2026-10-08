@@ -1328,10 +1328,20 @@
         }
     })();
 
-    /* ============================================================
-       ★★★ 渲染首页真实数据 ★★★
+        /* ============================================================
+       ★★★ 渲染首页真实数据（★ 先拉云端，再渲染） ★★★
        ============================================================ */
-    (function() {
+    (async function() {
+        // ★ 先拉云端数据 + 同步网络时间（未登录/未配置时静默跳过）
+        try {
+            await Promise.all([
+                JYTime.sync(),
+                window.JYSync ? JYSync.pull().catch(function() { return null; }) : Promise.resolve(null)
+            ]);
+        } catch (e) {
+            console.warn('[Home] 云端拉取失败，使用本地数据：', e);
+        }
+
         var data = JYStore.load();
         var s = data.stats;
         var records = data.records;
