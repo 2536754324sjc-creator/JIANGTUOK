@@ -1682,7 +1682,7 @@
     })();
 
     /* ============================================================
-       ★★★ 网络时间同步 JYTime（多源并行，谁先成功用谁） ★★★
+       ★★★ 网络时间同步 JYTime（双源：Cloudflare + 苏宁，已去掉 GitHub） ★★★
        ============================================================ */
     window.JYTime = (function() {
         var offset = 0;
@@ -1724,22 +1724,6 @@
                         clearTimeout(timer);
                         resolve(0);
                     });
-            });
-        }
-
-        function tryGithub() {
-            return fetchWithTimeout(
-                'https://api.github.com/',
-                { method: 'HEAD' },
-                2500,
-                function(res) {
-                    var dateStr = res.headers.get('date');
-                    if (!dateStr) return 0;
-                    var ts = new Date(dateStr).getTime();
-                    return ts > 0 ? ts : 0;
-                }
-            ).then(function(ts) {
-                return { ts: ts || 0, source: 'GitHub API' };
             });
         }
 
@@ -1814,7 +1798,7 @@
         function sync() {
             if (syncPromise) return syncPromise;
 
-            syncPromise = Promise.all([tryGithub(), tryCloudflare(), trySuning()])
+            syncPromise = Promise.all([tryCloudflare(), trySuning()])
                 .then(function(results) {
                     console.log('[JYTime] 各源结果：', results);
 
@@ -2088,22 +2072,22 @@
         });
     })();
 
-   /* ============================================================
-   ★ 初始化：先立即渲染一次（用本地缓存），再异步拉云端 + 同步网络时间，完成后重渲染
-   ============================================================ */
-renderOverview();
+    /* ============================================================
+       ★ 初始化：先立即渲染（用本地缓存），再异步拉云端 + 同步网络时间后重渲染
+       ============================================================ */
+    renderOverview();
 
-(async function() {
-    try {
-        await Promise.all([
-            JYTime.sync(),
-            window.JYSync ? JYSync.pull().catch(function() { return null; }) : Promise.resolve(null)
-        ]);
-        renderOverview();
-    } catch (e) {
-        console.warn('[Profile] 云端拉取失败，使用本地数据：', e);
-    }
-})();
+    (async function() {
+        try {
+            await Promise.all([
+                JYTime.sync(),
+                window.JYSync ? JYSync.pull().catch(function() { return null; }) : Promise.resolve(null)
+            ]);
+            renderOverview();
+        } catch (e) {
+            console.warn('[Profile] 云端拉取失败，使用本地数据：', e);
+        }
+    })();
 </script>
 
 </body>
