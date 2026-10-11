@@ -2210,6 +2210,8 @@
     </style>
         <!-- 云端同步模块 -->
     <script src="juyou-sync.js"></script>
+        <!-- ★ 课程数据文件（新增） -->
+    <script src="data/juyou-courses.js"></script>
 </head>
 <body>
 
@@ -2295,10 +2297,10 @@
                 <span>退出学习</span>
             </div>
 
-            <div class="course-title-bar">星荣零基础学英语 · 第 12 课</div>
+            <div class="course-title-bar">正在加载...</div>
 
             <div class="topbar-progress">
-                <span class="progress-text" id="progressText">1 / 8</span>
+               <span class="progress-text" id="progressText">1 / 40</span>
                 <div class="progress-bar-track">
                     <div class="progress-bar-fill" id="progressFill" style="width: 12.5%;"></div>
                 </div>
@@ -2659,7 +2661,7 @@
 })();
 
 /* ============================================================
-   ★★★ 网络时间同步 JYTime（★ 已去掉 GitHub 源，双源：Cloudflare + 苏宁） ★★★
+   网络时间同步 JYTime（双源：Cloudflare + 苏宁）
    ============================================================ */
 window.JYTime = (function() {
     var offset = 0;
@@ -2700,7 +2702,6 @@ window.JYTime = (function() {
         });
     }
 
-    /* 源 1：Cloudflare trace */
     function tryCloudflare() {
         return fetchWithTimeout(
             'https://www.cloudflare.com/cdn-cgi/trace',
@@ -2718,7 +2719,6 @@ window.JYTime = (function() {
         });
     }
 
-    /* 源 2：苏宁时间（JSONP 兜底） */
     function trySuning() {
         return new Promise(function(resolve) {
             var cbName = '__jySn_' + Date.now() + '_' + Math.floor(Math.random() * 1e6);
@@ -2831,13 +2831,9 @@ window.JYStore = (function() {
             mastered: [],
             starred: [],
             stats: {
-                totalDays: 0,
-                totalTime: 0,
-                totalSentences: 0,
-                streak: 0,
-                lastStudyDate: null,
-                todayCount: 0,
-                todayDate: null
+                totalDays: 0, totalTime: 0, totalSentences: 0,
+                streak: 0, lastStudyDate: null,
+                todayCount: 0, todayDate: null
             }
         };
     }
@@ -2862,9 +2858,7 @@ window.JYStore = (function() {
     }
 
     function save(data) {
-        try {
-            localStorage.setItem(KEY, JSON.stringify(data));
-        } catch (e) {}
+        try { localStorage.setItem(KEY, JSON.stringify(data)); } catch (e) {}
     }
 
     function getTodayStr() {
@@ -2879,21 +2873,17 @@ window.JYStore = (function() {
         for (var i = 0; i < data.reviewBook.length; i++) {
             if (data.reviewBook[i].en === en) { idx = i; break; }
         }
-
         if (correct) {
             if (idx > -1) {
                 var item = data.reviewBook[idx];
                 item.streak = (item.streak || 0) + 1;
-
                 if (item.streak >= MASTERED_STREAK) {
                     data.reviewBook.splice(idx, 1);
                     var alreadyM = data.mastered.some(function(m) { return m.en === en; });
                     if (!alreadyM) {
                         data.mastered.unshift({
-                            en: en,
-                            cn: cn,
-                            masteredTime: nowTs,
-                            accuracy: 100
+                            en: en, cn: cn,
+                            masteredTime: nowTs, accuracy: 100
                         });
                     }
                 } else {
@@ -2913,10 +2903,8 @@ window.JYStore = (function() {
                     var alreadyM2 = data.mastered.some(function(m) { return m.en === en; });
                     if (!alreadyM2) {
                         data.mastered.unshift({
-                            en: en,
-                            cn: cn,
-                            masteredTime: nowTs,
-                            accuracy: 100
+                            en: en, cn: cn,
+                            masteredTime: nowTs, accuracy: 100
                         });
                     }
                 }
@@ -2929,12 +2917,10 @@ window.JYStore = (function() {
                 item2.nextReview = nowTs + RELEARNING_MINUTES * 60000;
             } else {
                 data.reviewBook.unshift({
-                    en: en,
-                    cn: cn,
+                    en: en, cn: cn,
                     addTime: nowTs,
                     nextReview: nowTs + NEW_ITEM_HOURS * 3600000,
-                    state: 'new',
-                    streak: 0
+                    state: 'new', streak: 0
                 });
             }
         }
@@ -2955,7 +2941,6 @@ window.JYStore = (function() {
         if (data.records.length > MAX_RECORDS) {
             data.records = data.records.slice(0, MAX_RECORDS);
         }
-
         var today = getTodayStr();
         if (data.stats.todayDate !== today) {
             data.stats.todayDate = today;
@@ -2978,11 +2963,9 @@ window.JYStore = (function() {
         data.stats.todayCount += 1;
         data.stats.totalSentences += 1;
         data.stats.lastStudyDate = today;
-
         if (record.en) {
             updateReviewProgress(data, record.en, record.cn, record.correct, nowTs);
         }
-
         save(data);
         return record;
     }
@@ -3086,138 +3069,167 @@ window.JYStore = (function() {
 })();
 
 /* ============================================================
-   题库
+   ★★★ 课程数据适配层（从 juyou-courses.js 读取并转换） ★★★
    ============================================================ */
-var QUESTION_BANK = [
-    {
-        cn: '我喜欢吃苹果。',
-        en: 'I like to eat apples.',
-        phonetic: '/aɪ laɪk tuː iːt ˈæpəlz/',
-        structure: [
-            { label: '主语', word: 'I' },
-            { label: '谓语', word: 'like to eat' },
-            { label: '宾语', word: 'apples' }
-        ],
-        chunks: ['I', 'like', 'to eat', 'apples', '.'],
-        distractors: ['bananas', 'she']
-    },
-    {
-        cn: '它们又甜又健康。',
-        en: 'They are sweet and healthy.',
-        phonetic: '/ðeɪ ɑːr swiːt ænd ˈhelθi/',
-        structure: [
-            { label: '主语', word: 'They' },
-            { label: '系动词', word: 'are' },
-            { label: '表语', word: 'sweet and healthy' }
-        ],
-        chunks: ['They', 'are', 'sweet', 'and', 'healthy', '.'],
-        distractors: ['but', 'sour']
-    },
-    {
-        cn: '她坐公交车去上学。',
-        en: 'She goes to school by bus.',
-        phonetic: '/ʃiː ɡoʊz tuː skuːl baɪ bʌs/',
-        structure: [
-            { label: '主语', word: 'She' },
-            { label: '谓语', word: 'goes' },
-            { label: '地点状语', word: 'to school' },
-            { label: '方式状语', word: 'by bus' }
-        ],
-        chunks: ['She', 'goes', 'to school', 'by bus', '.'],
-        distractors: ['walk', 'car']
-    }
-];
 
-var DICTATION_DATA = [
-    {
-        cn: '早上好，王老师！',
-        en: 'Good morning, Mr. Wang!',
-        words: ['Good', 'morning', 'Mr.', 'Wang'],
-        grammar: [
-            { label: '状语', word: 'Good morning', phonetic: '/ɡʊd/ /ˈmɔːrnɪŋ/', cn: '早上好' },
-            { label: '状语', word: 'Mr. Wang', phonetic: '/ˈmɪstər/ /wɑːŋ/', cn: '王老师' }
-        ]
-    },
-    {
-        cn: '它们是太行山和王屋山。',
-        en: 'They were Taihang Mountain and Wangwu Mountain.',
-        words: ['They', 'were', 'Taihang', 'Mountain', 'and', 'Wangwu', 'Mountain'],
-        grammar: [
-            { label: '主语', word: 'They', phonetic: '/ðeɪ/', cn: '它们' },
-            { label: '谓语', word: 'were', phonetic: '/wɜːr/', cn: '是' },
-            { label: '补语', word: 'Taihang Mountain and Wangwu Mountain', phonetic: '/ˌtaɪˈhæŋ/ /ˈmaʊntən/ /ænd/ /ˈwɑːŋˈwuː/ /ˈmaʊntən/', cn: '太行山和王屋山' }
-        ]
-    },
-    {
-        cn: '我喜欢吃苹果。',
-        en: 'I like to eat apples.',
-        words: ['I', 'like', 'to', 'eat', 'apples'],
-        grammar: [
-            { label: '主语', word: 'I', phonetic: '/aɪ/', cn: '我' },
-            { label: '谓语', word: 'like to eat', phonetic: '/laɪk/ /tuː/ /iːt/', cn: '喜欢吃' },
-            { label: '宾语', word: 'apples', phonetic: '/ˈæpəlz/', cn: '苹果' }
-        ]
-    }
-];
+/* ---------- 1. 读 URL 参数 ---------- */
+function getUrlParam(name) {
+    var m = window.location.search.match(new RegExp('[?&]' + name + '=([^&]*)'));
+    return m ? decodeURIComponent(m[1]) : '';
+}
 
-var WORD_DICT = {
-    'i':          { phonetic: '/aɪ/',        cn: '我' },
-    'like':       { phonetic: '/laɪk/',      cn: '喜欢' },
-    'to':         { phonetic: '/tuː/',       cn: '（不定式符号）去' },
-    'eat':        { phonetic: '/iːt/',       cn: '吃' },
-    'apples':     { phonetic: '/ˈæpəlz/',    cn: '苹果（复数）' },
-    'they':       { phonetic: '/ðeɪ/',       cn: '它们 / 他们 / 她们' },
-    'are':        { phonetic: '/ɑːr/',       cn: '是（复数/第二人称）' },
-    'sweet':      { phonetic: '/swiːt/',     cn: '甜的' },
-    'and':        { phonetic: '/ænd/',       cn: '和' },
-    'healthy':    { phonetic: '/ˈhelθi/',    cn: '健康的' },
-    'she':        { phonetic: '/ʃiː/',       cn: '她' },
-    'goes':       { phonetic: '/ɡoʊz/',      cn: '去（第三人称单数）' },
-    'school':     { phonetic: '/skuːl/',     cn: '学校' },
-    'by':         { phonetic: '/baɪ/',       cn: '通过 / 乘坐' },
-    'bus':        { phonetic: '/bʌs/',       cn: '公交车' },
-    'good':       { phonetic: '/ɡʊd/',       cn: '好的' },
-    'morning':    { phonetic: '/ˈmɔːrnɪŋ/',  cn: '早上' },
-    'mr.':        { phonetic: '/ˈmɪstər/',   cn: '先生' },
-    'mr':         { phonetic: '/ˈmɪstər/',   cn: '先生' },
-    'wang':       { phonetic: '/wɑːŋ/',      cn: '王（姓）' },
-    'were':       { phonetic: '/wɜːr/',      cn: '是（过去式复数）' },
-    'taihang':    { phonetic: '/ˌtaɪˈhæŋ/',  cn: '太行（山名）' },
-    'mountain':   { phonetic: '/ˈmaʊntən/',  cn: '山' },
-    'wangwu':     { phonetic: '/ˈwɑːŋˈwuː/', cn: '王屋（山名）' }
+var URL_COURSE_ID = getUrlParam('course');
+var URL_LESSON_NO = parseInt(getUrlParam('lesson'), 10) || 1;
+
+/* ---------- 2. 找到当前课程包和课节 ---------- */
+var CURRENT_COURSE = null;
+var CURRENT_LESSON = null;
+
+(function loadCurrentLesson() {
+    var all = window.JUYOU_COURSES;
+    if (!all) {
+        console.error('[Learn] 数据文件没加载：window.JUYOU_COURSES 不存在');
+        return;
+    }
+    var courseIds = Object.keys(all);
+    if (courseIds.length === 0) {
+        console.error('[Learn] 数据文件里没有任何课程');
+        return;
+    }
+    if (!URL_COURSE_ID || !all[URL_COURSE_ID]) {
+        URL_COURSE_ID = courseIds[0];
+        console.warn('[Learn] URL 未指定 course，默认使用：' + URL_COURSE_ID);
+    }
+    CURRENT_COURSE = all[URL_COURSE_ID];
+    var lessons = CURRENT_COURSE.lessons || [];
+    if (lessons.length === 0) {
+        console.error('[Learn] 这个课程包里没有 lessons 数据');
+        return;
+    }
+    var target = null;
+    for (var i = 0; i < lessons.length; i++) {
+        if (lessons[i].lessonNo === URL_LESSON_NO) { target = lessons[i]; break; }
+    }
+    if (!target) {
+        target = lessons[0];
+        URL_LESSON_NO = target.lessonNo;
+        console.warn('[Learn] 没找到第 ' + URL_LESSON_NO + ' 课，默认使用第 1 课');
+    }
+    CURRENT_LESSON = target;
+    console.log('[Learn] 已加载：' + CURRENT_COURSE.courseName + ' · 第 ' + CURRENT_LESSON.lessonNo + ' 课');
+})();
+
+/* ---------- 3. 转成 QUESTION_BANK ---------- */
+var QUESTION_BANK = [];
+if (CURRENT_LESSON && CURRENT_LESSON.sentences) {
+    QUESTION_BANK = CURRENT_LESSON.sentences.map(function(s) {
+        return {
+            cn: s.cn || '',
+            en: s.en || '',
+            phonetic: s.phonetic || '',
+            structure: Array.isArray(s.structure) ? s.structure : [],
+            chunks: Array.isArray(s.chunks) ? s.chunks : (s.en || '').split(/\s+/).filter(Boolean),
+            distractors: Array.isArray(s.distractors) ? s.distractors : []
+        };
+    });
+}
+
+/* ---------- 4. 转成 DICTATION_DATA ---------- */
+var DICTATION_DATA = [];
+if (CURRENT_LESSON && CURRENT_LESSON.sentences) {
+    DICTATION_DATA = CURRENT_LESSON.sentences.map(function(s) {
+        var chunks = Array.isArray(s.chunks) ? s.chunks : [];
+        var words = chunks.filter(function(w) {
+            return w && !/^[.,!?;:]+$/.test(w);
+        });
+        if (words.length === 0) {
+            words = (s.en || '').split(/\s+/).filter(Boolean);
+        }
+        var structure = Array.isArray(s.structure) ? s.structure : [];
+        var grammar = structure.map(function(item) {
+            return {
+                label: item.label || '',
+                word: item.word || '',
+                phonetic: '',
+                cn: ''
+            };
+        });
+        return { cn: s.cn || '', en: s.en || '', words: words, grammar: grammar };
+    });
+}
+
+/* ---------- 5. 构建 WORD_DICT ---------- */
+var WORD_DICT = {};
+if (CURRENT_LESSON && Array.isArray(CURRENT_LESSON.coreWords)) {
+    CURRENT_LESSON.coreWords.forEach(function(w) {
+        if (w && w.word) {
+            var key = String(w.word).toLowerCase();
+            WORD_DICT[key] = { phonetic: w.phonetic || '', cn: w.cn || '' };
+        }
+    });
+}
+if (CURRENT_LESSON && Array.isArray(CURRENT_LESSON.sentences)) {
+    CURRENT_LESSON.sentences.forEach(function(s) {
+        var ws = Array.isArray(s.words) ? s.words : [];
+        ws.forEach(function(w) {
+            if (!w) return;
+            var key = String(w).toLowerCase();
+            if (!WORD_DICT[key]) {
+                WORD_DICT[key] = { phonetic: '', cn: '（词典中暂无此词）' };
+            }
+        });
+    });
+}
+
+/* ---------- 6. 构建 VIDEO_DATA ---------- */
+var VIDEO_DATA = {
+    title: (CURRENT_LESSON ? (CURRENT_LESSON.titleCn + ' · 逐句精听') : '逐句精听'),
+    videoUrl: 'https://media.w3.org/2010/05/sintel/trailer.mp4',
+    sentences: []
 };
+if (CURRENT_LESSON && Array.isArray(CURRENT_LESSON.sentences)) {
+    CURRENT_LESSON.sentences.slice(0, 20).forEach(function(s, i) {
+        VIDEO_DATA.sentences.push({
+            start: i * 5,
+            end: (i + 1) * 5,
+            en: s.en || '',
+            cn: s.cn || '',
+            phonetic: s.phonetic || ''
+        });
+    });
+}
+
+/* ---------- 7. 更新顶部标题栏 ---------- */
+(function updateTopbarTitle() {
+    if (!CURRENT_COURSE || !CURRENT_LESSON) return;
+    var titleEl = document.querySelector('.course-title-bar');
+    if (titleEl) {
+        titleEl.textContent = CURRENT_COURSE.courseName + ' · 第 ' + CURRENT_LESSON.lessonNo + ' 课';
+    }
+    document.title = CURRENT_COURSE.courseName + ' · 第 ' + CURRENT_LESSON.lessonNo + ' 课 - 句游英语';
+})();
+
+/* ---------- 8. 空数据兜底 ---------- */
+(function checkEmpty() {
+    if (QUESTION_BANK.length > 0) return;
+    console.error('[Learn] QUESTION_BANK 为空，无法开始学习');
+    var card = document.getElementById('learnCard');
+    if (card) {
+        card.innerHTML =
+            '<div style="padding:60px 20px;text-align:center;">' +
+                '<div style="font-size:52px;margin-bottom:14px;opacity:0.5;">📭</div>' +
+                '<div style="font-size:16px;font-weight:600;color:#666;margin-bottom:8px;">没有找到课程数据</div>' +
+                '<div style="font-size:13px;color:#999;line-height:1.7;">' +
+                    '请检查 URL 参数，例如：<br>' +
+                    '<code style="background:#f4f6fc;padding:4px 10px;border-radius:6px;">learn.html?course=junior_daily_present_simple&lesson=1</code>' +
+                '</div>' +
+            '</div>';
+    }
+})();
 
 /* ============================================================
-   视频数据
+   全局状态
    ============================================================ */
-var VIDEO_DATA = {
-    title: 'Sintel 预告片 · 逐句精听',
-    videoUrl: 'https://media.w3.org/2010/05/sintel/trailer.mp4',
-    sentences: [
-        {
-            start: 0,
-            end: 5,
-            en: 'I like to eat apples.',
-            cn: '我喜欢吃苹果。',
-            phonetic: '/aɪ laɪk tuː iːt ˈæpəlz/'
-        },
-        {
-            start: 5,
-            end: 10,
-            en: 'They are sweet and healthy.',
-            cn: '它们又甜又健康。',
-            phonetic: '/ðeɪ ɑːr swiːt ænd ˈhelθi/'
-        },
-        {
-            start: 10,
-            end: 15,
-            en: 'She goes to school by bus.',
-            cn: '她坐公交车去上学。',
-            phonetic: '/ʃiː ɡoʊz tuː skuːl baɪ bʌs/'
-        }
-    ]
-};
-
 var state = {
     currentIndex: 0, combo: 0, maxCombo: 0,
     correctCount: 0, totalAnswered: 0, score: 0,
@@ -3253,6 +3265,7 @@ function scoreToRating(score) {
 
 function updateTopbar() {
     var total = QUESTION_BANK.length;
+    if (total === 0) return;
     var current = Math.min(state.currentIndex + 1, total);
     document.getElementById('progressText').textContent = current + ' / ' + total;
     document.getElementById('progressFill').style.width = ((current / total) * 100) + '%';
@@ -3303,26 +3316,21 @@ function formatSeconds(s) {
 function renderReadMode(en) {
     var el = document.getElementById('readContent');
     if (!el) return;
-
     var html = en.replace(/([A-Za-z][A-Za-z.''-]*)/g, function(match) {
         var starred = JYStore.isInWordBook(match);
         var cls = 'read-word' + (starred ? ' starred' : '');
         return '<span class="' + cls + '" data-word="' + match.replace(/"/g, '&quot;') + '">' + match + '</span>';
     });
-
     el.innerHTML = html;
 }
 
 function openWordPopup(word) {
     var lower = word.toLowerCase();
     var dict = WORD_DICT[lower] || { phonetic: '', cn: '（词典中暂无此词）' };
-
     document.getElementById('wpWord').textContent = word;
     document.getElementById('wpPhonetic').textContent = dict.phonetic || '';
     document.getElementById('wpCn').textContent = dict.cn || '';
-
     currentWord = { word: word, cn: dict.cn || '' };
-
     var addBtn = document.getElementById('wpAdd');
     if (JYStore.isInWordBook(word)) {
         addBtn.classList.add('added');
@@ -3333,7 +3341,6 @@ function openWordPopup(word) {
         addBtn.classList.add('primary');
         addBtn.textContent = '⭐ 加入生词本';
     }
-
     document.getElementById('popupMask').classList.add('on');
     document.getElementById('wordPopup').classList.add('on');
 }
@@ -3370,9 +3377,7 @@ document.getElementById('wpSpeak').addEventListener('click', function() {
 
 document.getElementById('wpAdd').addEventListener('click', function() {
     if (!currentWord) return;
-
     var isNowIn = JYStore.toggleWordBook(currentWord.word, currentWord.cn);
-
     if (isNowIn) {
         this.classList.remove('primary');
         this.classList.add('added');
@@ -3382,7 +3387,6 @@ document.getElementById('wpAdd').addEventListener('click', function() {
         this.classList.add('primary');
         this.textContent = '⭐ 加入生词本';
     }
-
     var spans = document.querySelectorAll('.read-word');
     spans.forEach(function(span) {
         if (span.getAttribute('data-word') === currentWord.word) {
@@ -3401,19 +3405,14 @@ document.getElementById('wpAdd').addEventListener('click', function() {
 function loadQuestion() {
     var q = QUESTION_BANK[state.currentIndex];
     if (!q) { showComplete(); return; }
-
     state.selectedChunks = [];
     state.isAnswered = false;
-
     document.getElementById('promptCn').textContent = q.cn;
-
     var answerEl = document.getElementById('chunkAnswer');
     answerEl.className = 'chunk-answer';
     answerEl.innerHTML = '<span class="chunk-cursor"></span>';
-
     var poolEl = document.getElementById('chunkPool');
     poolEl.innerHTML = '';
-
     var allChunks = shuffleArray(q.chunks.concat(q.distractors || []));
     allChunks.forEach(function(chunk, index) {
         var el = document.createElement('div');
@@ -3423,7 +3422,6 @@ function loadQuestion() {
         el.setAttribute('data-chunk', chunk);
         poolEl.appendChild(el);
     });
-
     updateTopbar();
     renderReadMode(q.en);
 }
@@ -3432,34 +3430,26 @@ function submitAnswer() {
     if (state.isAnswered) return;
     var q = QUESTION_BANK[state.currentIndex];
     if (!q) return;
-
     var userAnswer = state.selectedChunks.join(' ');
     var isCorrect = (normalize(userAnswer) === normalize(q.en));
-
     state.isAnswered = true;
     state.totalAnswered++;
-
     JYStore.addRecord({
-        en: q.en,
-        cn: q.cn,
+        en: q.en, cn: q.cn,
         mode: 'translate',
         correct: isCorrect
     });
-
     if (isCorrect) {
         state.correctCount++;
         state.combo++;
         if (state.combo > state.maxCombo) state.maxCombo = state.combo;
         state.score += 10 + state.combo * 2;
-
         showFeedback(true, 'Perfect!', '连击 ' + state.combo + ' · 得分 +' + (10 + state.combo * 2));
         document.getElementById('chunkAnswer').classList.add('correct');
-
         var comboBadge = document.getElementById('comboBadge');
         comboBadge.classList.remove('bump');
         void comboBadge.offsetWidth;
         comboBadge.classList.add('bump');
-
         setTimeout(function() {
             state.currentIndex++;
             loadQuestion();
@@ -3468,13 +3458,11 @@ function submitAnswer() {
         state.combo = 0;
         showFeedback(false, '再试一次', '正确顺序：' + q.en);
         document.getElementById('chunkAnswer').classList.add('wrong');
-
         setTimeout(function() {
             state.isAnswered = false;
             document.getElementById('chunkAnswer').classList.remove('wrong');
         }, 1800);
     }
-
     updateTopbar();
 }
 
@@ -3483,7 +3471,6 @@ function showFeedback(isCorrect, title, sub) {
     var fbIcon = document.getElementById('fbIcon');
     var fbTitle = document.getElementById('fbTitle');
     var fbSub = document.getElementById('fbSub');
-
     if (isCorrect) {
         toast.className = 'feedback-toast correct on';
         fbIcon.textContent = '🎉';
@@ -3493,7 +3480,6 @@ function showFeedback(isCorrect, title, sub) {
     }
     fbTitle.textContent = title;
     fbSub.textContent = sub;
-
     setTimeout(function() { toast.classList.remove('on'); }, 1500);
 }
 
@@ -3507,46 +3493,36 @@ function showComplete() {
     var chunkPool = document.getElementById('chunkPool');
     var chunkAnswer = document.getElementById('chunkAnswer');
     if (!chunkPool || !chunkAnswer) return;
-
     chunkPool.addEventListener('click', function(e) {
         var target = e.target;
         if (!target.classList.contains('chunk-item')) return;
         if (target.classList.contains('used')) return;
         if (state.isAnswered) return;
-
         var chunkText = target.getAttribute('data-chunk');
         state.selectedChunks.push(chunkText);
-
         var selected = document.createElement('div');
         selected.className = 'chunk-selected';
         selected.textContent = chunkText;
         selected.setAttribute('data-from', target.getAttribute('data-index'));
-
         var cursor = chunkAnswer.querySelector('.chunk-cursor');
         if (cursor) cursor.remove();
         chunkAnswer.appendChild(selected);
         var newCursor = document.createElement('span');
         newCursor.className = 'chunk-cursor';
         chunkAnswer.appendChild(newCursor);
-
         target.classList.add('used');
     });
-
     chunkAnswer.addEventListener('click', function(e) {
         var target = e.target;
         if (!target.classList.contains('chunk-selected')) return;
         if (state.isAnswered) return;
-
         var fromIndex = target.getAttribute('data-from');
         var originItem = chunkPool.querySelector('.chunk-item[data-index="' + fromIndex + '"]');
         if (originItem) originItem.classList.remove('used');
-
         var chunkText = target.textContent;
         var idx = state.selectedChunks.indexOf(chunkText);
         if (idx > -1) state.selectedChunks.splice(idx, 1);
-
         target.remove();
-
         if (!chunkAnswer.querySelector('.chunk-selected')) {
             var cursor = chunkAnswer.querySelector('.chunk-cursor');
             if (!cursor) {
@@ -3560,7 +3536,6 @@ function showComplete() {
 
 (function() {
     document.getElementById('btnSubmit').addEventListener('click', submitAnswer);
-
     document.getElementById('btnSkip').addEventListener('click', function() {
         if (state.isAnswered) return;
         state.combo = 0;
@@ -3569,13 +3544,11 @@ function showComplete() {
         updateTopbar();
         loadQuestion();
     });
-
     document.getElementById('btnReset').addEventListener('click', function() {
         if (state.isAnswered) return;
         state.selectedChunks = [];
         loadQuestion();
     });
-
     document.addEventListener('keydown', function(e) {
         if (e.key === 'Enter' && !e.shiftKey && document.activeElement.tagName !== 'INPUT') {
             e.preventDefault();
@@ -3597,9 +3570,8 @@ var Dictation = (function() {
     function buildWaveform() {
         var wave = document.getElementById('waveform');
         if (!wave) return;
-        var BAR_COUNT = 50;
         var html = '';
-        for (var i = 0; i < BAR_COUNT; i++) {
+        for (var i = 0; i < 50; i++) {
             html += '<div class="wave-bar"></div>';
         }
         wave.innerHTML = html;
@@ -3609,22 +3581,17 @@ var Dictation = (function() {
         if (!currentData) return;
         var idx = dictationState.index;
         if (dictationState.recorded[idx]) return;
-
         var hasAnyInput = inputs.some(function(input) {
             return input.value.trim() !== '';
         });
         if (!hasAnyInput) return;
-
         var allCorrect = inputs.every(function(input) {
             var i = parseInt(input.getAttribute('data-index'));
             return normalize(input.value) === normalize(currentData.words[i]);
         });
-
         dictationState.recorded[idx] = true;
-
         JYStore.addRecord({
-            en: currentData.en,
-            cn: currentData.cn,
+            en: currentData.en, cn: currentData.cn,
             mode: 'dictation',
             correct: allCorrect
         });
@@ -3633,13 +3600,11 @@ var Dictation = (function() {
     function render() {
         currentData = DICTATION_DATA[dictationState.index];
         if (!currentData) return;
-
         panel.innerHTML = [
             '<div class="dictation-topbar">',
                 '<button class="d-exit-btn" id="dExit">← 退出听写</button>',
                 '<span class="d-progress-text">' + (dictationState.index + 1) + ' / ' + DICTATION_DATA.length + '</span>',
             '</div>',
-
             '<div class="grammar-popup" id="grammarPopup">',
                 '<div class="grammar-parts">',
                     currentData.grammar.map(function(g) {
@@ -3656,7 +3621,6 @@ var Dictation = (function() {
                     '<span class="gf-right">Ctrl+A 或 ESC</span>',
                 '</div>',
             '</div>',
-
             '<div class="dictation-main">',
                 '<div class="cn-prompt">' + currentData.cn + '</div>',
                 '<div class="word-slots" id="wordSlots">',
@@ -3668,7 +3632,6 @@ var Dictation = (function() {
                     }).join(''),
                 '</div>',
             '</div>',
-
             '<div class="dictation-bottom">',
                 '<div class="waveform" id="waveform"></div>',
                 '<div class="dictation-toolbar">',
@@ -3682,9 +3645,7 @@ var Dictation = (function() {
         ].join('');
 
         buildWaveform();
-
         inputs = Array.prototype.slice.call(panel.querySelectorAll('.slot-input'));
-
         inputs.forEach(function(input) {
             input.addEventListener('input', onInput);
             input.addEventListener('blur', onBlur);
@@ -3705,7 +3666,6 @@ var Dictation = (function() {
             starBtn.classList.add('starred');
             starBtn.textContent = '★';
         }
-
         panel.classList.add('fullscreen');
     }
 
@@ -3713,13 +3673,10 @@ var Dictation = (function() {
         var input = e.target;
         var idx = parseInt(input.getAttribute('data-index'));
         var correctWord = currentData.words[idx];
-
         var displayLen = Math.max(correctWord.length, input.value.length, 5) + 1;
         input.style.width = displayLen + 'ch';
-
         var userValue = normalize(input.value);
         var correctValue = normalize(correctWord);
-
         if (userValue === correctValue) {
             input.classList.add('correct');
             input.classList.remove('error', 'wrong');
@@ -3734,16 +3691,13 @@ var Dictation = (function() {
     function onBlur(e) {
         var input = e.target;
         if (!input.value.trim()) return;
-
         var idx = parseInt(input.getAttribute('data-index'));
         var correctWord = currentData.words[idx];
         var userValue = normalize(input.value);
         var correctValue = normalize(correctWord);
-
         if (userValue !== correctValue) {
             input.classList.add('wrong');
             input.classList.remove('correct', 'error');
-
             setTimeout(function() {
                 input.classList.remove('wrong');
                 input.classList.add('error');
@@ -3757,18 +3711,15 @@ var Dictation = (function() {
         var correctWord = currentData.words[idx];
         var userValue = normalize(input.value);
         var correctValue = normalize(correctWord);
-
         if (!input.value.trim()) {
             input.classList.remove('error', 'wrong', 'correct');
             return;
         }
-
         if (userValue === correctValue) {
             input.classList.add('correct');
             input.classList.remove('error', 'wrong');
             return;
         }
-
         input.classList.add('error');
         input.classList.remove('correct', 'wrong');
     }
@@ -3776,12 +3727,10 @@ var Dictation = (function() {
     function onKeyDown(e) {
         var input = e.target;
         var idx = parseInt(input.getAttribute('data-index'));
-
         if (e.key === ' ' || e.key === 'Enter') {
             e.preventDefault();
             jumpNext(input, idx);
         }
-
         if (e.key === 'Backspace' && !input.value) {
             e.preventDefault();
             if (idx > 0) {
@@ -3797,7 +3746,6 @@ var Dictation = (function() {
         var correctWord = currentData.words[idx];
         var userValue = normalize(input.value);
         var correctValue = normalize(correctWord);
-
         if (userValue === correctValue) {
             input.classList.add('correct');
             input.classList.remove('error', 'wrong');
@@ -3822,22 +3770,17 @@ var Dictation = (function() {
 
     function playAudio() {
         if (!currentData) return;
-
         var waveform = document.getElementById('waveform');
         var playBtn = panel.querySelector('#dBtnPlay');
         if (!waveform) return;
-
         playToken++;
         var myToken = playToken;
-
         if ('speechSynthesis' in window) {
             window.speechSynthesis.cancel();
         }
-
         waveform.classList.add('active');
         stopWaveAnimation();
         buildWaveform();
-
         if (playBtn) {
             playBtn.classList.remove('playing');
             void playBtn.offsetWidth;
@@ -3846,21 +3789,16 @@ var Dictation = (function() {
                 playBtn.classList.remove('playing');
             }, 400);
         }
-
         var estimatedDuration = Math.max(1200, currentData.en.length * 65);
-
         startWaveAnimation(estimatedDuration);
-
         var stopWave = function() {
             if (myToken !== playToken) return;
             stopWaveAnimation();
             waveform.classList.remove('active');
         };
-
         if ('speechSynthesis' in window) {
             setTimeout(function() {
                 if (myToken !== playToken) return;
-
                 var utterance = new SpeechSynthesisUtterance(currentData.en);
                 utterance.lang = 'en-US';
                 utterance.rate = 0.85;
@@ -3868,7 +3806,6 @@ var Dictation = (function() {
                 utterance.onerror = stopWave;
                 window.speechSynthesis.speak(utterance);
             }, 50);
-
             setTimeout(stopWave, estimatedDuration + 2000);
         } else {
             setTimeout(stopWave, estimatedDuration);
@@ -3878,35 +3815,26 @@ var Dictation = (function() {
     function startWaveAnimation(durationMs) {
         var bars = document.querySelectorAll('#waveform .wave-bar');
         if (!bars.length) return;
-
         if (waveRafId) cancelAnimationFrame(waveRafId);
-
         var startTime = performance.now();
         var BAR_COUNT = bars.length;
         var CENTER = (BAR_COUNT - 1) / 2;
-
         function frame(now) {
             var elapsed = now - startTime;
             var progress = Math.min(elapsed / durationMs, 1);
-
             var envelope = Math.sin(progress * Math.PI);
             envelope = Math.pow(envelope, 0.7);
-
             bars.forEach(function(bar, i) {
                 var dist = Math.abs(i - CENTER) / CENTER;
                 var centerWeight = 1 - dist * 0.65;
-
                 var t = elapsed / 1000;
                 var syllable = Math.abs(Math.sin(t * 8 + i * 0.7));
                 var harmonic = Math.abs(Math.sin(t * 13.5 + i * 0.35)) * 0.5;
                 var noise = Math.random() * 0.1;
-
                 var intensity = envelope * centerWeight * (syllable + harmonic + noise) / 1.6;
                 var height = 6 + Math.max(0, Math.min(1, intensity)) * 38;
-
                 bar.style.height = height + 'px';
             });
-
             if (progress < 1) {
                 waveRafId = requestAnimationFrame(frame);
             } else {
@@ -3914,7 +3842,6 @@ var Dictation = (function() {
                 waveRafId = null;
             }
         }
-
         waveRafId = requestAnimationFrame(frame);
     }
 
@@ -3967,17 +3894,14 @@ var Dictation = (function() {
 
     function exitFullscreen() {
         checkAndRecordCurrent();
-
         playToken++;
         if (waveRafId) cancelAnimationFrame(waveRafId);
         if ('speechSynthesis' in window) {
             window.speechSynthesis.cancel();
         }
-
         panel.classList.remove('fullscreen');
         panel.style.display = 'none';
         panel.innerHTML = '';
-
         var translateBtn = document.querySelector('.mode-btn[data-mode="translate"]');
         if (translateBtn) translateBtn.click();
     }
@@ -4017,35 +3941,26 @@ var Listening = (function() {
     function startWaveAnimation(containerId, durationMs) {
         var bars = document.querySelectorAll('#' + containerId + ' .wave-bar');
         if (!bars.length) return;
-
         if (waveRafId) cancelAnimationFrame(waveRafId);
-
         var startTime = performance.now();
         var BAR_COUNT = bars.length;
         var CENTER = (BAR_COUNT - 1) / 2;
-
         function frame(now) {
             var elapsed = now - startTime;
             var progress = Math.min(elapsed / durationMs, 1);
-
             var envelope = Math.sin(progress * Math.PI);
             envelope = Math.pow(envelope, 0.7);
-
             bars.forEach(function(bar, i) {
                 var dist = Math.abs(i - CENTER) / CENTER;
                 var centerWeight = 1 - dist * 0.65;
-
                 var t = elapsed / 1000;
                 var syllable = Math.abs(Math.sin(t * 8 + i * 0.7));
                 var harmonic = Math.abs(Math.sin(t * 13.5 + i * 0.35)) * 0.5;
                 var noise = Math.random() * 0.1;
-
                 var intensity = envelope * centerWeight * (syllable + harmonic + noise) / 1.6;
                 var height = 6 + Math.max(0, Math.min(1, intensity)) * 34;
-
                 bar.style.height = height + 'px';
             });
-
             if (progress < 1) {
                 waveRafId = requestAnimationFrame(frame);
             } else {
@@ -4053,7 +3968,6 @@ var Listening = (function() {
                 waveRafId = null;
             }
         }
-
         waveRafId = requestAnimationFrame(frame);
     }
 
@@ -4071,23 +3985,18 @@ var Listening = (function() {
     function playAudio(rate, containerId, btnId) {
         if (!currentData) return;
         rate = rate || 0.85;
-
         var waveform = containerId ? $(containerId) : null;
         var playBtn = btnId ? $(btnId) : null;
-
         playToken++;
         var myToken = playToken;
-
         if ('speechSynthesis' in window) {
             window.speechSynthesis.cancel();
         }
-
         if (waveform) {
             waveform.classList.add('active');
             stopWaveAnimation(containerId);
             buildWaveform(containerId);
         }
-
         if (playBtn) {
             playBtn.classList.remove('playing');
             void playBtn.offsetWidth;
@@ -4096,14 +4005,11 @@ var Listening = (function() {
                 playBtn.classList.remove('playing');
             }, 500);
         }
-
         var baseLen = currentData.en.length;
         var estimatedDuration = Math.max(1200, baseLen * 65 / rate);
-
         if (waveform) {
             startWaveAnimation(containerId, estimatedDuration);
         }
-
         var stopWave = function() {
             if (myToken !== playToken) return;
             if (containerId) {
@@ -4111,11 +4017,9 @@ var Listening = (function() {
                 if (waveform) waveform.classList.remove('active');
             }
         };
-
         if ('speechSynthesis' in window) {
             setTimeout(function() {
                 if (myToken !== playToken) return;
-
                 var u = new SpeechSynthesisUtterance(currentData.en);
                 u.lang = 'en-US';
                 u.rate = rate;
@@ -4123,7 +4027,6 @@ var Listening = (function() {
                 u.onerror = stopWave;
                 window.speechSynthesis.speak(u);
             }, 50);
-
             setTimeout(stopWave, estimatedDuration + 2000);
         } else {
             setTimeout(stopWave, estimatedDuration);
@@ -4149,15 +4052,12 @@ var Listening = (function() {
         if ('speechSynthesis' in window) {
             window.speechSynthesis.cancel();
         }
-
         currentStage = stage;
         updateSteps(stage >= 4 ? 3 : stage);
-
         $('listenStage1').style.display = 'none';
         $('listenStage2').style.display = 'none';
         $('listenStage3').style.display = 'none';
         $('listenQuizView').style.display = 'none';
-
         if (stage === 1) {
             $('listenStage1').style.display = 'block';
             setTimeout(function() { playAudio(0.85, 'listenWaveform1', 'listenPlayBtn1'); }, 300);
@@ -4178,7 +4078,6 @@ var Listening = (function() {
         $('listenEn').textContent = currentData.en;
         $('listenPhonetic').textContent = currentData.phonetic || '';
         $('listenCn').textContent = currentData.cn;
-
         var structureEl = $('listenStructure');
         structureEl.innerHTML = '';
         if (currentData.structure && currentData.structure.length) {
@@ -4191,7 +4090,6 @@ var Listening = (function() {
                 structureEl.appendChild(item);
             });
         }
-
         retriggerAnimation();
     }
 
@@ -4208,10 +4106,8 @@ var Listening = (function() {
     function buildQuiz() {
         selectedChunks = [];
         isAnswered = false;
-
         var pool = $('listenChunkPool');
         pool.innerHTML = '';
-
         var allChunks = shuffleArray(currentData.chunks.concat(currentData.distractors || []));
         allChunks.forEach(function(chunk, i) {
             var el = document.createElement('div');
@@ -4221,7 +4117,6 @@ var Listening = (function() {
             el.setAttribute('data-chunk', chunk);
             pool.appendChild(el);
         });
-
         $('listenChunkAnswer').innerHTML = '<span class="chunk-cursor"></span>';
         $('listenChunkAnswer').classList.remove('correct', 'wrong');
     }
@@ -4231,26 +4126,20 @@ var Listening = (function() {
         var userAnswer = selectedChunks.join(' ');
         var isCorrect = (normalize(userAnswer) === normalize(currentData.en));
         isAnswered = true;
-
         JYStore.addRecord({
-            en: currentData.en,
-            cn: currentData.cn,
+            en: currentData.en, cn: currentData.cn,
             mode: 'listening',
             correct: isCorrect
         });
-
         state.totalAnswered++;
-
         if (isCorrect) {
             state.correctCount++;
             state.combo++;
             if (state.combo > state.maxCombo) state.maxCombo = state.combo;
             state.score += 10 + state.combo * 2;
-
             showFeedback(true, 'Perfect!', '连击 ' + state.combo + ' · 得分 +' + (10 + state.combo * 2));
             $('listenChunkAnswer').classList.add('correct');
             updateTopbar();
-
             setTimeout(function() {
                 state.currentIndex++;
                 if (state.currentIndex >= QUESTION_BANK.length) {
@@ -4264,7 +4153,6 @@ var Listening = (function() {
             showFeedback(false, '再试一次', '正确答案：' + currentData.en);
             $('listenChunkAnswer').classList.add('wrong');
             updateTopbar();
-
             setTimeout(function() {
                 isAnswered = false;
                 $('listenChunkAnswer').classList.remove('wrong');
@@ -4283,16 +4171,13 @@ var Listening = (function() {
     function enter() {
         currentData = QUESTION_BANK[state.currentIndex];
         if (!currentData) return;
-
         currentStage = 1;
         selectedChunks = [];
         isAnswered = false;
-
         $('listenEn').textContent = '';
         $('listenPhonetic').textContent = '';
         $('listenCn').textContent = '';
         $('listenStructure').innerHTML = '';
-
         goToStage(1);
     }
 
@@ -4306,7 +4191,6 @@ var Listening = (function() {
         $('listenNext1').addEventListener('click', function() {
             goToStage(2);
         });
-
         $('listenPlayBtn2').addEventListener('click', function() {
             playAudio(0.6, 'listenWaveform2', 'listenPlayBtn2');
         });
@@ -4316,7 +4200,6 @@ var Listening = (function() {
         $('listenNext2').addEventListener('click', function() {
             goToStage(3);
         });
-
         $('listenPlayBtn3').addEventListener('click', function() {
             playAudio(0.85, 'listenWaveform3', 'listenPlayBtn3');
         });
@@ -4326,54 +4209,43 @@ var Listening = (function() {
         $('listenStartBtn').addEventListener('click', function() {
             goToStage(4);
         });
-
         $('listenReplayQuiz').addEventListener('click', function() {
             playAudio(0.85, null, null);
         });
         $('listenSubmit').addEventListener('click', submit);
         $('listenReset').addEventListener('click', resetQuiz);
-
         $('listenChunkPool').addEventListener('click', function(e) {
             var target = e.target;
             if (!target.classList.contains('chunk-item')) return;
             if (target.classList.contains('used')) return;
             if (isAnswered) return;
-
             var chunkText = target.getAttribute('data-chunk');
             selectedChunks.push(chunkText);
-
             var answerEl = $('listenChunkAnswer');
             var selected = document.createElement('div');
             selected.className = 'chunk-selected';
             selected.textContent = chunkText;
             selected.setAttribute('data-from', target.getAttribute('data-index'));
-
             var cursor = answerEl.querySelector('.chunk-cursor');
             if (cursor) cursor.remove();
             answerEl.appendChild(selected);
             var newCursor = document.createElement('span');
             newCursor.className = 'chunk-cursor';
             answerEl.appendChild(newCursor);
-
             target.classList.add('used');
         });
-
         $('listenChunkAnswer').addEventListener('click', function(e) {
             var target = e.target;
             if (!target.classList.contains('chunk-selected')) return;
             if (isAnswered) return;
-
             var answerEl = $('listenChunkAnswer');
             var fromIndex = target.getAttribute('data-from');
             var originItem = $('listenChunkPool').querySelector('.chunk-item[data-index="' + fromIndex + '"]');
             if (originItem) originItem.classList.remove('used');
-
             var chunkText = target.textContent;
             var idx = selectedChunks.indexOf(chunkText);
             if (idx > -1) selectedChunks.splice(idx, 1);
-
             target.remove();
-
             if (!answerEl.querySelector('.chunk-selected')) {
                 var cursor = answerEl.querySelector('.chunk-cursor');
                 if (!cursor) {
@@ -4406,7 +4278,6 @@ Listening.init();
    ============================================================ */
 var Speaking = (function() {
     var currentData = null;
-
     var mediaStream = null;
     var mediaRecorder = null;
     var audioChunks = [];
@@ -4414,15 +4285,12 @@ var Speaking = (function() {
     var recordedUrl = null;
     var recordStartTime = 0;
     var recordDuration = 0;
-
     var audioCtx = null;
     var analyser = null;
     var sourceNode = null;
     var volumeRafId = null;
     var volumeSamples = [];
-
     var playbackAudio = null;
-
     var isRecording = false;
     var hasRecorded = false;
     var isPlayingBack = false;
@@ -4442,7 +4310,6 @@ var Speaking = (function() {
 
     function calculateScore(duration, estimatedDuration, volumeSamples) {
         var ratio = duration / estimatedDuration;
-
         var avgVol = 0;
         var maxVol = 0;
         var voicedFrames = 0;
@@ -4455,7 +4322,6 @@ var Speaking = (function() {
         }
         avgVol = totalFrames > 0 ? avgVol / totalFrames : 0;
         var voicedRatio = totalFrames > 0 ? voicedFrames / totalFrames : 0;
-
         var accuracy = 100;
         if (ratio < 0.5) {
             accuracy -= (0.5 - ratio) * 100;
@@ -4469,12 +4335,10 @@ var Speaking = (function() {
         }
         accuracy = accuracy + (Math.random() * 8 - 4);
         accuracy = Math.max(35, Math.min(98, accuracy));
-
         var fluency = voicedRatio * 100;
         fluency = fluency + (Math.random() * 10 - 5);
         if (ratio < 0.6) fluency -= 15;
         fluency = Math.max(40, Math.min(98, fluency));
-
         var completeness = 100;
         if (ratio < 0.6) {
             completeness -= (0.6 - ratio) * 100;
@@ -4484,9 +4348,7 @@ var Speaking = (function() {
         }
         completeness = completeness + (Math.random() * 6 - 3);
         completeness = Math.max(40, Math.min(99, completeness));
-
         var total = Math.round(accuracy * 0.4 + fluency * 0.3 + completeness * 0.3);
-
         return {
             accuracy: Math.round(accuracy),
             fluency: Math.round(fluency),
@@ -4497,18 +4359,10 @@ var Speaking = (function() {
 
     function generateTips(score) {
         var tips = [];
-        if (score.accuracy < 75) {
-            tips.push('注意发音清晰，每个词都要读到位');
-        }
-        if (score.fluency < 75) {
-            tips.push('保持语速均匀，减少不必要的停顿');
-        }
-        if (score.completeness < 75) {
-            tips.push('把整句话读完整，不要漏词');
-        }
-        if (tips.length === 0) {
-            tips.push('读得非常棒，继续保持！');
-        }
+        if (score.accuracy < 75) tips.push('注意发音清晰，每个词都要读到位');
+        if (score.fluency < 75) tips.push('保持语速均匀，减少不必要的停顿');
+        if (score.completeness < 75) tips.push('把整句话读完整，不要漏词');
+        if (tips.length === 0) tips.push('读得非常棒，继续保持！');
         return tips.join('；') + '。';
     }
 
@@ -4518,18 +4372,14 @@ var Speaking = (function() {
             alert('当前浏览器不支持语音朗读');
             return;
         }
-
         window.speechSynthesis.cancel();
-
         var btn = $('speakDemoBtn');
         btn.classList.add('playing');
-
         var u = new SpeechSynthesisUtterance(currentData.en);
         u.lang = 'en-US';
         u.rate = 0.85;
         u.onend = function() { btn.classList.remove('playing'); };
         u.onerror = function() { btn.classList.remove('playing'); };
-
         window.speechSynthesis.speak(u);
     }
 
@@ -4546,28 +4396,21 @@ var Speaking = (function() {
     function startVolumeLoop() {
         var bars = document.querySelectorAll('#speakVolumeMeter .vol-bar');
         if (!bars.length) return;
-
         var meter = $('speakVolumeMeter');
         meter.classList.add('active');
-
         volumeSamples = [];
-
         function loop() {
             if (!analyser) return;
-
             var bufferLength = analyser.fftSize;
             var dataArray = new Uint8Array(bufferLength);
             analyser.getByteTimeDomainData(dataArray);
-
             var sum = 0;
             for (var i = 0; i < bufferLength; i++) {
                 var v = (dataArray[i] - 128) / 128;
                 sum += v * v;
             }
             var rms = Math.sqrt(sum / bufferLength);
-
             volumeSamples.push(rms);
-
             var center = (bars.length - 1) / 2;
             bars.forEach(function(bar, i) {
                 var dist = Math.abs(i - center) / center;
@@ -4578,10 +4421,8 @@ var Speaking = (function() {
                 var height = 6 + intensity * 36;
                 bar.style.height = height + 'px';
             });
-
             volumeRafId = requestAnimationFrame(loop);
         }
-
         volumeRafId = requestAnimationFrame(loop);
     }
 
@@ -4598,19 +4439,16 @@ var Speaking = (function() {
 
     function startRecording() {
         if (isRecording) return;
-
         if (!isSupported()) {
             $('speakPermissionWarn').style.display = 'block';
             $('speakPermissionWarn').textContent = '⚠️ 当前浏览器不支持录音功能，请使用 Chrome / Edge / Firefox 最新版本。';
             return;
         }
-
         navigator.mediaDevices.getUserMedia({ audio: true })
             .then(function(stream) {
                 mediaStream = stream;
                 audioChunks = [];
                 volumeSamples = [];
-
                 var mimeType = '';
                 if (MediaRecorder.isTypeSupported('audio/webm;codecs=opus')) {
                     mimeType = 'audio/webm;codecs=opus';
@@ -4619,7 +4457,6 @@ var Speaking = (function() {
                 } else if (MediaRecorder.isTypeSupported('audio/mp4')) {
                     mimeType = 'audio/mp4';
                 }
-
                 try {
                     mediaRecorder = mimeType
                         ? new MediaRecorder(stream, { mimeType: mimeType })
@@ -4627,30 +4464,23 @@ var Speaking = (function() {
                 } catch (e) {
                     mediaRecorder = new MediaRecorder(stream);
                 }
-
                 mediaRecorder.ondataavailable = function(e) {
                     if (e.data && e.data.size > 0) {
                         audioChunks.push(e.data);
                     }
                 };
-
                 mediaRecorder.onstop = function() {
                     if (audioChunks.length === 0) return;
                     recordedBlob = new Blob(audioChunks, { type: audioChunks[0].type || 'audio/webm' });
-
                     if (recordedUrl) URL.revokeObjectURL(recordedUrl);
                     recordedUrl = URL.createObjectURL(recordedBlob);
-
                     recordDuration = (performance.now() - recordStartTime) / 1000;
-
                     $('speakPlaybackRow').style.display = 'flex';
                     $('speakSubmitArea').style.display = 'flex';
                     $('speakMicStatus').textContent = '✓ 录音完成（' + recordDuration.toFixed(1) + ' 秒）';
                     $('speakMicStatus').classList.remove('recording');
-
                     hasRecorded = true;
                 };
-
                 try {
                     audioCtx = new (window.AudioContext || window.webkitAudioContext)();
                     analyser = audioCtx.createAnalyser();
@@ -4660,23 +4490,18 @@ var Speaking = (function() {
                 } catch (e) {
                     console.warn('AudioContext 初始化失败', e);
                 }
-
                 mediaRecorder.start();
                 isRecording = true;
                 recordStartTime = performance.now();
-
                 var micBtn = $('speakMicBtn');
                 micBtn.classList.add('recording');
                 micBtn.textContent = '⏹';
-
                 var status = $('speakMicStatus');
                 status.textContent = '● 正在录音... 点击麦克风停止';
                 status.classList.add('recording');
-
                 $('speakPlaybackRow').style.display = 'none';
                 $('speakSubmitArea').style.display = 'none';
                 $('speakResult').classList.remove('on');
-
                 buildVolumeMeter();
                 startVolumeLoop();
             })
@@ -4689,28 +4514,21 @@ var Speaking = (function() {
 
     function stopRecording() {
         if (!isRecording) return;
-
         if (mediaRecorder && mediaRecorder.state !== 'inactive') {
             mediaRecorder.stop();
         }
-
         if (mediaStream) {
             mediaStream.getTracks().forEach(function(t) { t.stop(); });
             mediaStream = null;
         }
-
         if (audioCtx) {
             try { audioCtx.close(); } catch (e) {}
             audioCtx = null;
         }
-
         analyser = null;
         sourceNode = null;
-
         stopVolumeLoop();
-
         isRecording = false;
-
         var micBtn = $('speakMicBtn');
         micBtn.classList.remove('recording');
         micBtn.textContent = '🎤';
@@ -4718,7 +4536,6 @@ var Speaking = (function() {
 
     function playRecording() {
         if (!recordedUrl) return;
-
         if (isPlayingBack && playbackAudio) {
             playbackAudio.pause();
             playbackAudio.currentTime = 0;
@@ -4727,11 +4544,9 @@ var Speaking = (function() {
             $('speakPlaybackBtn').textContent = '▶ 听我的录音';
             return;
         }
-
         if (playbackAudio) {
             playbackAudio.pause();
         }
-
         playbackAudio = new Audio(recordedUrl);
         playbackAudio.onended = function() {
             isPlayingBack = false;
@@ -4749,41 +4564,32 @@ var Speaking = (function() {
         var deg = (score.total / 100) * 360;
         ring.style.setProperty('--p', deg + 'deg');
         $('speakTotalScore').textContent = score.total;
-
         var rating = scoreToRating(score.total);
         var label = $('speakRatingLabel');
         label.textContent = rating.label;
         label.className = 'speak-rating-label ' + rating.cls;
-
         setTimeout(function() {
             $('dimAccuracy').style.width = score.accuracy + '%';
             $('dimFluency').style.width = score.fluency + '%';
             $('dimCompleteness').style.width = score.completeness + '%';
         }, 100);
-
         $('dimAccuracyScore').textContent = score.accuracy;
         $('dimFluencyScore').textContent = score.fluency;
         $('dimCompletenessScore').textContent = score.completeness;
-
         $('speakTipsText').textContent = generateTips(score);
-
         $('speakResult').classList.add('on');
     }
 
     function submitScore() {
         if (!hasRecorded || !currentData) return;
-
         var estimatedDuration = estimateStandardDuration(currentData.en);
         var score = calculateScore(recordDuration, estimatedDuration, volumeSamples);
-
         var isCorrect = score.total >= 70;
         JYStore.addRecord({
-            en: currentData.en,
-            cn: currentData.cn,
+            en: currentData.en, cn: currentData.cn,
             mode: 'speaking',
             correct: isCorrect
         });
-
         state.totalAnswered++;
         if (isCorrect) {
             state.correctCount++;
@@ -4793,7 +4599,6 @@ var Speaking = (function() {
             state.combo = 0;
         }
         updateTopbar();
-
         showScore(score);
     }
 
@@ -4805,13 +4610,11 @@ var Speaking = (function() {
         recordedBlob = null;
         hasRecorded = false;
         recordDuration = 0;
-
         $('speakPlaybackRow').style.display = 'none';
         $('speakSubmitArea').style.display = 'none';
         $('speakResult').classList.remove('on');
         $('speakMicStatus').textContent = '点击麦克风开始录音';
         $('speakMicStatus').classList.remove('recording');
-
         $('dimAccuracy').style.width = '0%';
         $('dimFluency').style.width = '0%';
         $('dimCompleteness').style.width = '0%';
@@ -4829,13 +4632,10 @@ var Speaking = (function() {
     function enter() {
         currentData = QUESTION_BANK[state.currentIndex];
         if (!currentData) return;
-
         $('speakEn').textContent = currentData.en;
         $('speakPhonetic').textContent = currentData.phonetic || '';
         $('speakCn').textContent = currentData.cn;
-
         retake();
-
         if ('speechSynthesis' in window) window.speechSynthesis.cancel();
         if (playbackAudio) {
             playbackAudio.pause();
@@ -4844,9 +4644,7 @@ var Speaking = (function() {
     }
 
     function stop() {
-        if (isRecording) {
-            stopRecording();
-        }
+        if (isRecording) stopRecording();
         if ('speechSynthesis' in window) window.speechSynthesis.cancel();
         if (playbackAudio) {
             playbackAudio.pause();
@@ -4861,7 +4659,6 @@ var Speaking = (function() {
 
     function init() {
         $('speakDemoBtn').addEventListener('click', playDemo);
-
         $('speakMicBtn').addEventListener('click', function() {
             if (isRecording) {
                 stopRecording();
@@ -4869,7 +4666,6 @@ var Speaking = (function() {
                 startRecording();
             }
         });
-
         $('speakPlaybackBtn').addEventListener('click', playRecording);
         $('speakRetakeBtn').addEventListener('click', retake);
         $('speakSubmitBtn').addEventListener('click', submitScore);
@@ -4887,7 +4683,7 @@ var Speaking = (function() {
 Speaking.init();
 
 /* ============================================================
-   ★★★ 视频观看（逐句精听）★ 已修复 null 检查
+   视频观看（逐句精听）
    ============================================================ */
 var VideoMode = (function() {
     var currentData = null;
@@ -4899,7 +4695,6 @@ var VideoMode = (function() {
     var playToken = 0;
     var isEntered = false;
     var videoLoadFailed = false;
-
     var PROGRESS_KEY = 'juyou_video_progress';
 
     function $(id) { return document.getElementById(id); }
@@ -4918,15 +4713,11 @@ var VideoMode = (function() {
     }
 
     function saveProgress() {
-        try {
-            localStorage.setItem(PROGRESS_KEY, JSON.stringify(completedSet));
-        } catch (e) {}
+        try { localStorage.setItem(PROGRESS_KEY, JSON.stringify(completedSet)); } catch (e) {}
     }
 
     function updateProgressText() {
-        // ★ 加 null 检查
         if (!currentData || !currentData.sentences) return;
-
         var total = currentData.sentences.length;
         var done = 0;
         for (var k in completedSet) {
@@ -4944,17 +4735,13 @@ var VideoMode = (function() {
     }
 
     function updateCurrentCard() {
-        // ★ 加 null 检查
         if (!currentData || !currentData.sentences) return;
-
         var s = currentData.sentences[currentIndex];
         if (!s) return;
-
         $('videoCurrentLabel').textContent = '第 ' + (currentIndex + 1) + ' 句';
         $('videoCurrentEn').textContent = s.en;
         $('videoCurrentPhonetic').textContent = s.phonetic || '';
         $('videoCurrentCn').textContent = s.cn;
-
         var card = $('videoCurrentCard');
         var doneBtn = $('videoDoneBtn');
         if (completedSet[currentIndex]) {
@@ -4966,25 +4753,20 @@ var VideoMode = (function() {
             doneBtn.classList.remove('done');
             doneBtn.textContent = '✓ 标记完成';
         }
-
         var overlay = $('videoOverlaySubtitle');
         overlay.textContent = s.en;
         overlay.classList.add('on');
     }
 
     function updateSentList() {
-        // ★ 加 null 检查
         if (!currentData || !currentData.sentences) return;
-
         var list = $('videoSentList');
         if (!list) return;
-
         var html = '';
         currentData.sentences.forEach(function(s, i) {
             var cls = 'video-sent-item';
             if (i === currentIndex) cls += ' on';
             if (completedSet[i]) cls += ' done';
-
             html +=
                 '<div class="' + cls + '" data-index="' + i + '">' +
                     '<div class="video-sent-num">' + (i + 1) + '</div>' +
@@ -4998,11 +4780,9 @@ var VideoMode = (function() {
         list.innerHTML = html;
     }
 
-    /* ★ 修复：加 null 检查 */
     function updateTimeDisplay() {
         var el = $('videoTimeDisplay');
         if (!el) return;
-
         if (!currentData || !currentData.sentences || currentIndex >= currentData.sentences.length) {
             el.textContent = '00:00 / 00:15';
             return;
@@ -5017,11 +4797,9 @@ var VideoMode = (function() {
         el.textContent = formatSeconds(cur) + ' / ' + formatSeconds(dur);
     }
 
-    /* ★ 修复：加 null 检查 */
     function updateProgressBar() {
         var el = $('videoProgressFill');
         if (!el) return;
-
         if (!videoEl || videoLoadFailed) return;
         var dur = videoEl.duration || 15;
         var cur = videoEl.currentTime || 0;
@@ -5029,12 +4807,10 @@ var VideoMode = (function() {
         el.style.width = pct + '%';
     }
 
-    /* ★ 修复：加 null 检查 */
     function showFallback() {
         videoLoadFailed = true;
         var fb = $('videoFallback');
         if (fb) fb.classList.add('on');
-        // 只有在 currentData 已就绪时才更新时间显示
         if (currentData && currentData.sentences) {
             updateTimeDisplay();
         }
@@ -5043,19 +4819,14 @@ var VideoMode = (function() {
     function goToSentence(index, autoPlay) {
         if (!currentData || !currentData.sentences) return;
         if (index < 0 || index >= currentData.sentences.length) return;
-
         currentIndex = index;
         var s = currentData.sentences[index];
-
         stopSegment();
-
         if (videoEl && !videoLoadFailed) {
             try { videoEl.currentTime = s.start; } catch (e) {}
         }
-
         updateCurrentCard();
         updateSentList();
-
         if (autoPlay) {
             playSegment();
         }
@@ -5065,16 +4836,12 @@ var VideoMode = (function() {
         if (!currentData || !currentData.sentences) return;
         var s = currentData.sentences[currentIndex];
         if (!s) return;
-
         stopSegment();
         playToken++;
         var myToken = playToken;
-
         if (videoEl && !videoLoadFailed) {
             try { videoEl.currentTime = s.start; } catch (e) {}
         }
-
-        // 朗读句子（核心功能）
         if ('speechSynthesis' in window) {
             window.speechSynthesis.cancel();
             setTimeout(function() {
@@ -5085,14 +4852,12 @@ var VideoMode = (function() {
                 window.speechSynthesis.speak(u);
             }, 100);
         }
-
         if (videoEl && !videoLoadFailed) {
             var playPromise = videoEl.play();
             if (playPromise && playPromise.catch) {
                 playPromise.catch(function() {});
             }
             isPlayingSegment = true;
-
             function check() {
                 if (myToken !== playToken) return;
                 if (!videoEl) return;
@@ -5129,26 +4894,20 @@ var VideoMode = (function() {
     function markCompleted(index) {
         if (!currentData || !currentData.sentences) return;
         if (completedSet[index]) return;
-
         completedSet[index] = true;
         saveProgress();
-
         var s = currentData.sentences[index];
         if (s) {
             JYStore.addRecord({
-                en: s.en,
-                cn: s.cn,
+                en: s.en, cn: s.cn,
                 mode: 'video',
                 correct: true
             });
         }
-
         updateProgressText();
         updateCurrentCard();
         updateSentList();
-
         showFeedback(true, '完成一句！', '继续下一句吧');
-
         var total = currentData.sentences.length;
         var done = 0;
         for (var k in completedSet) {
@@ -5179,7 +4938,6 @@ var VideoMode = (function() {
         if (!currentData || !currentData.sentences) return;
         var s = currentData.sentences[currentIndex];
         if (!s) return;
-
         var words = s.en.match(/[A-Za-z][A-Za-z.''-]*/g) || [];
         var added = 0;
         words.forEach(function(w) {
@@ -5192,7 +4950,6 @@ var VideoMode = (function() {
                 }
             }
         });
-
         if (added > 0) {
             showFeedback(true, '已加入生词本', '本句新增 ' + added + ' 个生词');
         } else {
@@ -5202,18 +4959,15 @@ var VideoMode = (function() {
 
     function bindVideoEvents() {
         if (!videoEl) return;
-
         videoEl.addEventListener('error', function() {
             console.warn('[Video] 视频加载失败，切换到兜底显示');
             showFallback();
         });
-
         videoEl.addEventListener('timeupdate', function() {
             if (videoLoadFailed) return;
             if (!currentData || !currentData.sentences) return;
             updateTimeDisplay();
             updateProgressBar();
-
             if (!isPlayingSegment) {
                 var t = videoEl.currentTime;
                 var sents = currentData.sentences;
@@ -5229,7 +4983,6 @@ var VideoMode = (function() {
                 }
             }
         });
-
         videoEl.addEventListener('loadedmetadata', function() {
             videoLoadFailed = false;
             var fb = $('videoFallback');
@@ -5237,7 +4990,6 @@ var VideoMode = (function() {
             updateTimeDisplay();
             updateProgressBar();
         });
-
         videoEl.addEventListener('ended', function() {
             isPlayingSegment = false;
         });
@@ -5258,18 +5010,14 @@ var VideoMode = (function() {
 
     function init() {
         videoEl = $('videoEl');
-
         if (videoEl) {
             videoEl.src = VIDEO_DATA.videoUrl;
-
-            // 4 秒超时：4 秒内没有 loadedmetadata 就当加载失败
             var loadTimeout = setTimeout(function() {
                 if (!videoLoadFailed && videoEl && videoEl.readyState < 1) {
                     console.warn('[Video] 加载超时，切换到兜底显示');
                     showFallback();
                 }
             }, 4000);
-
             videoEl.addEventListener('loadedmetadata', function() {
                 clearTimeout(loadTimeout);
                 videoLoadFailed = false;
@@ -5277,7 +5025,6 @@ var VideoMode = (function() {
                 if (fb) fb.classList.remove('on');
             });
         }
-
         $('videoPlayBtn').addEventListener('click', function() {
             if (isPlayingSegment) {
                 stopSegment();
@@ -5285,7 +5032,6 @@ var VideoMode = (function() {
                 playSegment();
             }
         });
-
         $('videoPrevBtn').addEventListener('click', prevSentence);
         $('videoNextBtn').addEventListener('click', nextSentence);
         $('videoSpeakBtn').addEventListener('click', function() {
@@ -5300,7 +5046,6 @@ var VideoMode = (function() {
                 window.speechSynthesis.speak(u);
             }
         });
-
         $('videoDoneBtn').addEventListener('click', function() {
             if (!currentData || !currentData.sentences) return;
             if (completedSet[currentIndex]) {
@@ -5313,9 +5058,7 @@ var VideoMode = (function() {
                 markCompleted(currentIndex);
             }
         });
-
         $('videoAddWordBtn').addEventListener('click', addCurrentWordsToBook);
-
         $('videoSentList').addEventListener('click', function(e) {
             var playBtn = e.target.closest('.video-sent-play');
             if (playBtn) {
@@ -5326,7 +5069,6 @@ var VideoMode = (function() {
                 }
                 return;
             }
-
             var item = e.target.closest('.video-sent-item');
             if (!item) return;
             var idx = parseInt(item.getAttribute('data-index'));
@@ -5334,7 +5076,6 @@ var VideoMode = (function() {
                 goToSentence(idx, true);
             }
         });
-
         bindVideoEvents();
         initProgressBar();
     }
@@ -5345,21 +5086,17 @@ var VideoMode = (function() {
         }
         loadProgress();
         isEntered = true;
-
         $('videoTitle').textContent = VIDEO_DATA.title;
-
         if (videoEl && !videoEl.src) {
             videoEl.src = VIDEO_DATA.videoUrl;
         }
-
         currentIndex = 0;
         updateCurrentCard();
         updateSentList();
         updateProgressText();
         updateTimeDisplay();
         updateProgressBar();
-
-        if (videoEl && !videoLoadFailed) {
+        if (videoEl && !videoLoadFailed && currentData.sentences.length > 0) {
             try { videoEl.currentTime = currentData.sentences[0].start; } catch (e) {}
         }
     }
@@ -5391,24 +5128,19 @@ VideoMode.init();
         speaking: document.getElementById('panel-speaking'),
         video: document.getElementById('panel-video')
     };
-
     modeBtns.forEach(function(btn) {
         btn.addEventListener('click', function(e) {
             e.stopPropagation();
             modeBtns.forEach(function(b) { b.classList.remove('on'); });
             this.classList.add('on');
-
             var mode = this.getAttribute('data-mode');
-
             Listening.stop();
             Speaking.stop();
             VideoMode.stop();
             if ('speechSynthesis' in window) window.speechSynthesis.cancel();
-
             ['read', 'translate', 'listening', 'speaking', 'video'].forEach(function(k) {
                 if (panels[k]) panels[k].style.display = 'none';
             });
-
             if (mode === 'dictation') {
                 Dictation.enter();
             } else if (mode === 'listening') {
@@ -5426,7 +5158,6 @@ VideoMode.init();
                         panels[key].style.display = (key === mode) ? 'block' : 'none';
                     }
                 });
-
                 var q = QUESTION_BANK[state.currentIndex];
                 if (q) {
                     if (mode === 'read') {
@@ -5448,7 +5179,6 @@ VideoMode.init();
             window.location.href = href;
         });
     });
-
     document.querySelectorAll('[data-tip]').forEach(function(el) {
         el.addEventListener('click', function(e) {
             e.stopPropagation();
