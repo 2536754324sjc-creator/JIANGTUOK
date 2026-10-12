@@ -1773,7 +1773,55 @@
             letter-spacing: 1px;
         }
 
-        .dictation-main {
+                /* ============================================================
+           辅助听写开关
+           ============================================================ */
+        .assist-toggle-wrap {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-left: 16px;
+            user-select: none;
+        }
+        .assist-label {
+            font-size: 12px;
+            color: #6b7280;
+            letter-spacing: 1px;
+        }
+        .assist-switch {
+            width: 40px;
+            height: 22px;
+            border-radius: 11px;
+            background: #1f1f2a;
+            border: 1px solid #33333f;
+            position: relative;
+            cursor: pointer;
+            transition: background 0.25s, box-shadow 0.25s, border-color 0.25s;
+            flex-shrink: 0;
+        }
+        .assist-knob {
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #4a4a58;
+            transition: transform 0.25s ease, background 0.25s ease, box-shadow 0.25s ease;
+        }
+        .assist-switch.on {
+            background: linear-gradient(135deg, #0ea5e9, #0284c7);
+            border-color: #0ea5e9;
+            box-shadow:
+                0 0 10px rgba(14, 165, 233, 0.65),
+                0 0 3px rgba(14, 165, 233, 0.9);
+        }
+        .assist-switch.on .assist-knob {
+            transform: translateX(20px);
+            background: #ffffff;
+            box-shadow: 0 0 6px rgba(255, 255, 255, 0.85);
+        }
+.dictation-main {
             position: absolute;
             top: 50%;
             left: 50%;
@@ -3567,6 +3615,54 @@ var Dictation = (function() {
     var waveRafId = null;
     var playToken = 0;
 
+    /* ---------- 辅助听写：开关状态 ---------- */
+    var assistEnabled = true;
+    try {
+        var savedAssist = localStorage.getItem('juyou_assist_dictation');
+        if (savedAssist === '0') assistEnabled = false;
+    } catch (e) {}
+
+    /* ---------- 辅助听写：错误计数 ---------- */
+    var errorCountMap = {};
+    var lastWrongValueMap = {};
+
+    function updateAssistSwitchUI() {
+        var el = panel.querySelector('#assistSwitch');
+        if (!el) return;
+        if (assistEnabled) el.classList.add('on');
+        else el.classList.remove('on');
+    }
+
+    function toggleAssist() {
+        assistEnabled = !assistEnabled;
+        try {
+            localStorage.setItem('juyou_assist_dictation', assistEnabled ? '1' : '0');
+        } catch (e) {}
+        updateAssistSwitchUI();
+    }
+
+    function resetErrorCount(idx) {
+        errorCountMap[idx] = 0;
+        lastWrongValueMap[idx] = null;
+    }
+
+    function checkWordError(idx, input) {
+        if (!assistEnabled) return;
+        var val = normalize(input.value);
+        if (!val) return;
+        if (lastWrongValueMap[idx] === val) return;
+        lastWrongValueMap[idx] = val;
+        errorCountMap[idx] = (errorCountMap[idx] || 0) + 1;
+        if (errorCountMap[idx] >= 5) {
+            errorCountMap[idx] = 0;
+            lastWrongValueMap[idx] = null;
+            var correctWord = currentData.words[idx];
+            setTimeout(function() {
+                alert('这个词已经连续拼错 5 次了\n\n正确答案：' + correctWord);
+            }, 700);
+        }
+    }
+
     function buildWaveform() {
         var wave = document.getElementById('waveform');
         if (!wave) return;
@@ -3600,10 +3696,18 @@ var Dictation = (function() {
     function render() {
         currentData = DICTATION_DATA[dictationState.index];
         if (!currentData) return;
+
+        errorCountMap = {};
+        lastWrongValueMap = {};
+
         panel.innerHTML = [
             '<div class="dictation-topbar">',
                 '<button class="d-exit-btn" id="dExit">← 退出听写</button>',
                 '<span class="d-progress-text">' + (dictationState.index + 1) + ' / ' + DICTATION_DATA.length + '</span>',
+                '<div class="assist-toggle-wrap">',
+                    '<span class="assist-label">辅助听写</span>',
+                    '<div class="assist-switch" id="assistSwitch"><div class="assist-knob"></div></div>',
+                '</div>',
             '</div>',
             '<div class="grammar-popup" id="grammarPopup">',
                 '<div class="grammar-parts">',
@@ -3666,7 +3770,19 @@ var Dictation = (function() {
             starBtn.classList.add('starred');
             starBtn.textContent = '★';
         }
+
+        panel.querySelector('#assistSwitch').addEventListener('click', toggleAssist);
+        updateAssistSwitchUI();
+
         panel.classList.add('fullscreen');
+
+        if (inputs.length > 0) {
+            setTimeout(function() {
+                inputs[0].focus();
+                var v = inputs[0].value || '';
+                inputs[0].setSelectionRange(v.length, v.length);
+            }, 60);
+        }
     }
 
     function onInput(e) {
@@ -3680,10 +3796,12 @@ var Dictation = (function() {
         if (userValue === correctValue) {
             input.classList.add('correct');
             input.classList.remove('error', 'wrong');
+            resetErrorCount(idx);
         } else {
             input.classList.remove('correct');
             if (!input.value.trim()) {
                 input.classList.remove('error', 'wrong');
+                resetErrorCount(idx);
             }
         }
     }
@@ -3702,6 +3820,7 @@ var Dictation = (function() {
                 input.classList.remove('wrong');
                 input.classList.add('error');
             }, 600);
+            checkWordError(idx, input);
         }
     }
 
@@ -3727,10 +3846,53 @@ var Dictation = (function() {
     function onKeyDown(e) {
         var input = e.target;
         var idx = parseInt(input.getAttribute('data-index'));
-        if (e.key === ' ' || e.key === 'Enter') {
+
+        if (e.key === 'Tab') {
             e.preventDefault();
-            jumpNext(input, idx);
+            toggleGrammar();
+            return;
         }
+
+        if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            if (dictationState.index === 0) {
+                showFeedback(true, '已经是第一句', '前面没有更多句子了');
+                return;
+            }
+            goPrev();
+            return;
+        }
+
+        if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            if (dictationState.index === DICTATION_DATA.length - 1) {
+                showFeedback(true, '已经是最后一句', '后面没有更多句子了');
+                return;
+            }
+            goNext();
+            return;
+        }
+
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            if (idx === inputs.length - 1) {
+                goNext();
+            }
+            return;
+        }
+
+        if (e.key === ' ') {
+            var cw = currentData.words[idx];
+            var hasSpace = /\s/.test(cw);
+            var uv = normalize(input.value);
+            var cv = normalize(cw);
+            if (!hasSpace || uv === cv || !input.value.trim()) {
+                e.preventDefault();
+                jumpNext(input, idx);
+            }
+            return;
+        }
+
         if (e.key === 'Backspace' && !input.value) {
             e.preventDefault();
             if (idx > 0) {
@@ -3749,6 +3911,7 @@ var Dictation = (function() {
         if (userValue === correctValue) {
             input.classList.add('correct');
             input.classList.remove('error', 'wrong');
+            resetErrorCount(idx);
             if (idx < inputs.length - 1) {
                 inputs[idx + 1].focus();
                 setTimeout(function() {
@@ -3761,6 +3924,7 @@ var Dictation = (function() {
                 input.classList.remove('wrong');
                 input.classList.add('error');
             }, 600);
+            checkWordError(idx, input);
         } else {
             if (idx < inputs.length - 1) {
                 inputs[idx + 1].focus();
@@ -3914,7 +4078,6 @@ var Dictation = (function() {
         exit: exitFullscreen
     };
 })();
-
 /* ============================================================
    听力模式（三阶段：盲听 → 慢听 → 字幕）
    ============================================================ */
