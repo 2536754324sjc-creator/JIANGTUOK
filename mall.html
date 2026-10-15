@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>句游英语 - 课程包商城</title>
-
+    <script src="juyou-sync.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -164,6 +164,19 @@
             gap: 16px;
         }
 
+        .streak-pill {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            background: #fff5f0;
+            border: 1px solid #ffe3d3;
+            border-radius: 20px;
+            padding: 6px 14px;
+            font-size: 13px;
+            font-weight: 700;
+            color: #ff6b35;
+        }
+
         .topbar-icon-btn {
             width: 38px;
             height: 38px;
@@ -206,9 +219,14 @@
             flex-shrink: 0;
         }
 
+        /* ============================================================
+           内容区
+           ============================================================ */
         .content-scroll { padding: 24px 28px 40px; }
 
-        .page-header { margin-bottom: 24px; }
+        .page-header {
+            margin-bottom: 20px;
+        }
 
         .page-header .page-title {
             font-size: 24px;
@@ -222,105 +240,49 @@
             color: var(--text-mute);
         }
 
-        .main-tabs {
+        /* 分类 chips */
+        .categories {
             display: flex;
-            gap: 6px;
-            background: #fff;
-            border-radius: 14px;
-            padding: 6px;
+            gap: 8px;
+            flex-wrap: wrap;
             margin-bottom: 20px;
-            width: fit-content;
-            box-shadow: 0 2px 12px rgba(20, 40, 90, 0.04);
         }
 
-        .main-tabs .main-tab {
-            padding: 10px 22px;
-            border-radius: 10px;
+        .cat-chip {
+            padding: 9px 20px;
+            border-radius: 22px;
             font-size: 14px;
-            color: var(--text-sub);
-            cursor: pointer;
-            transition: background 0.2s, color 0.2s;
             font-weight: 600;
+            color: var(--text-sub);
+            background: #ffffff;
+            border: 1px solid var(--border);
+            cursor: pointer;
+            transition: all 0.2s;
             white-space: nowrap;
+            user-select: none;
         }
 
-        .main-tabs .main-tab:hover { background: #f4f6fc; }
+        .cat-chip:hover {
+            border-color: #c9d4f5;
+            color: var(--brand);
+        }
 
-        .main-tabs .main-tab.on {
+        .cat-chip.on {
             background: linear-gradient(135deg, #4f6ef7, #6b8aff);
             color: #fff;
+            border-color: transparent;
+            box-shadow: 0 4px 12px rgba(79, 110, 247, 0.3);
         }
 
-        .filter-bar {
-            background: #fff;
-            border-radius: 14px;
-            padding: 18px 20px;
-            margin-bottom: 20px;
-            box-shadow: 0 2px 12px rgba(20, 40, 90, 0.04);
-        }
-
-        .filter-row {
-            display: flex;
-            align-items: flex-start;
-            gap: 14px;
-            margin-bottom: 14px;
-        }
-
-        .filter-row:last-child { margin-bottom: 0; }
-
-        .filter-label {
-            width: 60px;
-            flex-shrink: 0;
-            font-size: 13px;
-            color: var(--text-mute);
-            padding-top: 5px;
-        }
-
-        .filter-options {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-        }
-
-        .filter-chip {
-            padding: 5px 14px;
-            border-radius: 8px;
-            font-size: 13px;
-            color: var(--text-sub);
-            cursor: pointer;
-            transition: background 0.2s, color 0.2s;
-            background: #f4f6fc;
-        }
-
-        .filter-chip:hover { background: #e9edfa; color: var(--brand); }
-        .filter-chip.on { background: var(--brand); color: #fff; }
-
-        .course-list-head {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 16px;
-        }
-
-        .course-list-head .list-title {
-            font-size: 16px;
-            font-weight: 700;
-            color: var(--text-main);
-        }
-
-        .course-list-head .list-count {
-            font-size: 13px;
-            color: var(--text-mute);
-        }
-
+        /* 课程网格 */
         .course-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-            gap: 18px;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 20px;
         }
 
         .course-card {
-            background: #fff;
+            background: #ffffff;
             border-radius: 16px;
             overflow: hidden;
             cursor: pointer;
@@ -337,208 +299,72 @@
 
         .course-cover {
             width: 100%;
-            height: 130px;
-            background: linear-gradient(135deg, #eef2ff, #dfe7ff);
+            aspect-ratio: 1 / 1;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 44px;
+            font-size: 72px;
             position: relative;
+            overflow: hidden;
         }
 
-        .cover-badge {
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            background: rgba(79, 110, 247, 0.9);
-            color: #fff;
-            font-size: 11px;
-            font-weight: 600;
-            padding: 3px 9px;
-            border-radius: 6px;
-        }
-
-        .cover-badge.free { background: rgba(34, 160, 107, 0.9); }
+        .cover-grad-1 { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); }
+        .cover-grad-2 { background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); }
+        .cover-grad-3 { background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); }
+        .cover-grad-4 { background: linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%); }
+        .cover-grad-5 { background: linear-gradient(135deg, #f6d365 0%, #fda085 100%); }
+        .cover-grad-6 { background: linear-gradient(135deg, #5ee7df 0%, #b490ca 100%); }
+        .cover-grad-7 { background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%); }
+        .cover-grad-8 { background: linear-gradient(135deg, #84fab0 0%, #8fd3f4 100%); }
 
         .course-body {
-            padding: 16px;
-            flex: 1;
+            padding: 14px 16px 16px;
             display: flex;
             flex-direction: column;
+            flex: 1;
         }
 
-        .course-body .course-name {
+        .course-title {
             font-size: 15px;
             font-weight: 700;
             color: var(--text-main);
             line-height: 1.4;
-            margin-bottom: 8px;
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-        }
-
-        .course-body .course-desc {
-            font-size: 12px;
-            color: var(--text-mute);
-            line-height: 1.5;
             margin-bottom: 12px;
             display: -webkit-box;
             -webkit-line-clamp: 2;
             -webkit-box-orient: vertical;
             overflow: hidden;
-            flex: 1;
+            min-height: 42px;
         }
 
-        .course-footer {
+        .course-meta {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            border-top: 1px solid var(--border);
-            padding-top: 12px;
+            font-size: 12px;
+            gap: 8px;
             margin-top: auto;
         }
 
-        .course-footer .course-author {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            font-size: 12px;
-            color: var(--text-sub);
-        }
-
-        .course-footer .author-avatar {
-            width: 22px;
-            height: 22px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #dfe7ff, #c9d4f5);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 10px;
-        }
-
-        .course-footer .course-learners {
-            font-size: 12px;
-            color: var(--text-mute);
-        }
-
-        .course-tags {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 6px;
-            margin-bottom: 12px;
-        }
-
-        .course-tags .tag {
-            font-size: 11px;
-            color: var(--brand);
-            background: #eef2ff;
-            border-radius: 6px;
-            padding: 3px 8px;
-        }
-
-        .request-section {
-            background: #fff;
-            border-radius: 16px;
-            padding: 28px;
-            box-shadow: 0 2px 12px rgba(20, 40, 90, 0.04);
-        }
-
-        .request-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
-            gap: 12px;
-        }
-
-        .request-header .req-title {
-            font-size: 18px;
-            font-weight: 700;
-            color: var(--text-main);
-        }
-
-        .request-header .req-sub {
-            font-size: 13px;
-            color: var(--text-mute);
-            margin-top: 4px;
-        }
-
-        .btn-primary {
-            background: linear-gradient(135deg, #4f6ef7, #6b8aff);
-            color: #fff;
-            border: none;
-            border-radius: 10px;
-            padding: 10px 22px;
-            font-size: 14px;
+        .course-level {
+            color: #16a34a;
             font-weight: 600;
-            cursor: pointer;
-            transition: opacity 0.2s, transform 0.1s;
+            padding: 3px 10px;
+            background: #ecfdf5;
+            border-radius: 6px;
             white-space: nowrap;
         }
 
-        .btn-primary:hover { opacity: 0.9; }
-        .btn-primary:active { transform: scale(0.98); }
-
-        .request-item {
-            display: flex;
-            align-items: center;
-            gap: 16px;
-            padding: 16px 0;
-            border-bottom: 1px solid var(--border);
-        }
-
-        .request-item:last-child {
-            border-bottom: none;
-            padding-bottom: 0;
-        }
-
-        .request-item .req-emoji {
-            width: 46px;
-            height: 46px;
-            border-radius: 12px;
-            background: #f8faff;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 22px;
-            flex-shrink: 0;
-        }
-
-        .request-item .req-body { flex: 1; min-width: 0; }
-
-        .request-item .req-name {
-            font-size: 14px;
-            font-weight: 600;
-            color: var(--text-main);
-            margin-bottom: 4px;
-        }
-
-        .request-item .req-meta {
-            font-size: 12px;
+        .course-learners {
             color: var(--text-mute);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
-        .request-item .req-votes {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            font-size: 13px;
-            color: var(--brand);
-            font-weight: 600;
-            flex-shrink: 0;
-            cursor: pointer;
-            background: #eef2ff;
-            border-radius: 10px;
-            padding: 6px 14px;
-            transition: background 0.2s;
-        }
-
-        .request-item .req-votes:hover { background: #dfe7ff; }
-
+        /* ============================================================
+           响应式
+           ============================================================ */
         @media (max-width: 1100px) {
             .course-grid { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); }
         }
@@ -554,14 +380,14 @@
             .content-scroll { padding: 16px 14px 32px; }
             .topbar { padding: 12px 14px; }
             .page-header .page-title { font-size: 20px; }
-            .main-tabs { width: 100%; overflow-x: auto; }
-            .filter-row { flex-direction: column; gap: 6px; }
-            .filter-label { width: auto; padding-top: 0; }
-            .course-grid { grid-template-columns: 1fr 1fr; }
+            .course-grid {
+                grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+                gap: 12px;
+            }
+            .course-cover { font-size: 52px; }
+            .course-title { font-size: 14px; min-height: 38px; }
         }
     </style>
-        <!-- 云端同步模块 -->
-    <script src="juyou-sync.js"></script>
 </head>
 <body>
 
@@ -653,417 +479,41 @@
         <header class="topbar">
             <div class="search-box">
                 <span>🔍</span>
-                <input type="text" placeholder="搜索课程包、单词、句子...">
+                <input type="text" id="searchInput" placeholder="搜索课程包...">
             </div>
 
             <div class="topbar-right">
+                <div class="streak-pill">
+                    <span>🔥</span>
+                    <span id="streakText">0 天</span>
+                </div>
                 <div class="topbar-icon-btn" data-tip="通知中心（后续步骤实现）">
                     🔔
                     <span class="badge-dot"></span>
                 </div>
                 <div class="topbar-icon-btn" data-tip="帮助中心（后续步骤实现）">❓</div>
-                <div class="user-avatar" data-href="profile.html">学</div>
+                <div class="user-avatar" id="userAvatar" data-href="profile.html">学</div>
             </div>
         </header>
 
         <div class="content-scroll">
 
             <div class="page-header">
-                <div class="page-title">课程包商城</div>
+                <div class="page-title">课程商城</div>
                 <div class="page-desc">近千个优质课程包，覆盖零基础、中小学、备考、实用英语等场景</div>
             </div>
 
-            <div class="main-tabs" id="mainTabs">
-                <div class="main-tab on" data-tab="featured">精选区</div>
-                <div class="main-tab" data-tab="community">社区区</div>
-                <div class="main-tab" data-tab="request">求课程</div>
+            <div class="categories" id="categories">
+                <div class="cat-chip on" data-cat="all">全部</div>
+                <div class="cat-chip" data-cat="oral">实用口语</div>
+                <div class="cat-chip" data-cat="school">中小学</div>
+                <div class="cat-chip" data-cat="textbook">课本同步</div>
+                <div class="cat-chip" data-cat="exam">应试备考</div>
+                <div class="cat-chip" data-cat="business">商务职场</div>
+                <div class="cat-chip" data-cat="hobby">兴趣爱好</div>
             </div>
 
-            <!-- Tab 1：精选区 -->
-            <div id="panel-featured" class="tab-panel">
-
-                <div class="filter-bar">
-                    <div class="filter-row">
-                        <div class="filter-label">适用人群</div>
-                        <div class="filter-options">
-                            <div class="filter-chip on">全部</div>
-                            <div class="filter-chip">零基础</div>
-                            <div class="filter-chip">中小学生</div>
-                            <div class="filter-chip">备考</div>
-                            <div class="filter-chip">上班族</div>
-                            <div class="filter-chip">大学生</div>
-                        </div>
-                    </div>
-
-                    <div class="filter-row">
-                        <div class="filter-label">难度</div>
-                        <div class="filter-options">
-                            <div class="filter-chip on">全部</div>
-                            <div class="filter-chip">入门</div>
-                            <div class="filter-chip">初级</div>
-                            <div class="filter-chip">中级</div>
-                            <div class="filter-chip">高级</div>
-                        </div>
-                    </div>
-
-                    <div class="filter-row">
-                        <div class="filter-label">排序</div>
-                        <div class="filter-options">
-                            <div class="filter-chip on">推荐</div>
-                            <div class="filter-chip">最新</div>
-                            <div class="filter-chip">最多人学</div>
-                            <div class="filter-chip">评分最高</div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="course-list-head">
-                    <div class="list-title">精选课程</div>
-                    <div class="list-count">共 328 个课程包</div>
-                </div>
-
-                <div class="course-grid">
-
-                    <div class="course-card" data-href="learn.html">
-                        <div class="course-cover">
-                            🌱
-                            <span class="cover-badge free">免费试学</span>
-                        </div>
-                        <div class="course-body">
-                            <div class="course-name">星荣零基础学英语</div>
-                            <div class="course-desc">从字母音标开始，零基础也能轻松入门</div>
-                            <div class="course-tags">
-                                <span class="tag">零基础</span>
-                                <span class="tag">入门</span>
-                            </div>
-                            <div class="course-footer">
-                                <div class="course-author">
-                                    <span class="author-avatar">官</span>
-                                    <span>官方课程</span>
-                                </div>
-                                <div class="course-learners">12.8k 人学</div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="course-card" data-href="learn.html">
-                        <div class="course-cover">
-                            🎧
-                            <span class="cover-badge">热门</span>
-                        </div>
-                        <div class="course-body">
-                            <div class="course-name">雅思词汇 8000</div>
-                            <div class="course-desc">高频词汇 + 例句练习，听说读写全面提升</div>
-                            <div class="course-tags">
-                                <span class="tag">备考</span>
-                                <span class="tag">中级</span>
-                            </div>
-                            <div class="course-footer">
-                                <div class="course-author">
-                                    <span class="author-avatar">官</span>
-                                    <span>官方课程</span>
-                                </div>
-                                <div class="course-learners">9.6k 人学</div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="course-card" data-href="learn.html">
-                        <div class="course-cover">
-                            💼
-                            <span class="cover-badge free">免费试学</span>
-                        </div>
-                        <div class="course-body">
-                            <div class="course-name">美国人天天在用的 5000 词</div>
-                            <div class="course-desc">生活场景常用语，学了就能用</div>
-                            <div class="course-tags">
-                                <span class="tag">实用英语</span>
-                                <span class="tag">初级</span>
-                            </div>
-                            <div class="course-footer">
-                                <div class="course-author">
-                                    <span class="author-avatar">官</span>
-                                    <span>官方课程</span>
-                                </div>
-                                <div class="course-learners">15.2k 人学</div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="course-card" data-href="learn.html">
-                        <div class="course-cover">
-                            📝
-                            <span class="cover-badge">备考</span>
-                        </div>
-                        <div class="course-body">
-                            <div class="course-name">WFD 360 高频句</div>
-                            <div class="course-desc">PTE 听力写句子，精听精练高频题</div>
-                            <div class="course-tags">
-                                <span class="tag">应试</span>
-                                <span class="tag">高级</span>
-                            </div>
-                            <div class="course-footer">
-                                <div class="course-author">
-                                    <span class="author-avatar">官</span>
-                                    <span>官方课程</span>
-                                </div>
-                                <div class="course-learners">6.4k 人学</div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="course-card" data-href="learn.html">
-                        <div class="course-cover">
-                            📗
-                            <span class="cover-badge free">免费试学</span>
-                        </div>
-                        <div class="course-body">
-                            <div class="course-name">人教版小学英语三年级同步</div>
-                            <div class="course-desc">教材同步，逐课练习，家长省心</div>
-                            <div class="course-tags">
-                                <span class="tag">小学</span>
-                                <span class="tag">入门</span>
-                            </div>
-                            <div class="course-footer">
-                                <div class="course-author">
-                                    <span class="author-avatar">官</span>
-                                    <span>官方课程</span>
-                                </div>
-                                <div class="course-learners">18.3k 人学</div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="course-card" data-href="learn.html">
-                        <div class="course-cover">
-                            🎬
-                            <span class="cover-badge">视频</span>
-                        </div>
-                        <div class="course-body">
-                            <div class="course-name">TED 精选演讲精听</div>
-                            <div class="course-desc">视频逐句练习，语感听力双提升</div>
-                            <div class="course-tags">
-                                <span class="tag">听力</span>
-                                <span class="tag">中级</span>
-                            </div>
-                            <div class="course-footer">
-                                <div class="course-author">
-                                    <span class="author-avatar">官</span>
-                                    <span>官方课程</span>
-                                </div>
-                                <div class="course-learners">7.8k 人学</div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="course-card" data-href="learn.html">
-                        <div class="course-cover">
-                            🗣️
-                            <span class="cover-badge">口语</span>
-                        </div>
-                        <div class="course-body">
-                            <div class="course-name">日常口语 900 句</div>
-                            <div class="course-desc">AI 实时测评，练出地道口语</div>
-                            <div class="course-tags">
-                                <span class="tag">口语</span>
-                                <span class="tag">初级</span>
-                            </div>
-                            <div class="course-footer">
-                                <div class="course-author">
-                                    <span class="author-avatar">官</span>
-                                    <span>官方课程</span>
-                                </div>
-                                <div class="course-learners">11.5k 人学</div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="course-card" data-href="learn.html">
-                        <div class="course-cover">
-                            🏢
-                            <span class="cover-badge">职场</span>
-                        </div>
-                        <div class="course-body">
-                            <div class="course-name">商务英语邮件写作</div>
-                            <div class="course-desc">常用句式模板，职场沟通无障碍</div>
-                            <div class="course-tags">
-                                <span class="tag">职场</span>
-                                <span class="tag">中级</span>
-                            </div>
-                            <div class="course-footer">
-                                <div class="course-author">
-                                    <span class="author-avatar">官</span>
-                                    <span>官方课程</span>
-                                </div>
-                                <div class="course-learners">4.2k 人学</div>
-                            </div>
-                        </div>
-                    </div>
-
-                </div>
-            </div>
-
-            <!-- Tab 2：社区区 -->
-            <div id="panel-community" class="tab-panel" style="display: none;">
-
-                <div class="course-list-head">
-                    <div class="list-title">社区课程</div>
-                    <div class="list-count">由社区创作者制作（创作者至少已创作 3 门课程）</div>
-                </div>
-
-                <div class="course-grid">
-
-                    <div class="course-card" data-href="learn.html">
-                        <div class="course-cover">
-                            🎵
-                            <span class="cover-badge">社区</span>
-                        </div>
-                        <div class="course-body">
-                            <div class="course-name">英文歌学口语·Taylor Swift 篇</div>
-                            <div class="course-desc">用歌词学地道表达，边唱边练</div>
-                            <div class="course-tags">
-                                <span class="tag">兴趣</span>
-                                <span class="tag">初级</span>
-                            </div>
-                            <div class="course-footer">
-                                <div class="course-author">
-                                    <span class="author-avatar">M</span>
-                                    <span>Music_老师</span>
-                                </div>
-                                <div class="course-learners">3.1k 人学</div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="course-card" data-href="learn.html">
-                        <div class="course-cover">
-                            🍿
-                            <span class="cover-badge">社区</span>
-                        </div>
-                        <div class="course-body">
-                            <div class="course-name">老友记经典台词精练</div>
-                            <div class="course-desc">最经典的 100 句台词，逐句拆解</div>
-                            <div class="course-tags">
-                                <span class="tag">美剧</span>
-                                <span class="tag">中级</span>
-                            </div>
-                            <div class="course-footer">
-                                <div class="course-author">
-                                    <span class="author-avatar">F</span>
-                                    <span>Friends 迷</span>
-                                </div>
-                                <div class="course-learners">5.6k 人学</div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="course-card" data-href="learn.html">
-                        <div class="course-cover">
-                            ✈️
-                            <span class="cover-badge">社区</span>
-                        </div>
-                        <div class="course-body">
-                            <div class="course-name">出国旅行必备 300 句</div>
-                            <div class="course-desc">机场、酒店、点餐、购物全覆盖</div>
-                            <div class="course-tags">
-                                <span class="tag">旅行</span>
-                                <span class="tag">入门</span>
-                            </div>
-                            <div class="course-footer">
-                                <div class="course-author">
-                                    <span class="author-avatar">T</span>
-                                    <span>Traveler</span>
-                                </div>
-                                <div class="course-learners">8.9k 人学</div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="course-card" data-href="learn.html">
-                        <div class="course-cover">
-                            💻
-                            <span class="cover-badge">社区</span>
-                        </div>
-                        <div class="course-body">
-                            <div class="course-name">程序员英语·技术文档阅读</div>
-                            <div class="course-desc">IT 行业高频词汇与常见句式</div>
-                            <div class="course-tags">
-                                <span class="tag">职场</span>
-                                <span class="tag">高级</span>
-                            </div>
-                            <div class="course-footer">
-                                <div class="course-author">
-                                    <span class="author-avatar">D</span>
-                                    <span>Dev_English</span>
-                                </div>
-                                <div class="course-learners">2.3k 人学</div>
-                            </div>
-                        </div>
-                    </div>
-
-                </div>
-            </div>
-
-            <!-- Tab 3：求课程 -->
-            <div id="panel-request" class="tab-panel" style="display: none;">
-
-                <div class="request-section">
-
-                    <div class="request-header">
-                        <div>
-                            <div class="req-title">大家想要的课程</div>
-                            <div class="req-sub">没找到想要的课程？发布需求，官方或社区创作者会优先制作</div>
-                        </div>
-                        <button class="btn-primary" data-tip="发布课程需求（后续步骤实现）">+ 发布需求</button>
-                    </div>
-
-                    <div class="request-item">
-                        <div class="req-emoji">🎓</div>
-                        <div class="req-body">
-                            <div class="req-name">考研英语长难句专项</div>
-                            <div class="req-meta">由 小明同学 发起 · 2 天前</div>
-                        </div>
-                        <div class="req-votes" data-tip="投票（后续步骤实现）">👍 328</div>
-                    </div>
-
-                    <div class="request-item">
-                        <div class="req-emoji">🩺</div>
-                        <div class="req-body">
-                            <div class="req-name">医学英语专业词汇</div>
-                            <div class="req-meta">由 Dr.Li 发起 · 5 天前</div>
-                        </div>
-                        <div class="req-votes" data-tip="投票（后续步骤实现）">👍 256</div>
-                    </div>
-
-                    <div class="request-item">
-                        <div class="req-emoji">🧮</div>
-                        <div class="req-body">
-                            <div class="req-name">KET / PET 剑桥少儿英语</div>
-                            <div class="req-meta">由 宝妈一号 发起 · 1 周前</div>
-                        </div>
-                        <div class="req-votes" data-tip="投票（后续步骤实现）">👍 412</div>
-                    </div>
-
-                    <div class="request-item">
-                        <div class="req-emoji">📺</div>
-                        <div class="req-body">
-                            <div class="req-name">《老友记》全十季精听</div>
-                            <div class="req-meta">由 Friends 迷 发起 · 1 周前</div>
-                        </div>
-                        <div class="req-votes" data-tip="投票（后续步骤实现）">👍 187</div>
-                    </div>
-
-                    <div class="request-item">
-                        <div class="req-emoji">🎤</div>
-                        <div class="req-body">
-                            <div class="req-name">英文演讲模仿·奥巴马篇</div>
-                            <div class="req-meta">由 Speaker 发起 · 2 周前</div>
-                        </div>
-                        <div class="req-votes" data-tip="投票（后续步骤实现）">👍 143</div>
-                    </div>
-
-                </div>
-            </div>
+            <div class="course-grid" id="courseGrid"></div>
 
         </div>
 
@@ -1098,469 +548,135 @@
 })();
 
 /* ============================================================
-   ★★★ 商城本地数据 JYMall ★★★
-   数据结构：
-   {
-     votes: { '课程名': 数字 }  // 求课程投票数（偏移量，基准从 HTML 里的数字开始）
-     votesBase: { '课程名': 数字 }  // 初始基准数
-     voted: { '课程名': true }  // 是否已投票
-     requests: [ { id, title, author, timestamp, votes } ]  // 我发布的需求
-   }
+   显示用户首字
    ============================================================ */
-window.JYMall = (function() {
-    var KEY = 'juyou_mall';
-
-    function getDefault() {
-        return {
-            votes: {},
-            votesBase: {},
-            voted: {},
-            requests: []
-        };
-    }
-
-    function load() {
-        try {
-            var raw = localStorage.getItem(KEY);
-            if (!raw) return getDefault();
-            var data = JSON.parse(raw);
-            var def = getDefault();
-            return {
-                votes: data.votes || def.votes,
-                votesBase: data.votesBase || def.votesBase,
-                voted: data.voted || def.voted,
-                requests: data.requests || def.requests
-            };
-        } catch (e) {
-            return getDefault();
-        }
-    }
-
-    function save(data) {
-        try {
-            localStorage.setItem(KEY, JSON.stringify(data));
-        } catch (e) {}
-    }
-
-    return { load: load, save: save };
+(function() {
+    if (!window.currentUser) return;
+    var nickname = window.currentUser.nickname || '学习者';
+    var avatarEl = document.getElementById('userAvatar');
+    if (avatarEl) avatarEl.textContent = nickname.slice(-1);
 })();
 
 /* ============================================================
-   工具函数
+   ★★★ 临时占位数据（后续会被 juyou-courses.js 替换）★★★
    ============================================================ */
-function escapeHtml(str) {
-    if (str == null) return '';
-    return String(str)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#39;');
-}
+var PLACEHOLDER_COURSES = [
+    { courseId: 'kids_box_3',     title: "Kid's Box 3",        emoji: '🐻', grad: 1, level: '初级', learners: 2708 },
+    { courseId: 'kids_box_2',     title: "Kid's Box 2",        emoji: '🎯', grad: 2, level: '初级', learners: 6384 },
+    { courseId: 'fairy_tales',    title: '童话寓言故事',        emoji: '🦊', grad: 3, level: '初级', learners: 6703 },
+    { courseId: 'kids_box_1',     title: "Kid's Box 1",        emoji: '📘', grad: 4, level: '初级', learners: 4156 },
+    { courseId: 'chinese_fables', title: '中国成语寓言故事',     emoji: '🐢', grad: 5, level: '初级', learners: 3392 },
+    { courseId: 'pep_grade4',     title: '人教版四上·单元重难点', emoji: '📕', grad: 6, level: '中级', learners: 1821 },
+    { courseId: 'zoo_explorer',   title: '小小动物园探险家',     emoji: '🦁', grad: 7, level: '入门', learners: 1260 },
+    { courseId: 'daily_oral',     title: '日常口语 900 句',      emoji: '💬', grad: 8, level: '初级', learners: 5140 }
+];
 
-/* 从"12.8k 人学"提取数字（12800） */
-function parseLearners(text) {
-    if (!text) return 0;
-    var m = String(text).match(/([\d.]+)\s*([kK万]?)/);
-    if (!m) return 0;
-    var n = parseFloat(m[1]);
-    if (isNaN(n)) return 0;
-    if (m[2] === 'k' || m[2] === 'K') n *= 1000;
-    if (m[2] === '万') n *= 10000;
-    return n;
+/* ============================================================
+   渲染课程网格
+   ============================================================ */
+function renderCourseGrid(list) {
+    var grid = document.getElementById('courseGrid');
+    if (!grid) return;
+
+    if (list.length === 0) {
+        grid.innerHTML = '<div style="grid-column: 1 / -1; text-align:center; padding:80px 20px; color:#999; font-size:14px;">没有找到课程</div>';
+        return;
+    }
+
+    var html = '';
+    list.forEach(function(c) {
+        html +=
+            '<div class="course-card" data-course="' + c.courseId + '">' +
+                '<div class="course-cover cover-grad-' + c.grad + '">' +
+                    c.emoji +
+                '</div>' +
+                '<div class="course-body">' +
+                    '<div class="course-title">' + c.title + '</div>' +
+                    '<div class="course-meta">' +
+                        '<span class="course-level">' + c.level + '</span>' +
+                        '<span class="course-learners">' + c.learners + '人学习</span>' +
+                    '</div>' +
+                '</div>' +
+            '</div>';
+    });
+    grid.innerHTML = html;
 }
 
 /* ============================================================
-   页面跳转（data-href）
+   初始化 + 交互
    ============================================================ */
 (function() {
-    var currentPage = window.location.pathname.split('/').pop() || 'mall.html';
+    var grid = document.getElementById('courseGrid');
+    var categoriesEl = document.getElementById('categories');
+    var searchInput = document.getElementById('searchInput');
+
+    var state = { cat: 'all', keyword: '' };
+
+    function applyFilter() {
+        var list = PLACEHOLDER_COURSES.filter(function(c) {
+            if (state.keyword) {
+                var kw = state.keyword.toLowerCase();
+                if (c.title.toLowerCase().indexOf(kw) < 0) return false;
+            }
+            return true;
+        });
+        renderCourseGrid(list);
+    }
+
+    renderCourseGrid(PLACEHOLDER_COURSES);
+
+    // 分类切换
+    if (categoriesEl) {
+        categoriesEl.addEventListener('click', function(e) {
+            var chip = e.target.closest('.cat-chip');
+            if (!chip) return;
+            categoriesEl.querySelectorAll('.cat-chip').forEach(function(c) {
+                c.classList.remove('on');
+            });
+            chip.classList.add('on');
+            state.cat = chip.getAttribute('data-cat');
+            applyFilter();
+        });
+    }
+
+    // 搜索
+    if (searchInput) {
+        searchInput.addEventListener('input', function() {
+            state.keyword = this.value.trim();
+            applyFilter();
+        });
+    }
+
+    // 点击课程卡片 → 跳详情
+    if (grid) {
+        grid.addEventListener('click', function(e) {
+            var card = e.target.closest('.course-card');
+            if (!card) return;
+            var courseId = card.getAttribute('data-course');
+            if (!courseId) return;
+            window.location.href = 'course.html?course=' + encodeURIComponent(courseId);
+        });
+    }
+
+    // 页面跳转
     document.querySelectorAll('[data-href]').forEach(function(el) {
         el.addEventListener('click', function(e) {
             e.stopPropagation();
             var href = this.getAttribute('data-href');
-            if (!href || href === currentPage) return;
+            if (!href) return;
             window.location.href = href;
         });
     });
-})();
 
-/* ============================================================
-   一级 Tab 切换
-   ============================================================ */
-(function() {
-    var tabs = document.querySelectorAll('.main-tab');
-    var panels = {
-        featured: document.getElementById('panel-featured'),
-        community: document.getElementById('panel-community'),
-        request: document.getElementById('panel-request')
-    };
-
-    tabs.forEach(function(tab) {
-        tab.addEventListener('click', function(e) {
-            e.stopPropagation();
-            tabs.forEach(function(t) { t.classList.remove('on'); });
-            this.classList.add('on');
-
-            var name = this.getAttribute('data-tab');
-            Object.keys(panels).forEach(function(key) {
-                if (panels[key]) {
-                    panels[key].style.display = (key === name) ? 'block' : 'none';
-                }
-            });
-        });
-    });
-})();
-
-/* ============================================================
-   ★★★ 给所有课程卡片打标签（用于后续筛选/排序） ★★★
-   ============================================================ */
-(function() {
-    var featuredGrid = document.querySelector('#panel-featured .course-grid');
-    var communityGrid = document.querySelector('#panel-community .course-grid');
-
-    function tagCards(grid) {
-        if (!grid) return;
-        var cards = grid.querySelectorAll('.course-card');
-        cards.forEach(function(card, idx) {
-            var nameEl = card.querySelector('.course-name');
-            var descEl = card.querySelector('.course-desc');
-            var tagEls = card.querySelectorAll('.course-tags .tag');
-            var learnersEl = card.querySelector('.course-learners');
-
-            var tags = [];
-            tagEls.forEach(function(t) { tags.push(t.textContent.trim()); });
-
-            card.setAttribute('data-name', (nameEl ? nameEl.textContent : '').toLowerCase());
-            card.setAttribute('data-desc', (descEl ? descEl.textContent : '').toLowerCase());
-            card.setAttribute('data-tags', tags.join('|').toLowerCase());
-            card.setAttribute('data-learners', parseLearners(learnersEl ? learnersEl.textContent : ''));
-            card.setAttribute('data-sort-index', idx);
-            card.setAttribute('data-grid', grid.id || (grid.closest('.tab-panel') ? grid.closest('.tab-panel').id : ''));
-        });
-    }
-
-    tagCards(featuredGrid);
-    tagCards(communityGrid);
-})();
-
-/* ============================================================
-   ★★★ 筛选 + 搜索 + 排序 ★★★
-   ============================================================ */
-(function() {
-    var searchInput = document.querySelector('.search-box input');
-    var featuredGrid = document.querySelector('#panel-featured .course-grid');
-    if (!featuredGrid) return;
-
-    // 当前筛选状态
-    var filters = {
-        audience: '全部',
-        difficulty: '全部',
-        sort: '推荐'
-    };
-
-    // 人群 → 匹配的 tag 关键词
-    var audienceMap = {
-        '零基础': ['零基础', '入门'],
-        '中小学生': ['小学', '中学', '小学'],
-        '备考': ['备考', '应试'],
-        '上班族': ['职场', '商务'],
-        '大学生': ['大学', '校园']
-    };
-
-    // 难度 → 匹配的 tag 关键词
-    var difficultyMap = {
-        '入门': ['入门'],
-        '初级': ['初级'],
-        '中级': ['中级'],
-        '高级': ['高级']
-    };
-
-    function applyFilters() {
-        var keyword = (searchInput ? searchInput.value.trim().toLowerCase() : '');
-        var cards = featuredGrid.querySelectorAll('.course-card');
-        var visibleCards = [];
-
-        cards.forEach(function(card) {
-            var name = card.getAttribute('data-name') || '';
-            var desc = card.getAttribute('data-desc') || '';
-            var tags = card.getAttribute('data-tags') || '';
-
-            // 1. 搜索
-            if (keyword) {
-                if (name.indexOf(keyword) < 0 && desc.indexOf(keyword) < 0 && tags.indexOf(keyword) < 0) {
-                    card.style.display = 'none';
-                    return;
-                }
-            }
-
-            // 2. 适用人群
-            if (filters.audience !== '全部') {
-                var keywords = audienceMap[filters.audience] || [];
-                var matched = keywords.some(function(kw) { return tags.indexOf(kw.toLowerCase()) >= 0; });
-                if (!matched) {
-                    card.style.display = 'none';
-                    return;
-                }
-            }
-
-            // 3. 难度
-            if (filters.difficulty !== '全部') {
-                var diffKeywords = difficultyMap[filters.difficulty] || [];
-                var diffMatched = diffKeywords.some(function(kw) { return tags.indexOf(kw.toLowerCase()) >= 0; });
-                if (!diffMatched) {
-                    card.style.display = 'none';
-                    return;
-                }
-            }
-
-            card.style.display = '';
-            visibleCards.push(card);
-        });
-
-        // 4. 排序
-        if (filters.sort === '最多人学') {
-            visibleCards.sort(function(a, b) {
-                return parseFloat(b.getAttribute('data-learners') || 0) - parseFloat(a.getAttribute('data-learners') || 0);
-            });
-        } else if (filters.sort === '最新') {
-            visibleCards.sort(function(a, b) {
-                return parseFloat(b.getAttribute('data-sort-index') || 0) - parseFloat(a.getAttribute('data-sort-index') || 0);
-            });
-        } else {
-            // 推荐 / 评分最高：保持原顺序
-            visibleCards.sort(function(a, b) {
-                return parseFloat(a.getAttribute('data-sort-index') || 0) - parseFloat(b.getAttribute('data-sort-index') || 0);
-            });
-        }
-
-        // 重排
-        visibleCards.forEach(function(card) {
-            featuredGrid.appendChild(card);
-        });
-
-        // 更新"共 X 个课程包"
-        var countEl = document.querySelector('#panel-featured .list-count');
-        if (countEl) {
-            countEl.textContent = '共 ' + visibleCards.length + ' 个课程包';
-        }
-    }
-
-    // 搜索框输入
-    if (searchInput) {
-        searchInput.addEventListener('input', function() {
-            applyFilters();
-        });
-    }
-
-    // 筛选 chip 点击
-    var rows = document.querySelectorAll('#panel-featured .filter-row');
-    rows.forEach(function(row, rowIdx) {
-        var chips = row.querySelectorAll('.filter-chip');
-        chips.forEach(function(chip) {
-            chip.addEventListener('click', function(e) {
-                e.stopPropagation();
-                chips.forEach(function(c) { c.classList.remove('on'); });
-                this.classList.add('on');
-
-                var value = this.textContent.trim();
-                if (rowIdx === 0) filters.audience = value;
-                else if (rowIdx === 1) filters.difficulty = value;
-                else if (rowIdx === 2) filters.sort = value;
-
-                applyFilters();
-            });
-        });
-    });
-})();
-
-/* ============================================================
-   其他 filter-chip（社区区/非 feature 区域）保持单选视觉
-   ============================================================ */
-(function() {
-    var containers = new Set();
-    document.querySelectorAll('.filter-chip').forEach(function(chip) {
-        // 跳过 featured 里的（已经单独处理）
-        if (chip.closest('#panel-featured .filter-row')) return;
-        containers.add(chip.parentElement);
-    });
-
-    containers.forEach(function(container) {
-        var chips = container.querySelectorAll('.filter-chip');
-        chips.forEach(function(chip) {
-            chip.addEventListener('click', function(e) {
-                e.stopPropagation();
-                chips.forEach(function(c) { c.classList.remove('on'); });
-                this.classList.add('on');
-            });
-        });
-    });
-})();
-
-/* ============================================================
-   ★★★ 求课程投票持久化 ★★★
-   ============================================================ */
-(function() {
-    var requestList = document.querySelector('#panel-request .request-section');
-    if (!requestList) return;
-
-    var data = JYMall.load();
-    var voteEls = requestList.querySelectorAll('.req-votes');
-
-    // 初始化：显示投票数和已投状态
-    voteEls.forEach(function(el) {
-        var item = el.closest('.request-item');
-        if (!item) return;
-        var nameEl = item.querySelector('.req-name');
-        if (!nameEl) return;
-        var name = nameEl.textContent.trim();
-
-        // 首次访问，记录基准值
-        if (!data.votesBase[name]) {
-            var base = parseInt(el.textContent.replace(/[^\d]/g, '')) || 0;
-            data.votesBase[name] = base;
-            data.votes[name] = base;
-        }
-
-        // 显示当前值
-        el.textContent = '👍 ' + (data.votes[name] || 0);
-
-        // 已投票，加高亮
-        if (data.voted[name]) {
-            el.style.background = '#dfe7ff';
-            el.style.cursor = 'default';
-        }
-
-        // 点击投票
-        el.addEventListener('click', function(e) {
-            e.stopPropagation();
-            var d = JYMall.load();
-            if (d.voted[name]) {
-                alert('你已经投过票了');
-                return;
-            }
-            d.voted[name] = true;
-            d.votes[name] = (d.votes[name] || 0) + 1;
-            JYMall.save(d);
-
-            el.textContent = '👍 ' + d.votes[name];
-            el.style.background = '#dfe7ff';
-            el.style.cursor = 'default';
-        });
-    });
-
-    // 保存基准数据
-    JYMall.save(data);
-
-    // 渲染用户已发布的需求
-    function renderMyRequests() {
-        var d = JYMall.load();
-        if (!d.requests || d.requests.length === 0) return;
-
-        var header = requestList.querySelector('.request-header');
-        if (!header) return;
-
-        d.requests.forEach(function(req) {
-            // 检查是否已渲染
-            if (requestList.querySelector('[data-my-req="' + req.id + '"]')) return;
-
-            var el = document.createElement('div');
-            el.className = 'request-item';
-            el.setAttribute('data-my-req', req.id);
-
-            var now = Date.now();
-            var diffMin = Math.floor((now - req.timestamp) / 60000);
-            var timeText = diffMin < 1 ? '刚刚' :
-                           diffMin < 60 ? diffMin + ' 分钟前' :
-                           Math.floor(diffMin / 60) + ' 小时前';
-
-            el.innerHTML =
-                '<div class="req-emoji">💡</div>' +
-                '<div class="req-body">' +
-                    '<div class="req-name">' + escapeHtml(req.title) + '</div>' +
-                    '<div class="req-meta">由 ' + escapeHtml(req.author) + ' 发起 · ' + timeText + '</div>' +
-                '</div>' +
-                '<div class="req-votes" data-my-vote="' + req.id + '">👍 ' + (req.votes || 0) + '</div>';
-
-            // 插到第一个 request-item 前面（倒序）
-            var firstItem = requestList.querySelector('.request-item');
-            if (firstItem) {
-                firstItem.parentNode.insertBefore(el, firstItem);
-            }
-        });
-    }
-
-    renderMyRequests();
-    window.__renderMyRequests = renderMyRequests;
-})();
-
-/* ============================================================
-   ★★★ 发布需求 ★★★
-   ============================================================ */
-(function() {
-    var requestSection = document.querySelector('#panel-request .request-section');
-    if (!requestSection) return;
-
-    var publishBtn = requestSection.querySelector('.request-header .btn-primary');
-    if (!publishBtn) return;
-
-    // 移除原本的 data-tip
-    publishBtn.removeAttribute('data-tip');
-
-    publishBtn.addEventListener('click', function(e) {
-        e.stopPropagation();
-
-        var title = prompt('请输入你想要的课程主题：');
-        if (!title) return;
-        title = title.trim();
-        if (!title) return;
-        if (title.length > 50) {
-            alert('标题不能超过 50 字');
-            return;
-        }
-
-        var nickname = (window.currentUser && window.currentUser.nickname) || '我';
-
-        var req = {
-            id: 'req_' + Date.now() + '_' + Math.floor(Math.random() * 1000),
-            title: title,
-            author: nickname,
-            timestamp: Date.now(),
-            votes: 0
-        };
-
-        var data = JYMall.load();
-        data.requests.unshift(req);
-        if (data.requests.length > 50) {
-            data.requests = data.requests.slice(0, 50);
-        }
-        JYMall.save(data);
-
-        // 立刻渲染
-        if (window.__renderMyRequests) {
-            window.__renderMyRequests();
-        }
-
-        alert('需求已发布！');
-    });
-})();
-
-/* ============================================================
-   data-tip 提示（排除已接管功能的元素）
-   ============================================================ */
-(function() {
+    // data-tip
     document.querySelectorAll('[data-tip]').forEach(function(el) {
-        // 排除已接管的
-        if (el.classList.contains('req-votes')) return;
-        if (el.closest('.request-header')) return;
-
         el.addEventListener('click', function(e) {
             e.stopPropagation();
-            var tip = this.getAttribute('data-tip');
-            if (tip) alert(tip);
+            alert(this.getAttribute('data-tip'));
         });
     });
 })();
 </script>
+
 </body>
 </html>
