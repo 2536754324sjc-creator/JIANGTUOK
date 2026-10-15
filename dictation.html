@@ -1,0 +1,1547 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>听写 - 句游英语</title>
+
+    <script src="juyou-sync.js"></script>
+    <script src="data/juyou-courses-registry.js"></script>
+    <script src="data/juyou-courses-content.js"></script>
+
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: #000;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* ============================================================
+           顶部栏
+           ============================================================ */
+        .dictation-topbar {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 14px 22px;
+            background: transparent;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+            z-index: 10;
+        }
+
+        .d-exit-btn {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 13px;
+            color: #8b93a8;
+            cursor: pointer;
+            padding: 7px 14px;
+            border-radius: 8px;
+            transition: background 0.2s, color 0.2s;
+            background: transparent;
+            border: none;
+            font-family: inherit;
+        }
+
+        .d-exit-btn:hover {
+            background: rgba(255, 255, 255, 0.06);
+            color: #fff;
+        }
+
+        .d-progress-text {
+            font-size: 12px;
+            color: #6b7280;
+            letter-spacing: 1px;
+            margin-left: auto;
+        }
+
+        .assist-toggle-wrap {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-left: 16px;
+            user-select: none;
+        }
+
+        .assist-label {
+            font-size: 12px;
+            color: #6b7280;
+            letter-spacing: 1px;
+        }
+
+        .assist-switch {
+            width: 40px;
+            height: 22px;
+            border-radius: 11px;
+            background: #1f1f2a;
+            border: 1px solid #33333f;
+            position: relative;
+            cursor: pointer;
+            transition: background 0.25s, box-shadow 0.25s, border-color 0.25s;
+            flex-shrink: 0;
+        }
+
+        .assist-knob {
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #4a4a58;
+            transition: transform 0.25s ease, background 0.25s ease, box-shadow 0.25s ease;
+        }
+
+        .assist-switch.on {
+            background: linear-gradient(135deg, #0ea5e9, #0284c7);
+            border-color: #0ea5e9;
+            box-shadow: 0 0 10px rgba(14, 165, 233, 0.65);
+        }
+
+        .assist-switch.on .assist-knob {
+            transform: translateX(20px);
+            background: #ffffff;
+            box-shadow: 0 0 6px rgba(255, 255, 255, 0.85);
+        }
+
+        /* ============================================================
+           中间主区
+           ============================================================ */
+        .dictation-main {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 90%;
+            max-width: 900px;
+            max-height: calc(100vh - 260px);
+            text-align: center;
+            z-index: 5;
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+
+        .dictation-main::-webkit-scrollbar { width: 0; }
+
+        .cn-prompt {
+            font-size: 28px;
+            font-weight: 500;
+            color: #ffffff;
+            letter-spacing: 1px;
+            line-height: 1.6;
+            margin-bottom: 52px;
+            max-width: 90%;
+            text-align: center;
+        }
+
+        .word-slots {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: flex-end;
+            justify-content: center;
+            gap: 32px 36px;
+            max-width: 90%;
+            text-align: center;
+        }
+
+        .slot-input {
+            font-family: 'SF Mono', 'Monaco', 'Menlo', 'Consolas', monospace;
+            font-size: 24px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            color: #e5e7eb;
+
+            background: transparent !important;
+            background-color: transparent !important;
+            background-image: none !important;
+            -webkit-appearance: none !important;
+            -moz-appearance: none !important;
+            appearance: none !important;
+            outline: none !important;
+            box-shadow: none !important;
+
+            border: none;
+            border-bottom: 3px solid #374151;
+            padding: 4px 6px 8px;
+            text-align: center;
+            min-width: 60px;
+
+            transition: border-color 0.3s, color 0.3s, text-shadow 0.3s, transform 0.2s ease;
+            caret-color: #0ea5e9;
+            transform: scale(1);
+        }
+
+        .slot-input::placeholder {
+            color: #374151;
+            font-weight: 400;
+        }
+
+        .slot-input:focus {
+            transform: scale(1.12);
+            border-bottom-color: #06b6d4;
+            text-shadow: 0 0 3px rgba(6, 182, 212, 0.9), 0 0 6px rgba(6, 182, 212, 0.7), 0 0 10px rgba(6, 182, 212, 0.4);
+        }
+
+        .slot-input.correct {
+            color: #4ade80;
+            border-bottom-color: #4ade80;
+            text-shadow: 0 0 3px rgba(74, 222, 128, 0.9), 0 0 6px rgba(74, 222, 128, 0.6), 0 0 10px rgba(74, 222, 128, 0.35);
+        }
+
+        .slot-input.correct:focus {
+            text-shadow: 0 0 4px rgba(74, 222, 128, 1), 0 0 8px rgba(74, 222, 128, 0.85), 0 0 14px rgba(74, 222, 128, 0.6);
+        }
+
+        .slot-input.error {
+            color: #ff5b5b;
+            border-bottom-color: #ff5b5b;
+            text-shadow: 0 0 3px rgba(255, 91, 91, 0.9), 0 0 6px rgba(255, 91, 91, 0.6), 0 0 10px rgba(255, 91, 91, 0.35);
+        }
+
+        .slot-input.wrong {
+            animation: flashRed 0.6s ease;
+        }
+
+        @keyframes flashRed {
+            0%   { transform: scale(1.12) translateX(0); }
+            20%  { transform: scale(1.18) translateX(-6px); }
+            40%  { transform: scale(1.12) translateX(6px); }
+            60%  { transform: scale(1.18) translateX(-4px); }
+            80%  { transform: scale(1.12) translateX(4px); }
+            100% { transform: scale(1.12) translateX(0); }
+        }
+
+        /* ============================================================
+           语法弹层
+           ============================================================ */
+        .grammar-popup {
+            position: absolute;
+            top: 70px;
+            left: 50%;
+            width: 90%;
+            max-width: 720px;
+            background: linear-gradient(180deg, #1e1e2e 0%, #15151f 100%);
+            border: 1px solid #2a2a3d;
+            border-radius: 16px;
+            padding: 22px 26px 14px;
+            transform: translate(-50%, -180%);
+            opacity: 0;
+            visibility: hidden;
+            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease, visibility 0.3s ease;
+            z-index: 30;
+            pointer-events: none;
+        }
+
+        .grammar-popup.show {
+            transform: translate(-50%, 0);
+            opacity: 1;
+            visibility: visible;
+            pointer-events: auto;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+        }
+
+        .grammar-parts {
+            display: flex;
+            gap: 24px;
+            flex-wrap: wrap;
+            margin-bottom: 14px;
+        }
+
+        .grammar-part {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            position: relative;
+            padding-right: 24px;
+            text-align: left;
+        }
+
+        .grammar-part + .grammar-part::before {
+            content: '';
+            position: absolute;
+            left: -12px;
+            top: 0;
+            bottom: 0;
+            width: 1px;
+            background: #2a2a3d;
+        }
+
+        .gp-label {
+            display: inline-block;
+            font-size: 11px;
+            font-weight: 700;
+            color: #fda4af;
+            background: rgba(244, 63, 94, 0.15);
+            border: 1px solid rgba(244, 63, 94, 0.4);
+            border-radius: 20px;
+            padding: 2px 10px;
+            align-self: flex-start;
+            margin-bottom: 4px;
+        }
+
+        .gp-word {
+            font-size: 20px;
+            font-weight: 800;
+            color: #ffffff;
+            letter-spacing: 0.3px;
+        }
+
+        .grammar-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 12px;
+            border-top: 1px solid #2a2a3d;
+            font-size: 11px;
+            color: #6b7280;
+        }
+
+        .grammar-footer .gf-left {
+            color: #22d3ee;
+            cursor: pointer;
+        }
+
+        .grammar-empty {
+            color: #6b7280;
+            font-size: 13px;
+            padding: 8px 0;
+        }
+
+        /* ============================================================
+           底部工具栏
+           ============================================================ */
+        .dictation-bottom {
+            position: absolute;
+            left: 0;
+            right: 0;
+            bottom: 70px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 30px;
+            z-index: 10;
+            pointer-events: none;
+        }
+
+        .waveform {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            height: 46px;
+            width: 60%;
+            max-width: 620px;
+            opacity: 0;
+            transition: opacity 0.35s ease;
+            pointer-events: none;
+        }
+
+        .waveform.active { opacity: 1; }
+
+        .wave-bar {
+            width: 3px;
+            border-radius: 2px;
+            background: linear-gradient(180deg, #22d3ee 0%, #06b6d4 100%);
+            height: 6px;
+            transition: height 0.08s linear;
+            box-shadow: 0 0 4px rgba(34, 211, 238, 0.6);
+        }
+
+        .waveform.active .wave-bar {
+            background: linear-gradient(180deg, #67e8f9 0%, #22d3ee 100%);
+            box-shadow: 0 0 6px rgba(103, 232, 249, 0.8);
+        }
+
+        .dictation-toolbar {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 14px;
+            border: 1.5px solid rgba(255, 255, 255, 0.7);
+            border-radius: 22px;
+            padding: 14px 22px;
+            background: rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            pointer-events: auto;
+        }
+
+        .d-tool-btn {
+            width: 50px;
+            height: 50px;
+            border-radius: 14px;
+            background: #1a1a26;
+            border: 1px solid #2a2a3d;
+            color: #c8cbd8;
+            font-size: 22px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s, border-color 0.2s, color 0.2s, transform 0.15s;
+            font-family: inherit;
+        }
+
+        .d-tool-btn:hover {
+            background: #23232f;
+            border-color: #3a3a50;
+            color: #fff;
+        }
+
+        .d-tool-btn:active { transform: scale(0.95); }
+
+        .d-tool-btn.d-primary {
+            background: linear-gradient(135deg, #0ea5e9, #0284c7);
+            border-color: transparent;
+            color: #fff;
+            box-shadow: 0 4px 16px rgba(14, 165, 233, 0.4);
+        }
+
+        .d-tool-btn.d-primary.playing {
+            animation: playPulse 0.4s ease;
+        }
+
+        .d-tool-btn.starred {
+            color: #fbbf24;
+            border-color: #fbbf24;
+        }
+
+        @keyframes playPulse {
+            0%   { transform: scale(1); }
+            50%  { transform: scale(1.15); }
+            100% { transform: scale(1); }
+        }
+
+        /* ============================================================
+           完成提示
+           ============================================================ */
+        .complete-toast {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.9);
+            background: #15151f;
+            border: 1px solid #2a2a3d;
+            border-radius: 20px;
+            padding: 40px 60px;
+            box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6);
+            text-align: center;
+            z-index: 200;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.25s, transform 0.25s, visibility 0.25s;
+            pointer-events: none;
+        }
+
+        .complete-toast.on {
+            opacity: 1;
+            visibility: visible;
+            transform: translate(-50%, -50%) scale(1);
+        }
+
+        .complete-toast .ct-icon { font-size: 52px; margin-bottom: 14px; }
+        .complete-toast .ct-title {
+            font-size: 22px;
+            font-weight: 800;
+            margin-bottom: 8px;
+            background: linear-gradient(135deg, #22d3ee, #0ea5e9);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .complete-toast .ct-sub { font-size: 13px; color: #8b93a8; }
+
+        /* ============================================================
+           空状态
+           ============================================================ */
+        .empty-wrap {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            color: #6b7280;
+            padding: 20px;
+            z-index: 5;
+        }
+        .empty-wrap .es-icon { font-size: 56px; margin-bottom: 16px; opacity: 0.4; }
+        .empty-wrap .es-title { font-size: 16px; font-weight: 600; color: #c8cbd8; margin-bottom: 8px; }
+        .empty-wrap .es-desc { font-size: 13px; line-height: 1.8; margin-bottom: 20px; }
+        .empty-wrap .es-desc code {
+            background: rgba(255,255,255,0.06);
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-family: monospace;
+            color: #22d3ee;
+            font-size: 12px;
+        }
+        .empty-wrap .es-btn {
+            display: inline-block;
+            background: linear-gradient(135deg, #0ea5e9, #0284c7);
+            color: #fff;
+            border: none;
+            border-radius: 10px;
+            padding: 11px 26px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            box-shadow: 0 4px 12px rgba(14, 165, 233, 0.35);
+            font-family: inherit;
+        }
+
+        /* ============================================================
+           移动端适配
+           ============================================================ */
+        @media (max-width: 900px) {
+            .dictation-topbar { padding: 12px 14px; }
+            .assist-label { display: none; }
+            .cn-prompt { font-size: 20px; margin-bottom: 32px; }
+            .slot-input { font-size: 18px; padding: 3px 4px 6px; min-width: 44px; }
+            .word-slots { gap: 20px 22px; }
+            .dictation-bottom { bottom: 40px; gap: 20px; }
+            .dictation-toolbar { padding: 10px 16px; border-radius: 18px; gap: 10px; }
+            .d-tool-btn { width: 44px; height: 44px; font-size: 18px; border-radius: 12px; }
+            .waveform { width: 80%; gap: 2px; }
+            .wave-bar { width: 2px; }
+            .grammar-popup { top: 60px; padding: 18px 18px 12px; }
+            .gp-word { font-size: 16px; }
+            .grammar-parts { gap: 12px; }
+            .grammar-part { padding-right: 12px; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 顶部栏 -->
+    <div class="dictation-topbar">
+        <button class="d-exit-btn" id="dExit">← 退出听写</button>
+        <span class="d-progress-text" id="dProgress">1 / 10</span>
+        <div class="assist-toggle-wrap">
+            <span class="assist-label">辅助听写</span>
+            <div class="assist-switch" id="assistSwitch"><div class="assist-knob"></div></div>
+        </div>
+    </div>
+
+    <!-- 语法弹层 -->
+    <div class="grammar-popup" id="grammarPopup">
+        <div class="grammar-parts" id="grammarParts"></div>
+        <div class="grammar-footer">
+            <span class="gf-left" id="grammarClose">☰ Switch to Text</span>
+            <span class="gf-right">Ctrl+A 或 ESC</span>
+        </div>
+    </div>
+
+    <!-- 主区（中文提示 + 输入格） -->
+    <div class="dictation-main" id="dictationMain">
+        <div class="cn-prompt" id="cnPrompt"></div>
+        <div class="word-slots" id="wordSlots"></div>
+    </div>
+
+    <!-- 底部工具栏 -->
+    <div class="dictation-bottom">
+        <div class="waveform" id="waveform"></div>
+        <div class="dictation-toolbar">
+            <button class="d-tool-btn" id="dBtnPrev" title="上一句">‹</button>
+            <button class="d-tool-btn d-primary" id="dBtnPlay" title="播放发音">🔊</button>
+            <button class="d-tool-btn" id="dBtnEye" title="语法结构">👁</button>
+            <button class="d-tool-btn" id="dBtnStar" title="收藏">☆</button>
+            <button class="d-tool-btn" id="dBtnNext" title="下一句">›</button>
+        </div>
+    </div>
+
+    <!-- 完成提示 -->
+    <div class="complete-toast" id="completeToast">
+        <div class="ct-icon">🎉</div>
+        <div class="ct-title">听写完成！</div>
+        <div class="ct-sub" id="completeSub">本单元已全部完成</div>
+    </div>
+
+<script>
+/* ============================================================
+   登录检查
+   ============================================================ */
+(function() {
+    var userStr = localStorage.getItem('juyou_user');
+    if (!userStr) { window.location.href = 'index.html'; return; }
+    var user = null;
+    try { user = JSON.parse(userStr); } catch (e) {
+        localStorage.removeItem('juyou_user');
+        window.location.href = 'index.html';
+        return;
+    }
+    if (!user || !user.phone) {
+        localStorage.removeItem('juyou_user');
+        window.location.href = 'index.html';
+        return;
+    }
+    window.currentUser = user;
+})();
+
+/* ============================================================
+   网络时间 JYTime
+   ============================================================ */
+window.JYTime = (function() {
+    var offset = 0;
+    var syncPromise = null;
+
+    function fetchWithTimeout(url, opts, timeoutMs, parseFn) {
+        return new Promise(function(resolve) {
+            if (!window.fetch) return resolve(0);
+            var controller = ('AbortController' in window) ? new AbortController() : null;
+            var finished = false;
+            var timer = setTimeout(function() {
+                if (finished) return;
+                finished = true;
+                if (controller) { try { controller.abort(); } catch (e) {} }
+                resolve(0);
+            }, timeoutMs);
+            var fetchOpts = Object.assign({ cache: 'no-store' }, opts || {});
+            if (controller) fetchOpts.signal = controller.signal;
+            fetch(url, fetchOpts)
+                .then(function(res) { return finished ? 0 : parseFn(res); })
+                .then(function(ts) {
+                    if (finished) return;
+                    finished = true;
+                    clearTimeout(timer);
+                    resolve(ts > 0 ? ts : 0);
+                })
+                .catch(function() {
+                    if (finished) return;
+                    finished = true;
+                    clearTimeout(timer);
+                    resolve(0);
+                });
+        });
+    }
+
+    function tryCloudflare() {
+        return fetchWithTimeout('https://www.cloudflare.com/cdn-cgi/trace', {}, 2500,
+            function(res) {
+                return res.text().then(function(text) {
+                    var m = text.match(/^ts=([\d.]+)/m);
+                    if (!m) return 0;
+                    return Math.round(parseFloat(m[1]) * 1000);
+                });
+            }).then(function(ts) { return { ts: ts || 0, source: 'Cloudflare' }; });
+    }
+
+    function trySuning() {
+        return new Promise(function(resolve) {
+            var cbName = '__jySn_' + Date.now() + '_' + Math.floor(Math.random() * 1e6);
+            var script = document.createElement('script');
+            var done = false;
+            function cleanup() {
+                if (script.parentNode) script.parentNode.removeChild(script);
+                try { delete window[cbName]; } catch (e) { window[cbName] = undefined; }
+            }
+            var timer = setTimeout(function() {
+                if (done) return;
+                done = true;
+                cleanup();
+                resolve({ ts: 0, source: '苏宁' });
+            }, 2500);
+            window[cbName] = function(data) {
+                if (done) return;
+                done = true;
+                clearTimeout(timer);
+                var ts = 0;
+                try {
+                    if (data && data.sysTime1) {
+                        var s = String(data.sysTime1);
+                        ts = new Date(
+                            parseInt(s.slice(0,4),10),
+                            parseInt(s.slice(4,6),10)-1,
+                            parseInt(s.slice(6,8),10),
+                            parseInt(s.slice(8,10),10),
+                            parseInt(s.slice(10,12),10),
+                            parseInt(s.slice(12,14),10)
+                        ).getTime();
+                    }
+                } catch (e) {}
+                cleanup();
+                resolve({ ts: ts > 0 ? ts : 0, source: '苏宁' });
+            };
+            script.src = 'https://quan.suning.com/getSysTime.do?callback=' + cbName;
+            script.onerror = function() {
+                if (done) return;
+                done = true;
+                clearTimeout(timer);
+                cleanup();
+                resolve({ ts: 0, source: '苏宁' });
+            };
+            document.head.appendChild(script);
+        });
+    }
+
+    function sync() {
+        if (syncPromise) return syncPromise;
+        syncPromise = Promise.all([tryCloudflare(), trySuning()])
+            .then(function(results) {
+                for (var i = 0; i < results.length; i++) {
+                    if (results[i].ts > 0) {
+                        var diff = results[i].ts - Date.now();
+                        if (Math.abs(diff) < 86400000 * 365) {
+                            offset = diff;
+                            console.log('[JYTime] ✅ 同步成功（来源：' + results[i].source + '）');
+                            return true;
+                        }
+                    }
+                }
+                return false;
+            });
+        return syncPromise;
+    }
+
+    function now() { return Date.now() + offset; }
+    function date() { return new Date(now()); }
+
+    return { sync: sync, now: now, date: date };
+})();
+
+/* ============================================================
+   学习数据 JYStore
+   ============================================================ */
+window.JYStore = (function() {
+    var KEY = 'juyou_study';
+    var MAX_RECORDS = 500;
+    var INTERVAL_DAYS = [0, 1, 3];
+    var RELEARNING_MINUTES = 10;
+    var NEW_ITEM_HOURS = 24;
+    var MASTERED_STREAK = 3;
+
+    function getDefault() {
+        return {
+            records: [], reviewBook: [], wordBook: [], mastered: [], starred: [],
+            stats: { totalDays: 0, totalTime: 0, totalSentences: 0, streak: 0, lastStudyDate: null, todayCount: 0, todayDate: null }
+        };
+    }
+
+    function load() {
+        try {
+            var raw = localStorage.getItem(KEY);
+            if (!raw) return getDefault();
+            var data = JSON.parse(raw);
+            var def = getDefault();
+            return {
+                records: data.records || def.records,
+                reviewBook: data.reviewBook || def.reviewBook,
+                wordBook: data.wordBook || def.wordBook,
+                mastered: data.mastered || def.mastered,
+                starred: data.starred || def.starred,
+                stats: Object.assign({}, def.stats, data.stats || {})
+            };
+        } catch (e) { return getDefault(); }
+    }
+
+    function save(data) {
+        try { localStorage.setItem(KEY, JSON.stringify(data)); } catch (e) {}
+    }
+
+    function getTodayStr() {
+        var d = JYTime.date();
+        var m = d.getMonth() + 1;
+        var day = d.getDate();
+        return d.getFullYear() + '-' + (m < 10 ? '0' + m : m) + '-' + (day < 10 ? '0' + day : day);
+    }
+
+    function updateReviewProgress(data, en, cn, correct, nowTs) {
+        var idx = -1;
+        for (var i = 0; i < data.reviewBook.length; i++) {
+            if (data.reviewBook[i].en === en) { idx = i; break; }
+        }
+        if (correct) {
+            if (idx > -1) {
+                var item = data.reviewBook[idx];
+                item.streak = (item.streak || 0) + 1;
+                if (item.streak >= MASTERED_STREAK) {
+                    data.reviewBook.splice(idx, 1);
+                    if (!data.mastered.some(function(m) { return m.en === en; })) {
+                        data.mastered.unshift({ en: en, cn: cn, masteredTime: nowTs, accuracy: 100 });
+                    }
+                } else {
+                    item.state = item.streak === 1 ? 'learning' : 'review';
+                    item.nextReview = nowTs + INTERVAL_DAYS[Math.min(item.streak, 2)] * 86400000;
+                }
+            }
+        } else {
+            if (idx > -1) {
+                var it = data.reviewBook[idx];
+                it.streak = 0;
+                it.state = 'relearning';
+                it.nextReview = nowTs + RELEARNING_MINUTES * 60000;
+            } else {
+                data.reviewBook.unshift({
+                    en: en, cn: cn, addTime: nowTs,
+                    nextReview: nowTs + NEW_ITEM_HOURS * 3600000,
+                    state: 'new', streak: 0
+                });
+            }
+        }
+    }
+
+    function addRecord(opts) {
+        var data = load();
+        var nowTs = JYTime.now();
+        data.records.unshift({
+            id: nowTs + '_' + Math.random().toString(36).slice(2, 8),
+            en: opts.en || '', cn: opts.cn || '',
+            mode: opts.mode || 'dictation',
+            correct: !!opts.correct,
+            timestamp: nowTs
+        });
+        if (data.records.length > MAX_RECORDS) data.records = data.records.slice(0, MAX_RECORDS);
+
+        var today = getTodayStr();
+        if (data.stats.todayDate !== today) {
+            data.stats.todayDate = today;
+            data.stats.todayCount = 0;
+            var last = data.stats.lastStudyDate;
+            if (last) {
+                var diffDays = Math.round((new Date(today + 'T00:00:00').getTime() - new Date(last + 'T00:00:00').getTime()) / 86400000);
+                if (diffDays === 1) data.stats.streak += 1;
+                else if (diffDays > 1) data.stats.streak = 1;
+            } else {
+                data.stats.streak = 1;
+            }
+            data.stats.totalDays += 1;
+        }
+        data.stats.todayCount += 1;
+        data.stats.totalSentences += 1;
+        data.stats.lastStudyDate = today;
+
+        if (opts.en) updateReviewProgress(data, opts.en, opts.cn, opts.correct, nowTs);
+        save(data);
+    }
+
+    function toggleStar(item) {
+        var data = load();
+        var idx = -1;
+        for (var i = 0; i < data.starred.length; i++) {
+            if (data.starred[i].en === item.en) { idx = i; break; }
+        }
+        if (idx > -1) { data.starred.splice(idx, 1); save(data); return false; }
+        data.starred.unshift({ en: item.en, cn: item.cn, timestamp: JYTime.now() });
+        save(data);
+        return true;
+    }
+
+    function isStarred(en) {
+        var data = load();
+        for (var i = 0; i < data.starred.length; i++) if (data.starred[i].en === en) return true;
+        return false;
+    }
+
+    return { load: load, save: save, addRecord: addRecord, toggleStar: toggleStar, isStarred: isStarred };
+})();
+
+/* ============================================================
+   工具函数
+   ============================================================ */
+function getUrlParam(name) {
+    var m = window.location.search.match(new RegExp('[?&]' + name + '=([^&]*)'));
+    return m ? decodeURIComponent(m[1]) : '';
+}
+
+function escapeHtml(str) {
+    if (str == null) return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
+/* 归一化：忽略大小写、标点、撇号 */
+function normalize(str) {
+    return String(str || '')
+        .replace(/[\u2018\u2019\u201C\u201D'".,!?;:]/g, '')
+        .replace(/\s+/g, ' ')
+        .trim()
+        .toLowerCase();
+}
+
+/* ============================================================
+   加载数据
+   ============================================================ */
+var URL_COURSE_ID = getUrlParam('course');
+var URL_LESSON_NO = parseInt(getUrlParam('lesson'), 10) || 1;
+
+var CURRENT_UNIT = null;
+var CURRENT_COURSE = null;
+
+var STATE = {
+    index: 0,
+    combo: 0,
+    inputs: [],
+    isCompleted: false,
+    isFinished: false,
+    assistEnabled: true
+};
+
+// 从 localStorage 读辅助开关
+(function loadAssistSetting() {
+    try {
+        var v = localStorage.getItem('juyou_assist_dictation');
+        if (v === '0') STATE.assistEnabled = false;
+    } catch (e) {}
+})();
+
+(function loadData() {
+    var lib = window.JY_COURSE_CONTENT;
+    if (!lib) {
+        console.error('[Dictation] JY_COURSE_CONTENT 未加载');
+        return;
+    }
+    var course = lib[URL_COURSE_ID];
+    if (!course) {
+        var ids = Object.keys(lib);
+        if (ids.length > 0) {
+            URL_COURSE_ID = ids[0];
+            course = lib[URL_COURSE_ID];
+            console.warn('[Dictation] URL 未指定课程，默认：' + URL_COURSE_ID);
+        } else {
+            console.error('[Dictation] 内容库为空');
+            return;
+        }
+    }
+    if (!course.units || course.units.length === 0) {
+        console.error('[Dictation] 课程没有单元');
+        return;
+    }
+    var unit = null;
+    for (var i = 0; i < course.units.length; i++) {
+        if (course.units[i].unitId === 'U' + URL_LESSON_NO) {
+            unit = course.units[i];
+            break;
+        }
+    }
+    if (!unit) unit = course.units[0];
+    if (!unit.sentences || unit.sentences.length === 0) {
+        console.error('[Dictation] 单元没有句子');
+        return;
+    }
+    CURRENT_UNIT = unit;
+    CURRENT_COURSE = course;
+    console.log('[Dictation] 已加载：' + course.courseName + ' · ' + unit.title +
+        '（共 ' + unit.sentences.length + ' 句）');
+})();
+
+/* ============================================================
+   渲染
+   ============================================================ */
+function render() {
+    if (!CURRENT_UNIT) {
+        document.getElementById('dictationMain').style.display = 'none';
+        document.querySelector('.dictation-bottom').style.display = 'none';
+        var wrap = document.createElement('div');
+        wrap.className = 'empty-wrap';
+        wrap.innerHTML =
+            '<div class="es-icon">📭</div>' +
+            '<div class="es-title">没有找到听写数据</div>' +
+            '<div class="es-desc">请检查 URL 参数，例如：<br>' +
+                '<code>dictation.html?course=zoo_explorer&lesson=1</code>' +
+            '</div>' +
+            '<a class="es-btn" href="my-courses.html">返回我的课程</a>';
+        document.body.appendChild(wrap);
+        return;
+    }
+
+    var sentences = CURRENT_UNIT.sentences;
+    if (STATE.index >= sentences.length) {
+        showComplete();
+        return;
+    }
+
+    var s = sentences[STATE.index];
+    var words = Array.isArray(s.words) && s.words.length > 0
+        ? s.words
+        : (s.en || '').split(/\s+/).filter(Boolean);
+    var structure = Array.isArray(s.structure) ? s.structure : [];
+
+    // 中文提示
+    document.getElementById('cnPrompt').textContent = s.cn || '';
+
+    // 单词格
+    var slotsHtml = words.map(function(w, i) {
+        var width = Math.max(w.length, 5) + 1;
+        return '<input class="slot-input" data-index="' + i + '" data-word="' + escapeHtml(w) + '" ' +
+               'type="text" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" ' +
+               'style="width:' + width + 'ch;" placeholder="____">';
+    }).join('');
+    document.getElementById('wordSlots').innerHTML = slotsHtml;
+
+    // 语法弹层内容
+    var partsEl = document.getElementById('grammarParts');
+    if (structure.length > 0) {
+        partsEl.innerHTML = structure.map(function(st) {
+            return '<div class="grammar-part">' +
+                '<span class="gp-label">' + escapeHtml(st.label) + '</span>' +
+                '<span class="gp-word">' + escapeHtml(st.word) + '</span>' +
+            '</div>';
+        }).join('');
+    } else {
+        partsEl.innerHTML = '<div class="grammar-empty">本句暂无语法标注</div>';
+    }
+
+    // 输入格
+    STATE.inputs = Array.prototype.slice.call(document.querySelectorAll('.slot-input'));
+    STATE.isCompleted = false;
+
+    STATE.inputs.forEach(function(input) {
+        input.addEventListener('input', onInput);
+        input.addEventListener('blur', onBlur);
+        input.addEventListener('keydown', onKeyDown);
+        input.addEventListener('focus', onFocus);
+    });
+
+    // 更新顶部进度
+    document.getElementById('dProgress').textContent =
+        (STATE.index + 1) + ' / ' + sentences.length;
+
+    // 更新收藏按钮
+    var starBtn = document.getElementById('dBtnStar');
+    if (JYStore.isStarred(s.en)) {
+        starBtn.classList.add('starred');
+        starBtn.textContent = '★';
+    } else {
+        starBtn.classList.remove('starred');
+        starBtn.textContent = '☆';
+    }
+
+    // 关闭语法弹层
+    document.getElementById('grammarPopup').classList.remove('show');
+
+    // 自动聚焦第一格
+    if (STATE.inputs.length > 0) {
+        setTimeout(function() {
+            STATE.inputs[0].focus();
+            try { STATE.inputs[0].setSelectionRange(0, 0); } catch (e) {}
+        }, 60);
+    }
+}
+
+/* ============================================================
+   输入事件
+   ============================================================ */
+function onInput(e) {
+    var input = e.target;
+    var idx = parseInt(input.getAttribute('data-index'), 10);
+    var word = input.getAttribute('data-word');
+
+    var len = Math.max(word.length, input.value.length, 4);
+    input.style.width = (len + 1) + 'ch';
+
+    var uv = normalize(input.value);
+    var cv = normalize(word);
+
+    if (uv === cv) {
+        input.classList.add('correct');
+        input.classList.remove('error', 'wrong');
+        if (idx < STATE.inputs.length - 1) {
+            STATE.inputs[idx + 1].focus();
+            setTimeout(function() {
+                try { STATE.inputs[idx + 1].setSelectionRange(99, 99); } catch (e) {}
+            }, 10);
+        } else {
+            checkAllCorrect();
+        }
+    } else {
+        input.classList.remove('correct');
+    }
+}
+
+function onBlur(e) {
+    var input = e.target;
+    if (!input.value.trim()) return;
+    var word = input.getAttribute('data-word');
+    if (normalize(input.value) !== normalize(word)) {
+        input.classList.add('wrong');
+        input.classList.remove('correct', 'error');
+        setTimeout(function() {
+            input.classList.remove('wrong');
+            input.classList.add('error');
+        }, 600);
+
+        // 辅助听写：错 5 次提示答案
+        if (STATE.assistEnabled) {
+            var idx = parseInt(input.getAttribute('data-index'), 10);
+            var val = normalize(input.value);
+            var lastVal = input.getAttribute('data-last-wrong');
+            if (lastVal !== val) {
+                input.setAttribute('data-last-wrong', val);
+                var count = parseInt(input.getAttribute('data-err-count') || '0', 10) + 1;
+                input.setAttribute('data-err-count', count);
+                if (count >= 5) {
+                    input.setAttribute('data-err-count', '0');
+                    setTimeout(function() {
+                        alert('这个词已经拼错 5 次了\n\n正确答案：' + word);
+                    }, 700);
+                }
+            }
+        }
+    }
+}
+
+function onFocus(e) {
+    var input = e.target;
+    var word = input.getAttribute('data-word');
+    if (!input.value.trim()) {
+        input.classList.remove('error', 'wrong', 'correct');
+        return;
+    }
+    if (normalize(input.value) === normalize(word)) {
+        input.classList.add('correct');
+        input.classList.remove('error', 'wrong');
+    } else {
+        input.classList.add('error');
+        input.classList.remove('correct', 'wrong');
+    }
+}
+
+function onKeyDown(e) {
+    var input = e.target;
+    var idx = parseInt(input.getAttribute('data-index'), 10);
+
+    // Tab → 切换语法弹层
+    if (e.key === 'Tab') {
+        e.preventDefault();
+        toggleGrammar();
+        return;
+    }
+
+    // Enter → 检查是否全对
+    if (e.key === 'Enter') {
+        e.preventDefault();
+        if (checkAllCorrect()) return;
+        for (var i = 0; i < STATE.inputs.length; i++) {
+            if (!STATE.inputs[i].classList.contains('correct')) {
+                STATE.inputs[i].focus();
+                return;
+            }
+        }
+        return;
+    }
+
+    // 空格 → 下一格
+    if (e.key === ' ') {
+        var cw = input.getAttribute('data-word') || '';
+        var hasSpace = /\s/.test(cw);
+        var uv = normalize(input.value);
+        var cv = normalize(cw);
+        if (!hasSpace || uv === cv || !input.value.trim()) {
+            e.preventDefault();
+            if (idx < STATE.inputs.length - 1) STATE.inputs[idx + 1].focus();
+        }
+        return;
+    }
+
+    // Backspace 空格退回
+    if (e.key === 'Backspace' && !input.value) {
+        e.preventDefault();
+        if (idx > 0) STATE.inputs[idx - 1].focus();
+        return;
+    }
+
+    // 方向键
+    if (e.key === 'ArrowRight' && input.selectionStart === input.value.length) {
+        e.preventDefault();
+        if (idx < STATE.inputs.length - 1) STATE.inputs[idx + 1].focus();
+        return;
+    }
+    if (e.key === 'ArrowLeft' && input.selectionStart === 0) {
+        e.preventDefault();
+        if (idx > 0) STATE.inputs[idx - 1].focus();
+        return;
+    }
+    if (e.key === 'ArrowUp') { e.preventDefault(); goPrev(); return; }
+    if (e.key === 'ArrowDown') { e.preventDefault(); goNext(); return; }
+    if (e.key === 'Escape') {
+        document.getElementById('grammarPopup').classList.remove('show');
+        return;
+    }
+}
+
+/* ============================================================
+   检查是否全对
+   ============================================================ */
+function checkAllCorrect() {
+    if (STATE.isCompleted || STATE.isFinished) return true;
+    var allCorrect = STATE.inputs.every(function(input) {
+        var word = input.getAttribute('data-word');
+        return normalize(input.value) === normalize(word);
+    });
+    if (allCorrect) {
+        STATE.isCompleted = true;
+        STATE.combo += 1;
+
+        var s = CURRENT_UNIT.sentences[STATE.index];
+        JYStore.addRecord({ en: s.en, cn: s.cn, mode: 'dictation', correct: true });
+
+        setTimeout(function() { advance(); }, 900);
+        return true;
+    }
+    return false;
+}
+
+/* ============================================================
+   切换句子
+   ============================================================ */
+function advance() {
+    if (STATE.index < CURRENT_UNIT.sentences.length - 1) {
+        STATE.index += 1;
+        render();
+    } else {
+        STATE.isFinished = true;
+        showComplete();
+    }
+}
+
+function goPrev() {
+    if (STATE.index > 0) {
+        STATE.index -= 1;
+        render();
+    }
+}
+
+function goNext() {
+    if (!CURRENT_UNIT) return;
+    var s = CURRENT_UNIT.sentences[STATE.index];
+    if (s && !STATE.isCompleted) {
+        STATE.combo = 0;
+        JYStore.addRecord({ en: s.en, cn: s.cn, mode: 'dictation', correct: false });
+    }
+    if (STATE.index < CURRENT_UNIT.sentences.length - 1) {
+        STATE.index += 1;
+        render();
+    } else {
+        STATE.isFinished = true;
+        showComplete();
+    }
+}
+
+/* ============================================================
+   ★ 语音系统：有道 TTS 预加载 + 系统 TTS 兜底
+   ============================================================ */
+var EN_VOICE = null;
+var audioCache = {};      // { 句子索引: { audio, state } }
+var USE_TTS_FALLBACK = false;
+
+function loadTTSVoices() {
+    if (!('speechSynthesis' in window)) return;
+    var voices = window.speechSynthesis.getVoices();
+    if (!voices || voices.length === 0) return;
+    EN_VOICE = voices.find(function(v) { return v.lang === 'en-US'; })
+            || voices.find(function(v) { return v.lang === 'en-GB'; })
+            || voices.find(function(v) { return v.lang && v.lang.indexOf('en') === 0; })
+            || null;
+}
+
+if ('speechSynthesis' in window) {
+    loadTTSVoices();
+    if (typeof window.speechSynthesis.onvoiceschanged !== 'undefined') {
+        window.speechSynthesis.onvoiceschanged = loadTTSVoices;
+    }
+}
+
+/* ★ 有道 TTS 音频 URL */
+function getAudioUrl(en) {
+    return 'https://dict.youdao.com/dictvoice?audio=' +
+        encodeURIComponent(en) + '&type=2';
+}
+
+/* ★ 预加载当前单元所有句子的读音 */
+function preloadAudios() {
+    if (!CURRENT_UNIT || !CURRENT_UNIT.sentences) return;
+
+    var sentences = CURRENT_UNIT.sentences;
+    var totalCount = sentences.length;
+    var loadedCount = 0;
+    var errorCount = 0;
+
+    console.log('[Audio] 开始预加载 ' + totalCount + ' 句读音...');
+
+    sentences.forEach(function(s, i) {
+        if (audioCache[i]) return;
+
+        var audio = new Audio();
+        audio.preload = 'auto';
+        audio.src = getAudioUrl(s.en);
+        audioCache[i] = { audio: audio, state: 'loading' };
+
+        audio.addEventListener('loadeddata', function() {
+            audioCache[i].state = 'ready';
+            loadedCount++;
+            if (loadedCount + errorCount >= totalCount) {
+                if (errorCount === 0) {
+                    console.log('[Audio] ✅ 全部预加载完成（' + totalCount + ' 句）');
+                } else {
+                    console.log('[Audio] 预加载完成：成功 ' + loadedCount + ' / 失败 ' + errorCount);
+                }
+            }
+        }, { once: true });
+
+        audio.addEventListener('error', function() {
+            audioCache[i].state = 'error';
+            errorCount++;
+            if (loadedCount + errorCount >= totalCount) {
+                console.log('[Audio] 预加载完成：成功 ' + loadedCount + ' / 失败 ' + errorCount);
+            }
+        }, { once: true });
+
+        try { audio.load(); } catch (e) {}
+    });
+}
+
+/* ============================================================
+   波形动画
+   ============================================================ */
+var waveRafId = null;
+var playToken = 0;
+
+function buildWaveform() {
+    var wave = document.getElementById('waveform');
+    if (!wave) return;
+    var html = '';
+    for (var i = 0; i < 50; i++) html += '<div class="wave-bar"></div>';
+    wave.innerHTML = html;
+}
+
+function startWaveAnimation(durationMs) {
+    var bars = document.querySelectorAll('#waveform .wave-bar');
+    if (!bars.length) return;
+    if (waveRafId) cancelAnimationFrame(waveRafId);
+    var startTime = performance.now();
+    var BAR_COUNT = bars.length;
+    var CENTER = (BAR_COUNT - 1) / 2;
+
+    function frame(now) {
+        var elapsed = now - startTime;
+        var progress = Math.min(elapsed / durationMs, 1);
+        var envelope = Math.pow(Math.sin(progress * Math.PI), 0.7);
+        bars.forEach(function(bar, i) {
+            var dist = Math.abs(i - CENTER) / CENTER;
+            var centerWeight = 1 - dist * 0.65;
+            var t = elapsed / 1000;
+            var syllable = Math.abs(Math.sin(t * 8 + i * 0.7));
+            var harmonic = Math.abs(Math.sin(t * 13.5 + i * 0.35)) * 0.5;
+            var noise = Math.random() * 0.1;
+            var intensity = envelope * centerWeight * (syllable + harmonic + noise) / 1.6;
+            var height = 6 + Math.max(0, Math.min(1, intensity)) * 38;
+            bar.style.height = height + 'px';
+        });
+        if (progress < 1) {
+            waveRafId = requestAnimationFrame(frame);
+        } else {
+            bars.forEach(function(b) { b.style.height = '6px'; });
+            waveRafId = null;
+        }
+    }
+    waveRafId = requestAnimationFrame(frame);
+}
+
+function stopWaveAnimation() {
+    if (waveRafId) { cancelAnimationFrame(waveRafId); waveRafId = null; }
+    var bars = document.querySelectorAll('#waveform .wave-bar');
+    bars.forEach(function(bar) { bar.style.height = '6px'; });
+}
+
+/* ★ 播放 UI 启动 */
+function startPlaybackUI() {
+    var waveform = document.getElementById('waveform');
+    var playBtn = document.getElementById('dBtnPlay');
+    if (waveform) {
+        waveform.classList.add('active');
+        stopWaveAnimation();
+        buildWaveform();
+    }
+    if (playBtn) {
+        playBtn.classList.remove('playing');
+        void playBtn.offsetWidth;
+        playBtn.classList.add('playing');
+        setTimeout(function() { playBtn.classList.remove('playing'); }, 400);
+    }
+}
+
+/* ★ 播放 UI 停止 */
+function stopPlaybackUI() {
+    stopWaveAnimation();
+    var waveform = document.getElementById('waveform');
+    if (waveform) waveform.classList.remove('active');
+}
+
+/* ★ 系统 TTS 兜底 */
+function fallbackTTS(en, myToken) {
+    if (!('speechSynthesis' in window)) {
+        stopPlaybackUI();
+        return;
+    }
+    startPlaybackUI();
+    var estimatedDuration = Math.max(1200, en.length * 80);
+    startWaveAnimation(estimatedDuration);
+
+    var u = new SpeechSynthesisUtterance(en);
+    u.lang = 'en-US';
+    u.rate = 0.85;
+    u.pitch = 1;
+    u.volume = 1;
+    if (EN_VOICE) u.voice = EN_VOICE;
+
+    u.onend = function() { if (myToken === playToken) stopPlaybackUI(); };
+    u.onerror = function() { if (myToken === playToken) stopPlaybackUI(); };
+
+    window.speechSynthesis.speak(u);
+}
+
+/* ★ 主播放函数：优先预加载音频，失败兜底 TTS */
+function playAudio() {
+    if (!CURRENT_UNIT) return;
+    var i = STATE.index;
+    var s = CURRENT_UNIT.sentences[i];
+    if (!s) return;
+
+    playToken++;
+    var myToken = playToken;
+
+    // 停掉上一次播放的所有音频
+    Object.keys(audioCache).forEach(function(k) {
+        var c = audioCache[k];
+        if (c && c.audio) {
+            try { c.audio.pause(); c.audio.currentTime = 0; } catch (e) {}
+        }
+    });
+    if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+
+    var cached = audioCache[i];
+
+    // ★ 优先用预加载好的音频（秒播）
+    if (cached && cached.audio && cached.state !== 'error' && !USE_TTS_FALLBACK) {
+        var audio = cached.audio;
+        try { audio.currentTime = 0; } catch (e) {}
+
+        startPlaybackUI();
+        startWaveAnimation(8000);
+
+        audio.onended = function() {
+            if (myToken === playToken) stopPlaybackUI();
+        };
+        audio.onerror = function() {
+            if (myToken !== playToken) return;
+            cached.state = 'error';
+            fallbackTTS(s.en, myToken);
+        };
+
+        var p = null;
+        try { p = audio.play(); } catch (e) { p = null; }
+
+        if (p && p.catch) {
+            p.catch(function(err) {
+                console.warn('[Audio] play() 失败：', err);
+                if (myToken === playToken) {
+                    fallbackTTS(s.en, myToken);
+                }
+            });
+        }
+        return;
+    }
+
+    // ★ 兜底：系统 TTS
+    fallbackTTS(s.en, myToken);
+}
+
+/* ============================================================
+   语法弹层
+   ============================================================ */
+function toggleGrammar() {
+    var popup = document.getElementById('grammarPopup');
+    popup.classList.toggle('show');
+}
+
+/* ============================================================
+   完成提示
+   ============================================================ */
+function showComplete() {
+    var total = CURRENT_UNIT ? CURRENT_UNIT.sentences.length : 0;
+    var toast = document.getElementById('completeToast');
+    document.getElementById('completeSub').textContent = '本单元共 ' + total + ' 句，已全部完成';
+    toast.classList.add('on');
+    setTimeout(function() { toast.classList.remove('on'); }, 3200);
+}
+
+/* ============================================================
+   辅助听写开关
+   ============================================================ */
+(function initAssistSwitch() {
+    var sw = document.getElementById('assistSwitch');
+    if (!sw) return;
+    if (STATE.assistEnabled) sw.classList.add('on');
+    else sw.classList.remove('on');
+
+    sw.addEventListener('click', function() {
+        STATE.assistEnabled = !STATE.assistEnabled;
+        if (STATE.assistEnabled) sw.classList.add('on');
+        else sw.classList.remove('on');
+        try {
+            localStorage.setItem('juyou_assist_dictation', STATE.assistEnabled ? '1' : '0');
+        } catch (e) {}
+    });
+})();
+
+/* ============================================================
+   底部按钮事件
+   ============================================================ */
+document.getElementById('dExit').addEventListener('click', function() {
+    if (window.history.length > 1) {
+        window.history.back();
+    } else if (CURRENT_COURSE) {
+        window.location.href = 'course.html?course=' + encodeURIComponent(URL_COURSE_ID);
+    } else {
+        window.location.href = 'my-courses.html';
+    }
+});
+
+document.getElementById('dBtnPrev').addEventListener('click', goPrev);
+document.getElementById('dBtnNext').addEventListener('click', goNext);
+document.getElementById('dBtnPlay').addEventListener('click', playAudio);
+document.getElementById('dBtnEye').addEventListener('click', toggleGrammar);
+document.getElementById('grammarClose').addEventListener('click', toggleGrammar);
+document.getElementById('dBtnStar').addEventListener('click', function() {
+    if (!CURRENT_UNIT) return;
+    var s = CURRENT_UNIT.sentences[STATE.index];
+    var nowStarred = JYStore.toggleStar({ en: s.en, cn: s.cn });
+    this.classList.toggle('starred', nowStarred);
+    this.textContent = nowStarred ? '★' : '☆';
+});
+
+/* ESC 关闭弹层 */
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        document.getElementById('grammarPopup').classList.remove('show');
+    }
+});
+
+/* ============================================================
+   初始化
+   ============================================================ */
+JYTime.sync();
+buildWaveform();
+preloadAudios();     // ★ 进页面立即预加载本单元所有读音
+render();
+</script>
+
+</body>
+</html>
