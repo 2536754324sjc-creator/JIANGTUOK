@@ -6,35 +6,12 @@
     <title>课程详情 - 句游英语</title>
     <script src="juyou-sync.js"></script>
     <script src="data/juyou-courses-registry.js"></script>
+    <link rel="stylesheet" href="assets/common.css">
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif; background: #f5f7fb; color: #333; min-height: 100vh; }
-        :root { --brand: #4f6ef7; --text-main: #1a1a2e; --text-sub: #666; --text-mute: #999; --border: #eef1f8; }
-        a { text-decoration: none; color: inherit; }
-        ::-webkit-scrollbar { width: 6px; height: 6px; }
-        ::-webkit-scrollbar-thumb { background: #d8dfee; border-radius: 99px; }
-
-        .app-layout { display: flex; min-height: 100vh; }
-        .sidebar { width: 220px; flex-shrink: 0; background: #fff; border-right: 1px solid var(--border); display: flex; flex-direction: column; padding: 24px 16px; position: sticky; top: 0; height: 100vh; overflow-y: auto; }
-        .sidebar .logo { font-size: 20px; font-weight: 800; color: var(--brand); padding: 0 12px; margin-bottom: 28px; display: flex; align-items: center; gap: 8px; }
-        .nav-group { margin-bottom: 8px; }
-        .nav-group-title { font-size: 11px; color: #bbb; padding: 8px 12px; letter-spacing: 1px; }
-        .nav-item { display: flex; align-items: center; gap: 10px; padding: 11px 12px; border-radius: 10px; font-size: 14px; color: var(--text-sub); cursor: pointer; transition: background 0.2s, color 0.2s; margin-bottom: 2px; }
-        .nav-item:hover { background: #f4f6fc; color: var(--brand); }
-        .nav-item.on { background: #eef2ff; color: var(--brand); font-weight: 600; }
-        .nav-item .nav-icon { font-size: 17px; width: 20px; text-align: center; flex-shrink: 0; }
-        .sidebar-bottom { margin-top: auto; padding-top: 16px; }
-        .vip-card { background: linear-gradient(135deg, #4f6ef7, #7b8fff); border-radius: 14px; padding: 16px; color: #fff; margin-bottom: 10px; cursor: pointer; }
-        .vip-card .vip-title { font-size: 14px; font-weight: 700; margin-bottom: 4px; }
-        .vip-card .vip-desc { font-size: 11px; opacity: 0.85; line-height: 1.5; }
-
-        .main-area { flex: 1; min-width: 0; display: flex; flex-direction: column; }
-        .topbar { background: #fff; border-bottom: 1px solid var(--border); padding: 14px 28px; display: flex; align-items: center; gap: 20px; position: sticky; top: 0; z-index: 50; }
+        
         .back-btn { display: flex; align-items: center; gap: 6px; font-size: 14px; color: var(--text-sub); cursor: pointer; padding: 6px 12px; border-radius: 8px; transition: background 0.2s; flex-shrink: 0; }
         .back-btn:hover { background: #f4f6fc; color: var(--brand); }
         .topbar-title { font-size: 15px; font-weight: 700; color: var(--text-main); }
-        .topbar-right { margin-left: auto; display: flex; align-items: center; gap: 16px; }
-        .user-avatar { width: 38px; height: 38px; border-radius: 50%; background: linear-gradient(135deg, #4f6ef7, #7b8fff); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 600; cursor: pointer; flex-shrink: 0; }
 
         .content-scroll { padding: 24px 28px 110px; }
         .content-wrap { max-width: 1100px; margin: 0 auto; }
@@ -222,42 +199,13 @@
             .bottom-bar { left: 64px; padding: 12px 14px; }
         }
     </style>
+    <script src="assets/common.js"></script>
 </head>
 <body>
 
 <div class="app-layout">
 
-    <aside class="sidebar">
-        <div class="logo"><span class="logo-icon">🎯</span><span class="logo-text">句游英语</span></div>
-        <nav>
-            <div class="nav-group">
-                <div class="nav-group-title">学习</div>
-                <div class="nav-item" data-href="home.html"><span class="nav-icon">🏠</span><span class="nav-text">首页</span></div>
-                <div class="nav-item" data-href="my-courses.html"><span class="nav-icon">📁</span><span class="nav-text">我的课程</span></div>
-                <div class="nav-item on" data-href="mall.html"><span class="nav-icon">📚</span><span class="nav-text">课程包商城</span></div>
-                <div class="nav-item" data-href="archive.html"><span class="nav-icon">🗂️</span><span class="nav-text">学习档案</span></div>
-                <div class="nav-item" data-href="growth.html"><span class="nav-icon">📈</span><span class="nav-text">成长分析</span></div>
-            </div>
-            <div class="nav-group">
-                <div class="nav-group-title">社交</div>
-                <div class="nav-item" data-href="community.html"><span class="nav-icon">👥</span><span class="nav-text">社区</span></div>
-                <div class="nav-item" data-href="community.html"><span class="nav-icon">⚔️</span><span class="nav-text">PK 对战</span></div>
-                <div class="nav-item" data-href="community.html"><span class="nav-icon">🏆</span><span class="nav-text">排行榜</span></div>
-            </div>
-            <div class="nav-group">
-                <div class="nav-group-title">我的</div>
-                <div class="nav-item" data-href="profile.html"><span class="nav-icon">👤</span><span class="nav-text">个人中心</span></div>
-                <div class="nav-item" data-href="promote.html"><span class="nav-icon">💰</span><span class="nav-text">推广返佣</span></div>
-                <div class="nav-item" data-href="plugin.html"><span class="nav-icon">🧩</span><span class="nav-text">浏览器插件</span></div>
-            </div>
-        </nav>
-        <div class="sidebar-bottom">
-            <div class="vip-card" data-href="profile.html">
-                <div class="vip-title">👑 升级会员</div>
-                <div class="vip-desc">解锁全部课程<br>AI 助手无限次提问</div>
-            </div>
-        </div>
-    </aside>
+    <aside class="sidebar" id="jy-sidebar"></aside>
 
     <div class="main-area">
         <header class="topbar">
@@ -291,16 +239,9 @@
 
 <script>
 /* 登录检查 */
-(function() {
-    var userStr = localStorage.getItem('juyou_user');
-    if (!userStr) { window.location.href = 'index.html'; return; }
-    var user = null;
-    try { user = JSON.parse(userStr); } catch (e) { localStorage.removeItem('juyou_user'); window.location.href = 'index.html'; return; }
-    if (!user || !user.phone) { localStorage.removeItem('juyou_user'); window.location.href = 'index.html'; return; }
-    window.currentUser = user;
-    var avatarEl = document.getElementById('userAvatar');
-    if (avatarEl) avatarEl.textContent = (user.nickname || '学习者').slice(-1);
-})();
+JUYOU.requireLogin();
+var avatarEl = document.getElementById('userAvatar');
+if (avatarEl && window.currentUser) avatarEl.textContent = (window.currentUser.nickname || '学习者').slice(-1);
 
 function getUrlParam(name) {
     var m = window.location.search.match(new RegExp('[?&]' + name + '=([^&]*)'));
@@ -480,7 +421,7 @@ function renderDetail() {
         });
 
         document.getElementById('startBtn').addEventListener('click', function() {
-           window.location.href = 'dictation.html?course=' + encodeURIComponent(COURSE_ID) + '&lesson=' + firstIncomplete;
+           window.location.href = 'loading.html?course=' + encodeURIComponent(COURSE_ID) + '&lesson=' + firstIncomplete;
         });
     }
 
@@ -500,7 +441,7 @@ function renderDetail() {
         btn.addEventListener('click', function(e) {
             e.stopPropagation();
             var unitNo = parseInt(this.getAttribute('data-unit'), 10) || 1;
-            window.location.href = 'dictation.html?course=' + encodeURIComponent(COURSE_ID) + '&lesson=' + unitNo;
+            window.location.href = 'loading.html?course=' + encodeURIComponent(COURSE_ID) + '&lesson=' + unitNo;
         });
     });
 }
@@ -508,15 +449,6 @@ function renderDetail() {
 document.getElementById('backBtn').addEventListener('click', function() {
     if (window.history.length > 1) window.history.back();
     else window.location.href = 'mall.html';
-});
-
-document.querySelectorAll('[data-href]').forEach(function(el) {
-    el.addEventListener('click', function(e) {
-        e.stopPropagation();
-        var href = this.getAttribute('data-href');
-        if (!href) return;
-        window.location.href = href;
-    });
 });
 
 /* 删除确认弹窗的事件绑定（只绑定一次） */
