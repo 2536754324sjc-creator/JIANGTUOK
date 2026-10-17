@@ -32,134 +32,6 @@
     var courses = [
 
         /* ================================================================
-           1. Kid's Box 1
-           ================================================================ */
-        {
-            courseId: 'kids_box_1',
-            title: "Kid's Box 1",
-            emoji: '📘',
-            grad: 4,
-            level: '初级',
-            learners: 4156,
-            isMemberOnly: true,
-            description: "《Kid's Box 1》是剑桥国际少儿英语启蒙第一级，通过 Star 一家和玩具伙伴们的生动故事，以歌曲、游戏、卡通情景剧等多种形式，全面培养孩子的英语听说能力，打下坚实的语音与词汇基础。特别适合小学1-2年级（有一定字母基础）的孩子开启英语启蒙之旅！",
-            units: [
-                { title: 'Unit 1 Hello again!',   desc: '本课主要学习介绍家庭成员，以及询问别人姓名', sentenceCount: 22,
-                  vocabulary: ['hello', 'name', 'friend', 'family', 'brother', 'sister'],
-                  phrases: ['hello, I am', 'what is your name', 'this is my'],
-                  grammar: ["问候语和自我介绍", "What's your name? 句型"] },
-                { title: 'Unit 2 Back to School', desc: '本课主要围绕教室场景展开，学习教室物品', sentenceCount: 29,
-                  vocabulary: ['classroom', 'pencil', 'book', 'chair', 'desk'],
-                  phrases: ['go to school', 'in the classroom', 'sit down'],
-                  grammar: ["What's this? / It's a ...", "冠词 a / an 用法"] },
-                { title: 'Unit 3 Play time!',     desc: '本课围绕玩具主题，学习玩具名称和玩耍表达', sentenceCount: 26,
-                  vocabulary: ['toy', 'ball', 'doll', 'kite', 'car'],
-                  phrases: ['play with', 'I like playing', 'let us play'],
-                  grammar: ["I like + 名词", "祈使句 Let's ..."] },
-                { title: 'Unit 4 At home',        desc: '本课围绕家庭成员展开，介绍家庭成员称谓', sentenceCount: 28,
-                  vocabulary: ['mother', 'father', 'grandma', 'grandpa', 'baby'],
-                  phrases: ['my family', 'in my family', 'look at'],
-                  grammar: ["物主代词 my / your", "This is my ..."] },
-                { title: 'Unit 5 Our pets',       desc: '本课围绕宠物主题，学习宠物名称和简单描述', sentenceCount: 24,
-                  vocabulary: ['pet', 'dog', 'cat', 'bird', 'fish'],
-                  phrases: ['I have a', 'This is my pet', 'It is a'],
-                  grammar: ["I have got ...", "形容词描述宠物"] },
-                { title: 'Unit 6 My face',        desc: '本课围绕五官部位，学习身体部位的英语表达', sentenceCount: 25,
-                  vocabulary: ['face', 'eyes', 'nose', 'mouth', 'ears'],
-                  phrases: ['I have got', 'look at my', 'touch your'],
-                  grammar: ["have got 句型", "身体部位表达"] },
-                { title: 'Unit 7 Wild animals',   desc: '本课围绕野生动物，学习常见动物名称', sentenceCount: 27,
-                  vocabulary: ['lion', 'tiger', 'elephant', 'monkey', 'panda'],
-                  phrases: ['wild animal', 'in the zoo', 'look at the'],
-                  grammar: ["形容词描述动物", "一般现在时"] },
-                { title: 'Unit 8 My clothes',     desc: '本课围绕服装主题，学习常见衣物名称', sentenceCount: 26,
-                  vocabulary: ['shirt', 'skirt', 'hat', 'shoes', 'socks'],
-                  phrases: ['put on', 'take off', 'I like my'],
-                  grammar: ["颜色 + 衣物表达", "I'm wearing ..."] }
-            ]
-        },
-
-        /* ================================================================
-           2. Kid's Box 2
-           ================================================================ */
-        {
-            courseId: 'kids_box_2',
-            title: "Kid's Box 2",
-            emoji: '🎯',
-            grad: 2,
-            level: '初级',
-            learners: 6384,
-            isMemberOnly: true,
-            description: "《Kid's Box 2》（剑桥国际少儿英语第2级）是一门\"听说读写全面起步与剑桥考级冲刺课\"。延续 Star 一家的生动故事，由\"纯听说\"平稳过渡到\"读写结合\"，系统巩固自然拼读规律，拓展日常场景表达与基础语法句型，全面对标剑桥少儿英语一级（YLE Starters）满盾标准。特别适合小学1-2年级（有一定字母/简单听说基础）、想要稳步提升校内成绩、实现自信自主阅读并考取首张国际权威证书的孩子！",
-            units: [
-                { title: 'Unit 1 Hello again!', desc: '本课主要学习介绍家庭成员，以及询问...', sentenceCount: 22,
-                  vocabulary: ['family', 'brother', 'sister', 'parents', 'friend'],
-                  phrases: ['hello I am', 'this is', 'nice to meet'],
-                  grammar: ["自我介绍句型", "物主代词"] },
-                { title: 'Unit 2 Back to School', desc: '本课主要围绕教室场景展开，学习教室...', sentenceCount: 29,
-                  vocabulary: ['classroom', 'teacher', 'student', 'board', 'book'],
-                  phrases: ['go to school', 'in the classroom'],
-                  grammar: ["What's this?", "There be 句型"] },
-                { title: 'Unit 3 Play time!', desc: '本课围绕玩耍场景，学习游戏表达', sentenceCount: 26,
-                  vocabulary: ['play', 'game', 'toy', 'ball', 'kite'],
-                  phrases: ['let us play', 'I like to', 'have fun'],
-                  grammar: ["Let's + 动词", "I like + doing"] },
-                { title: 'Unit 4 At home', desc: '本课围绕居家场景，学习家中物品', sentenceCount: 27,
-                  vocabulary: ['home', 'room', 'kitchen', 'bedroom', 'table'],
-                  phrases: ['at home', 'in the room'],
-                  grammar: ["方位介词", "There be 句型"] },
-                { title: 'Unit 5 Our pets', desc: '本课围绕宠物，学习动物表达', sentenceCount: 25,
-                  vocabulary: ['pet', 'dog', 'cat', 'rabbit', 'hamster'],
-                  phrases: ['I have got', 'look after'],
-                  grammar: ["have got 句型", "形容词描述"] },
-                { title: 'Unit 6 My face', desc: '本课围绕五官部位', sentenceCount: 24,
-                  vocabulary: ['face', 'eyes', 'nose', 'mouth', 'hair'],
-                  phrases: ['I have got', 'touch your'],
-                  grammar: ["have got 句型", "身体部位"] }
-            ]
-        },
-
-        /* ================================================================
-           3. 互联网大厂程序员职场英语口语
-           ================================================================ */
-        {
-            courseId: 'dev_english',
-            title: '互联网大厂程序员职场英语口语',
-            emoji: '💻',
-            grad: 6,
-            level: '中级',
-            learners: 3929,
-            isMemberOnly: true,
-            description: "《互联网大厂程序员职场英语口语》专为互联网从业者打造，覆盖需求评审、系统架构、敏捷开发、Code Review、线上问题排查、跨时区协作等真实工作场景。帮助技术人员用英语流畅进行技术讨论、文档撰写和跨国团队协作，提升职场竞争力！",
-            units: [
-                { title: '需求分析与功能讨论', desc: '70 句 · 学习产品需求沟通的表达方式', sentenceCount: 70,
-                  vocabulary: ['feature', 'requirement', 'user story', 'stakeholder', 'backlog'],
-                  phrases: ['we need to', 'the requirement is', 'let us discuss'],
-                  grammar: ["技术讨论常用句型", "被动语态描述需求"] },
-                { title: '系统架构与技术方案', desc: '86 句 · 掌握技术选型与架构沟通', sentenceCount: 86,
-                  vocabulary: ['architecture', 'scalable', 'database', 'microservice', 'cache'],
-                  phrases: ['we decided to', 'the design is', 'based on'],
-                  grammar: ["技术对比句型", "原因/结果表达"] },
-                { title: '敏捷开发与每日站会', desc: '79 句 · 敏捷开发日常沟通', sentenceCount: 79,
-                  vocabulary: ['sprint', 'standup', 'ticket', 'blocker', 'milestone'],
-                  phrases: ['I am working on', 'blocked by', 'will finish by'],
-                  grammar: ["现在进行时描述进度", "将来时表达计划"] },
-                { title: 'Code Review 与代码讨论', desc: '88 句 · 代码评审时的英语沟通', sentenceCount: 88,
-                  vocabulary: ['refactor', 'bug', 'commit', 'merge', 'review'],
-                  phrases: ['could you please', 'looks good to me', 'need to fix'],
-                  grammar: ["礼貌请求", "给出建议"] },
-                { title: '线上问题排查', desc: '82 句 · 生产事故应急沟通', sentenceCount: 82,
-                  vocabulary: ['incident', 'root cause', 'rollback', 'monitoring', 'alert'],
-                  phrases: ['we are investigating', 'the issue is', 'fix is on the way'],
-                  grammar: ["紧急情况表达", "优先级描述"] },
-                { title: '跨时区团队协作', desc: '78 句 · 跨国团队远程协作', sentenceCount: 78,
-                  vocabulary: ['timezone', 'handover', 'sync', 'async', 'follow-up'],
-                  phrases: ['as discussed', 'let us sync up', 'thank you for'],
-                  grammar: ["书面沟通语气", "会议安排表达"] }
-            ]
-        },
-
-        /* ================================================================
            4. 小小动物园探险家
            ================================================================ */
         {
@@ -228,6 +100,42 @@
                   vocabulary: ['celebration', 'birthday', 'party', 'cake', 'gift', 'family', 'friend', 'sing', 'dance', 'play'],
                   phrases: ['birthday party', 'blow out candles', 'cut the cake', 'open gifts', 'celebrate together', 'have fun'],
                   grammar: ['一般过去时', '规则动词加 -ed', '不规则动词过去式'] }
+            ]
+        },
+
+        /* ================================================================
+           校园英语初阶：我的学校生活（初级 · Dify 工作流生成）
+           ================================================================ */
+        {
+            courseId: 'school_life_elementary',
+            title: '校园英语初阶：我的学校生活',
+            emoji: '🏫',
+            grad: 1,
+            level: '初级',
+            learners: 0,
+            isMemberOnly: false,
+            description: '围绕校园生活场景，帮助初级学习者掌握学校场所、课程科目、课堂用语与校园活动的基础英语表达，每句配语法结构标注。',
+            units: [
+                { title: 'U1 我的学校 My School', desc: '认识学校场所，学习 There be 句型与方位介词', sentenceCount: 10,
+                  vocabulary: ['school', 'classroom', 'library', 'playground', 'gym', 'canteen'],
+                  phrases: ['next to', 'in front of', 'behind', 'between ... and ...'],
+                  grammar: ['There be 句型', '方位介词'] },
+                { title: 'U2 我的课程 My Subjects', desc: '学习学科名称与课程安排，掌握一般现在时', sentenceCount: 10,
+                  vocabulary: ['subject', 'math', 'English', 'science', 'art', 'music'],
+                  phrases: ['favorite subject', 'be good at', 'be interested in'],
+                  grammar: ['一般现在时', '喜好与原因表达'] },
+                { title: 'U3 在课堂上 In the Classroom', desc: '学习课堂常用英语，掌握祈使句', sentenceCount: 10,
+                  vocabulary: ['listen', 'look', 'open', 'answer', 'raise', 'board'],
+                  phrases: ['listen to', 'look at', 'raise your hand', 'open your book'],
+                  grammar: ['祈使句', 'if 条件状语从句'] },
+                { title: 'U4 我的同学们 My Classmates', desc: '学习描述同学外貌与性格，掌握形容词与物主代词', sentenceCount: 10,
+                  vocabulary: ['classmate', 'tall', 'kind', 'funny', 'helpful', 'glasses'],
+                  phrases: ['make friends', 'be friendly to', 'help each other', 'laugh at'],
+                  grammar: ['描述性形容词', '物主代词'] },
+                { title: 'U5 校园活动 School Activities', desc: '学习校园社团与活动表达，掌握现在进行时', sentenceCount: 10,
+                  vocabulary: ['club', 'basketball', 'singing', 'dancing', 'match', 'join'],
+                  phrases: ['join the club', 'take part in', 'after school', 'play basketball'],
+                  grammar: ['现在进行时', '动词-ing 形式变化'] }
             ]
         }
 
