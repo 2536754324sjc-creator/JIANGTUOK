@@ -1,0 +1,358 @@
+/* ============================================================
+   句游英语 · 全站公共样式（common.css）
+   内容：基础样式 / 页面布局 / 侧边栏导航 / 顶部栏 / 按钮 / 卡片
+   用法：所有页面共享。要改全站外观（颜色、间距、导航样式等），
+         只改这一个文件即可，不用再逐个改 10 多个页面。
+   注意：页面里剩下的 <style> 是"该页面专属样式"，会覆盖本文件。
+   ============================================================ */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: #f5f7fb;
+    color: #333;
+    min-height: 100vh;
+}
+
+:root {
+    --brand: #4f6ef7;
+    --brand-light: #7b8fff;
+    --text-main: #1a1a2e;
+    --text-sub: #666;
+    --text-mute: #999;
+    --border: #eef1f8;
+    --card-bg: #ffffff;
+    --success: #22a06b;
+    --danger: #ff5b5b;
+    --warn: #ff9f43;
+}
+
+a {
+    text-decoration: none;
+    color: inherit;
+}
+
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #d8dfee;
+    border-radius: 99px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.app-layout {
+    display: flex;
+    min-height: 100vh;
+}
+
+.sidebar {
+    width: 220px;
+    flex-shrink: 0;
+    background: #ffffff;
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    padding: 24px 16px;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow-y: auto;
+}
+
+.sidebar .logo {
+    font-size: 20px;
+    font-weight: 800;
+    color: var(--brand);
+    padding: 0 12px;
+    margin-bottom: 28px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.nav-group {
+    margin-bottom: 8px;
+}
+
+.nav-group-title {
+    font-size: 11px;
+    color: #bbb;
+    padding: 8px 12px;
+    letter-spacing: 1px;
+}
+
+.nav-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 11px 12px;
+    border-radius: 10px;
+    font-size: 14px;
+    color: var(--text-sub);
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+    margin-bottom: 2px;
+}
+
+.nav-item:hover {
+    background: #f4f6fc;
+    color: var(--brand);
+}
+
+.nav-item.on {
+    background: #eef2ff;
+    color: var(--brand);
+    font-weight: 600;
+}
+
+.nav-item .nav-icon {
+    font-size: 17px;
+    width: 20px;
+    text-align: center;
+    flex-shrink: 0;
+}
+
+.sidebar-bottom {
+    margin-top: auto;
+    padding-top: 16px;
+}
+
+.vip-card {
+    background: linear-gradient(135deg, #4f6ef7, #7b8fff);
+    border-radius: 14px;
+    padding: 16px;
+    color: #fff;
+    margin-bottom: 10px;
+    cursor: pointer;
+}
+
+.vip-card .vip-title {
+    font-size: 14px;
+    font-weight: 700;
+    margin-bottom: 4px;
+}
+
+.vip-card .vip-desc {
+    font-size: 11px;
+    opacity: 0.85;
+    line-height: 1.5;
+}
+
+.main-area {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.topbar {
+    background: #ffffff;
+    border-bottom: 1px solid var(--border);
+    padding: 14px 28px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    position: sticky;
+    top: 0;
+    z-index: 50;
+}
+
+.search-box {
+    flex: 1;
+    max-width: 420px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: #f4f6fc;
+    border-radius: 10px;
+    padding: 0 14px;
+    height: 40px;
+    transition: box-shadow 0.2s;
+}
+
+.search-box input {
+    flex: 1;
+    border: none;
+    outline: none;
+    background: transparent;
+    font-size: 14px;
+    color: var(--text-main);
+}
+
+.search-box input::placeholder {
+    color: #b3bdd1;
+}
+
+.topbar-right {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.topbar-icon-btn {
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 17px;
+    cursor: pointer;
+    color: var(--text-sub);
+    transition: background 0.2s;
+    position: relative;
+}
+
+.topbar-icon-btn:hover {
+    background: #f4f6fc;
+}
+
+.badge-dot {
+    position: absolute;
+    top: 7px;
+    right: 7px;
+    width: 7px;
+    height: 7px;
+    background: #ff5b5b;
+    border-radius: 50%;
+    border: 1.5px solid #fff;
+}
+
+.user-avatar {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #4f6ef7, #7b8fff);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+.content-scroll {
+    padding: 24px 28px 40px;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #4f6ef7, #6b8aff);
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    padding: 11px 22px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.2s, transform 0.1s;
+    white-space: nowrap;
+    box-shadow: 0 4px 12px rgba(79, 110, 247, 0.25);
+}
+
+.btn-primary:hover {
+    opacity: 0.9;
+}
+
+.btn-primary:active {
+    transform: scale(0.98);
+}
+
+.btn-ghost {
+    background: #fff;
+    color: var(--text-sub);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 11px 22px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s, border-color 0.2s;
+    white-space: nowrap;
+}
+
+.btn-ghost:hover {
+    background: #f4f6fc;
+    color: var(--brand);
+    border-color: #c9d4f5;
+}
+
+.card {
+    background: var(--card-bg);
+    border-radius: 16px;
+    padding: 20px;
+    box-shadow: 0 2px 12px rgba(20, 40, 90, 0.04);
+    margin-bottom: 20px;
+}
+
+.card-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.card-head .card-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text-main);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.card-head .card-sub {
+    font-size: 12px;
+    color: var(--text-mute);
+    font-weight: 400;
+}
+
+/* ---------- 平板/手机：侧边栏收窄为图标 ---------- */
+@media (max-width: 768px) {
+    .sidebar {
+        width: 64px;
+        padding: 16px 8px;
+    }
+    .sidebar .logo {
+        font-size: 0;
+        justify-content: center;
+        padding: 0;
+    }
+    .sidebar .logo .logo-icon {
+        font-size: 22px;
+    }
+    .nav-item {
+        justify-content: center;
+        padding: 12px 0;
+    }
+    .nav-item .nav-text {
+        display: none;
+    }
+    .nav-group-title {
+        display: none;
+    }
+    .vip-card {
+        display: none;
+    }
+    .content-scroll {
+        padding: 16px 14px 32px;
+    }
+    .topbar {
+        padding: 12px 14px;
+    }
+}
