@@ -6,6 +6,7 @@
     <title>听写 - 句游英语</title>
 
     <script src="juyou-sync.js"></script>
+    <script src="assets/jy-audio.js"></script>
     <script src="data/juyou-courses-registry.js"></script>
     <script src="data/juyou-courses-content.js"></script>
 
@@ -413,6 +414,17 @@
         .d-tool-btn.d-primary.playing {
             animation: playPulse 0.4s ease;
         }
+
+        /* 发音下载中的呼吸指示 */
+        .d-tool-btn.d-primary.audio-loading {
+            animation: audioBreath 1.1s ease-in-out infinite;
+        }
+        @keyframes audioBreath {
+            0%, 100% { opacity: 0.45; }
+            50% { opacity: 1; }
+        }
+        .d-tool-btn.d-primary.audio-error { opacity: 0.75; }
+        .d-tool-btn.d-primary.audio-ready { opacity: 1; box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.4); }
 
         .d-tool-btn.starred {
             color: #fbbf24;
@@ -1033,6 +1045,20 @@ function render() {
             try { STATE.inputs[0].setSelectionRange(0, 0); } catch (e) {}
         }, 60);
     }
+
+    // 刷新播放按钮的音频加载状态
+    refreshPlayBtnState();
+
+    /* ★ 每显示一句：0.5 秒后自动朗读一次
+       （之后再听需要手动点 🔊；切句会自动取消上一次的待播放） */
+    autoPlayToken++;
+    var myAutoToken = autoPlayToken;
+    var myIndex = STATE.index;
+    setTimeout(function() {
+        if (myAutoToken !== autoPlayToken) return;   // 已经切到别的句子
+        if (STATE.index !== myIndex) return;
+        playAudio();
+    }, 500);
 }
 
 /* ============================================================
@@ -1235,76 +1261,64 @@ function goNext() {
 }
 
 /* ============================================================
-   ★ 语音系统：有道 TTS 预加载 + 系统 TTS 兜底
+   ★ 语音系统：统一使用 JYAudio 多源引擎
+   播放链路：有道(主) → 百度(备用①) → Google(备用②) → 系统TTS(兜底)
+   - 真人语音就绪 → 秒播
+   - 真人语音还在加载 → 立即用系统 TTS 出声（零等待，不卡端）
+   - 全部在线源失败 → 系统 TTS 兜底（无需网络）
+   - 与 loading.html 共享同一 JYAudio 实例 + sessionStorage 失败记忆，
+     已知失败的源会被跳过，少走弯路
    ============================================================ */
-var EN_VOICE = null;
-var audioCache = {};      // { 句子索引: { audio, state } }
-var USE_TTS_FALLBACK = false;
+var autoPlayToken = 0;    // 自动朗读令牌：切句后旧的待播放自动失效
+var btnStateTimer = null; // 播放按钮三态轮询计时器
 
-function loadTTSVoices() {
-    if (!('speechSynthesis' in window)) return;
-    var voices = window.speechSynthesis.getVoices();
-    if (!voices || voices.length === 0) return;
-    EN_VOICE = voices.find(function(v) { return v.lang === 'en-US'; })
-            || voices.find(function(v) { return v.lang === 'en-GB'; })
-            || voices.find(function(v) { return v.lang && v.lang.indexOf('en') === 0; })
-            || null;
+/* ★ 预加载当前单元所有句子的读音
+   统一走 JYAudio 多源引擎（有道→百度→Google→系统TTS），
+   后台并发进行，不阻塞播放；播放时若真人语音未就绪，
+   会立即用系统 TTS 出声（零等待，不卡端）。与 loading.html
+   共享 sessionStorage 失败记忆：已知失败的源会被跳过，少走弯路。 */
+function preloadAudios() {
+    if (!CURRENT_UNIT || !CURRENT_UNIT.sentences) return;
+    var list = CURRENT_UNIT.sentences.map(function(s) { return s.en; });
+    console.log('[Audio] 开始预加载 ' + list.length + ' 句读音（JYAudio 多源：有道→百度→Google→系统TTS）...');
+    JYAudio.prefetchAll(list, { concurrency: 3 });
+    refreshPlayBtnState();
+    ensureBtnStatePolling();
 }
 
-if ('speechSynthesis' in window) {
-    loadTTSVoices();
-    if (typeof window.speechSynthesis.onvoiceschanged !== 'undefined') {
-        window.speechSynthesis.onvoiceschanged = loadTTSVoices;
+/* ★ 播放按钮三态实时刷新：
+   ready=正常(真人语音可秒播) / loading=真人语音准备中(点击即用系统语音) / error=将用系统语音 */
+function refreshPlayBtnState() {
+    var btn = document.getElementById('dBtnPlay');
+    if (!btn) return;
+    btn.classList.remove('audio-loading', 'audio-ready', 'audio-error');
+    var s = CURRENT_UNIT && CURRENT_UNIT.sentences[STATE.index];
+    if (!s) return;
+    var st = JYAudio.getState(s.en);   // 'ready' | 'loading' | 'error' | null
+    if (st === 'ready') {
+        btn.classList.add('audio-ready');
+        btn.title = '播放发音（真人语音）';
+    } else if (st === 'error') {
+        btn.classList.add('audio-error');
+        btn.title = '点击用系统语音播放';
+    } else {
+        btn.classList.add('audio-loading');
+        btn.title = '真人语音准备中，点击立即用系统语音播放';
     }
 }
 
-/* ★ 有道 TTS 音频 URL */
-function getAudioUrl(en) {
-    return 'https://dict.youdao.com/dictvoice?audio=' +
-        encodeURIComponent(en) + '&type=2';
-}
-
-/* ★ 预加载当前单元所有句子的读音 */
-function preloadAudios() {
-    if (!CURRENT_UNIT || !CURRENT_UNIT.sentences) return;
-
-    var sentences = CURRENT_UNIT.sentences;
-    var totalCount = sentences.length;
-    var loadedCount = 0;
-    var errorCount = 0;
-
-    console.log('[Audio] 开始预加载 ' + totalCount + ' 句读音...');
-
-    sentences.forEach(function(s, i) {
-        if (audioCache[i]) return;
-
-        var audio = new Audio();
-        audio.preload = 'auto';
-        audio.src = getAudioUrl(s.en);
-        audioCache[i] = { audio: audio, state: 'loading' };
-
-        audio.addEventListener('loadeddata', function() {
-            audioCache[i].state = 'ready';
-            loadedCount++;
-            if (loadedCount + errorCount >= totalCount) {
-                if (errorCount === 0) {
-                    console.log('[Audio] ✅ 全部预加载完成（' + totalCount + ' 句）');
-                } else {
-                    console.log('[Audio] 预加载完成：成功 ' + loadedCount + ' / 失败 ' + errorCount);
-                }
-            }
-        }, { once: true });
-
-        audio.addEventListener('error', function() {
-            audioCache[i].state = 'error';
-            errorCount++;
-            if (loadedCount + errorCount >= totalCount) {
-                console.log('[Audio] 预加载完成：成功 ' + loadedCount + ' / 失败 ' + errorCount);
-            }
-        }, { once: true });
-
-        try { audio.load(); } catch (e) {}
-    });
+/* ★ 后台轮询当前句状态，加载完成/失败后停止轮询（保证按钮三态实时） */
+function ensureBtnStatePolling() {
+    if (btnStateTimer) return;
+    btnStateTimer = setInterval(function() {
+        refreshPlayBtnState();
+        var s = CURRENT_UNIT && CURRENT_UNIT.sentences[STATE.index];
+        var st = s ? JYAudio.getState(s.en) : 'ready';
+        if (st === 'ready' || st === 'error') {
+            clearInterval(btnStateTimer);
+            btnStateTimer = null;
+        }
+    }, 400);
 }
 
 /* ============================================================
@@ -1384,30 +1398,12 @@ function stopPlaybackUI() {
     if (waveform) waveform.classList.remove('active');
 }
 
-/* ★ 系统 TTS 兜底 */
-function fallbackTTS(en, myToken) {
-    if (!('speechSynthesis' in window)) {
-        stopPlaybackUI();
-        return;
-    }
-    startPlaybackUI();
-    var estimatedDuration = Math.max(1200, en.length * 80);
-    startWaveAnimation(estimatedDuration);
+/* ★ 系统 TTS 兜底（已统一交由 JYAudio 引擎处理，此处不再单独实现） */
 
-    var u = new SpeechSynthesisUtterance(en);
-    u.lang = 'en-US';
-    u.rate = 0.85;
-    u.pitch = 1;
-    u.volume = 1;
-    if (EN_VOICE) u.voice = EN_VOICE;
-
-    u.onend = function() { if (myToken === playToken) stopPlaybackUI(); };
-    u.onerror = function() { if (myToken === playToken) stopPlaybackUI(); };
-
-    window.speechSynthesis.speak(u);
-}
-
-/* ★ 主播放函数：优先预加载音频，失败兜底 TTS */
+/* ★ 主播放函数：统一走 JYAudio 多源引擎，绝不卡端
+   - 真人语音就绪 → 秒播
+   - 真人语音还在加载 → 立即系统 TTS 出声（零等待）
+   - 全部在线源失败 → 系统 TTS 兜底（无需网络） */
 function playAudio() {
     if (!CURRENT_UNIT) return;
     var i = STATE.index;
@@ -1417,50 +1413,23 @@ function playAudio() {
     playToken++;
     var myToken = playToken;
 
-    // 停掉上一次播放的所有音频
-    Object.keys(audioCache).forEach(function(k) {
-        var c = audioCache[k];
-        if (c && c.audio) {
-            try { c.audio.pause(); c.audio.currentTime = 0; } catch (e) {}
+    refreshPlayBtnState();
+
+    JYAudio.play(s.en, {
+        onStart: function(durationMs) {
+            if (myToken !== playToken) return;
+            startPlaybackUI();
+            startWaveAnimation(durationMs || 6000);
+        },
+        onEnd: function() {
+            if (myToken !== playToken) return;
+            stopPlaybackUI();
+        },
+        onStateChange: function() {
+            if (myToken !== playToken) return;
+            refreshPlayBtnState();
         }
     });
-    if ('speechSynthesis' in window) window.speechSynthesis.cancel();
-
-    var cached = audioCache[i];
-
-    // ★ 优先用预加载好的音频（秒播）
-    if (cached && cached.audio && cached.state !== 'error' && !USE_TTS_FALLBACK) {
-        var audio = cached.audio;
-        try { audio.currentTime = 0; } catch (e) {}
-
-        startPlaybackUI();
-        startWaveAnimation(8000);
-
-        audio.onended = function() {
-            if (myToken === playToken) stopPlaybackUI();
-        };
-        audio.onerror = function() {
-            if (myToken !== playToken) return;
-            cached.state = 'error';
-            fallbackTTS(s.en, myToken);
-        };
-
-        var p = null;
-        try { p = audio.play(); } catch (e) { p = null; }
-
-        if (p && p.catch) {
-            p.catch(function(err) {
-                console.warn('[Audio] play() 失败：', err);
-                if (myToken === playToken) {
-                    fallbackTTS(s.en, myToken);
-                }
-            });
-        }
-        return;
-    }
-
-    // ★ 兜底：系统 TTS
-    fallbackTTS(s.en, myToken);
 }
 
 /* ============================================================
@@ -1504,14 +1473,12 @@ function showComplete() {
 /* ============================================================
    底部按钮事件
    ============================================================ */
+/* ★ 退出听写：用 replace 直接跳回课程详情页，
+   彻底避免 history.back() 落到预加载页(loading.html)又自动进入听写的死循环 */
 document.getElementById('dExit').addEventListener('click', function() {
-    if (window.history.length > 1) {
-        window.history.back();
-    } else if (CURRENT_COURSE) {
-        window.location.href = 'course.html?course=' + encodeURIComponent(URL_COURSE_ID);
-    } else {
-        window.location.href = 'my-courses.html';
-    }
+    var exitTarget = getUrlParam('from') ||
+        ('course.html?course=' + encodeURIComponent(URL_COURSE_ID));
+    window.location.replace(exitTarget);
 });
 
 document.getElementById('dBtnPrev').addEventListener('click', goPrev);
