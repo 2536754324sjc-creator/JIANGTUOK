@@ -496,9 +496,96 @@
                 font-size: 24px;
             }
         }
+        /* ============================================
+           完善资料（注册第二步）
+           ============================================ */
+        .setup-steps {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 22px;
+        }
+        .setup-step { font-size: 12px; color: #bbb; }
+        .setup-step.done { color: #22a06b; font-weight: 600; }
+        .setup-step.now { color: #4f6ef7; font-weight: 700; }
+        .setup-step-line { width: 28px; height: 2px; background: #e2e8f5; border-radius: 2px; }
+
+        .setup-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: #1a1a2e;
+            text-align: center;
+            margin-bottom: 6px;
+        }
+        .setup-sub {
+            font-size: 13px;
+            color: #999;
+            text-align: center;
+            margin-bottom: 24px;
+        }
+
+        #form-setup { animation: setupIn 0.4s ease; }
+        @keyframes setupIn {
+            from { opacity: 0; transform: translateY(14px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        .level-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+        .level-card {
+            position: relative;
+            border: 1.5px solid #e2e8f5;
+            border-radius: 14px;
+            padding: 16px 8px 12px;
+            text-align: center;
+            cursor: pointer;
+            background: #fff;
+            transition: transform 0.18s, border-color 0.18s, box-shadow 0.18s, background 0.18s;
+            user-select: none;
+        }
+        .level-card:hover {
+            border-color: #4f6ef7;
+            transform: translateY(-3px);
+            box-shadow: 0 8px 18px rgba(79, 110, 247, 0.14);
+        }
+        .level-card.on {
+            border-color: #4f6ef7;
+            background: #f0f4ff;
+            box-shadow: 0 0 0 3px rgba(79, 110, 247, 0.16);
+            transform: translateY(-2px);
+        }
+        .level-card.on::after {
+            content: '✓';
+            position: absolute;
+            top: 6px;
+            right: 8px;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #4f6ef7;
+            color: #fff;
+            font-size: 11px;
+            line-height: 18px;
+            text-align: center;
+        }
+        .level-emoji { font-size: 26px; margin-bottom: 6px; transition: transform 0.18s; }
+        .level-card:hover .level-emoji { transform: scale(1.15); }
+        .level-name { font-size: 14px; font-weight: 700; color: #1a1a2e; }
+        .level-desc { font-size: 11px; color: #999; margin-top: 2px; }
+
+        .btn-login.loading { opacity: 0.7; pointer-events: none; }
+
+        @media (max-width: 480px) {
+            .level-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
+        }
     </style>
         <!-- 云端同步模块 -->
     <script src="juyou-sync.js"></script>
+    <script src="assets/common.js"></script>
 </head>
 <body>
 
@@ -666,6 +753,58 @@
                     <p style="color: #ccc; font-size: 12px; margin-top: 8px;">（后续步骤实现）</p>
                 </div>
 
+                <!-- 完善资料表单（新用户登录后显示：用户名 + 英语水平） -->
+                <div id="form-setup" class="form-content" style="display: none;">
+                    <div class="setup-steps">
+                        <span class="setup-step done">✓ 手机验证</span>
+                        <span class="setup-step-line"></span>
+                        <span class="setup-step now">完善资料</span>
+                    </div>
+
+                    <div class="setup-title">开启你的英语之旅</div>
+                    <div class="setup-sub">设置用户名和英语水平，每日练习为你定制</div>
+
+                    <div class="form-group">
+                        <label>用户名</label>
+                        <div class="input-wrap">
+                            <span class="input-prefix">👤</span>
+                            <input type="text" id="setupUsername" maxlength="16" placeholder="请输入用户名">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>英语水平</label>
+                        <div class="level-grid" id="levelGrid">
+                            <div class="level-card" data-level="入门">
+                                <div class="level-emoji">🐣</div>
+                                <div class="level-name">入门</div>
+                                <div class="level-desc">零基础起步</div>
+                            </div>
+                            <div class="level-card" data-level="初级">
+                                <div class="level-emoji">🌱</div>
+                                <div class="level-name">初级</div>
+                                <div class="level-desc">能读简单句</div>
+                            </div>
+                            <div class="level-card" data-level="中级">
+                                <div class="level-emoji">🌿</div>
+                                <div class="level-name">中级</div>
+                                <div class="level-desc">能日常交流</div>
+                            </div>
+                            <div class="level-card" data-level="高级">
+                                <div class="level-emoji">🏆</div>
+                                <div class="level-name">高级</div>
+                                <div class="level-desc">冲刺高阶运用</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button class="btn-login" id="btnSetupDone">开始学习 →</button>
+
+                    <div class="agreement">
+                        所选水平将用于为你推荐课程和出题，之后可在个人中心修改
+                    </div>
+                </div>
+
                 <!-- 底部版权 -->
                 <div class="footer-copyright">
                     <!-- 可修改：版权信息 -->
@@ -792,11 +931,38 @@
     })();
 
         /* ============================================================
-       登录按钮 - 调用 Supabase 登录 + 首次云端同步
+       登录按钮 - 调 Supabase 登录 + 首次云端同步
+       登录成功后：老用户直接进首页；新用户进入"完善资料"步骤
        ============================================================ */
     (function() {
         var btn = document.getElementById('btnLogin');
         var originalText = btn.textContent;
+
+        /* 登录成功后的处理 */
+        function afterLogin(phone) {
+            var profile = window.JUYOU.getProfile();
+            if (profile && profile.level) {
+                // 已完善过资料 → 直接进首页
+                profile.loginTime = Date.now();
+                window.JUYOU.saveProfile(profile);
+                window.location.href = 'home.html';
+            } else {
+                // 新用户 → 显示"完善资料"步骤
+                showSetup(phone);
+            }
+        }
+
+        /* 显示完善资料表单，并生成默认用户名 */
+        function showSetup(phone) {
+            // 默认用户名 = 用户编号（从 1001 开始递增）+ 手机尾号后 4 位
+            var userNo = window.JUYOU.nextUserNumber();
+            document.getElementById('setupUsername').value = String(userNo) + phone.slice(-4);
+            document.getElementById('form-code').style.display = 'none';
+            document.getElementById('form-wechat').style.display = 'none';
+            document.getElementById('form-setup').style.display = 'block';
+            btn.disabled = false;
+            btn.textContent = originalText;
+        }
 
         btn.addEventListener('click', function() {
             // 1. 获取输入
@@ -813,27 +979,14 @@
                 return;
             }
 
-            // 3. 生成昵称
-            var nickname = '学员' + phone.slice(-4);
-            var userInfo = {
-                phone: phone,
-                nickname: nickname,
-                loginTime: Date.now()
-            };
-
-            // 4. 调云端登录 + 同步（按钮变"登录中..."防重复点击）
+            // 3. 调云端登录 + 同步（按钮变"登录中..."防重复点击）
             btn.disabled = true;
             btn.textContent = '登录中...';
 
             window.JYSync.loginAndSync(phone)
                 .then(function(result) {
                     console.log('[登录] 同步来源：', result.source);
-
-                    // 5. 保存用户信息
-                    localStorage.setItem('juyou_user', JSON.stringify(userInfo));
-
-                    // 6. 跳转到主页面
-                    window.location.href = 'home.html';
+                    afterLogin(phone);
                 })
                 .catch(function(err) {
                     console.error('[登录] 失败：', err);
@@ -843,10 +996,47 @@
                     // 云端失败也不挡本地登录（弱网/未配置时仍可离线使用）
                     var goOn = confirm('云端同步失败（' + (err.message || '未知错误') + '）\n\n是否继续以本地模式进入？\n（数据只存在本设备，换设备不同步）');
                     if (goOn) {
-                        localStorage.setItem('juyou_user', JSON.stringify(userInfo));
-                        window.location.href = 'home.html';
+                        afterLogin(phone);
                     }
                 });
+        });
+    })();
+
+    /* ============================================================
+       完善资料：用户名 + 英语水平选择
+       ============================================================ */
+    (function() {
+        var btn = document.getElementById('btnSetupDone');
+        var cards = document.querySelectorAll('.level-card');
+        var selectedLevel = '';
+
+        cards.forEach(function(card) {
+            card.addEventListener('click', function() {
+                cards.forEach(function(c) { c.classList.remove('on'); });
+                card.classList.add('on');
+                selectedLevel = card.getAttribute('data-level');
+            });
+        });
+
+        btn.addEventListener('click', function() {
+            var name = document.getElementById('setupUsername').value.trim();
+            if (!name) {
+                alert('请输入用户名');
+                return;
+            }
+            if (!selectedLevel) {
+                alert('请选择你的英语水平');
+                return;
+            }
+            btn.classList.add('loading');
+            btn.textContent = '正在进入...';
+            window.JUYOU.saveProfile({
+                phone: document.getElementById('phoneInput').value.trim(),
+                nickname: name,
+                level: selectedLevel,
+                loginTime: Date.now()
+            });
+            window.location.href = 'home.html';
         });
     })();
 </script>
